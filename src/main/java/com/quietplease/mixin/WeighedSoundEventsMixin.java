@@ -1,6 +1,6 @@
-package com.musicbox.mixin;
+package com.quietplease.mixin;
 
-import com.musicbox.music.MusicSettings;
+import com.quietplease.music.MusicSettings;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.resources.sounds.Sound;
@@ -22,7 +22,7 @@ public abstract class WeighedSoundEventsMixin {
 
     @Inject(method = "getSound(Lnet/minecraft/util/RandomSource;)Lnet/minecraft/client/resources/sounds/Sound;",
             at = @At("HEAD"), cancellable = true)
-    private void musicbox$skipDisabledTracks(RandomSource random, CallbackInfoReturnable<Sound> cir) {
+    private void quietplease$skipDisabledTracks(RandomSource random, CallbackInfoReturnable<Sound> cir) {
         if (!MusicSettings.hasDisabled()) return;
 
         List<Weighted<Sound>> all = ((WeighedSoundEvents) (Object) this).list;

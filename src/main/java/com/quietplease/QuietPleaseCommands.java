@@ -1,14 +1,14 @@
-package com.musicbox;
+package com.quietplease;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-import com.musicbox.gui.MusicBoxScreen;
-import com.musicbox.music.MusicLibrary;
-import com.musicbox.music.MusicSettings;
-import com.musicbox.music.MusicTrack;
+import com.quietplease.gui.QuietPleaseScreen;
+import com.quietplease.music.MusicLibrary;
+import com.quietplease.music.MusicSettings;
+import com.quietplease.music.MusicTrack;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -33,17 +33,17 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 /**
  * Sohbet komutlari (sadece oyuncunun kendi bilgisayarinda calisir, sunucuya gitmez):
  *
- *   /musicbox                        modlara gore muzik sayilari (mod adina tiklayinca listesi acilir)
- *   /musicbox list <mod>             o modun parcalari, tiklanabilir [-] [+] [Kapat] dugmeleriyle
- *   /musicbox volume <parca> <0-100> parcanin ses seviyesi
- *   /musicbox off|on <parca>         parcayi kapat / ac
- *   /musicbox mod <mod> off|on       bir modun tum parcalarini kapat / ac
- *   /musicbox reset <parca>          parcayi varsayilana dondur
- *   /musicbox resetall               tum ayarlari sil
- *   /musicbox dump                   tam listeyi musicbox-tracks.txt dosyasina yazar
- *   /musicbox gui                    ayar panelini acar
+ *   /quietplease                        modlara gore muzik sayilari (mod adina tiklayinca listesi acilir)
+ *   /quietplease list <mod>             o modun parcalari, tiklanabilir [-] [+] [Kapat] dugmeleriyle
+ *   /quietplease volume <parca> <0-100> parcanin ses seviyesi
+ *   /quietplease off|on <parca>         parcayi kapat / ac
+ *   /quietplease mod <mod> off|on       bir modun tum parcalarini kapat / ac
+ *   /quietplease reset <parca>          parcayi varsayilana dondur
+ *   /quietplease resetall               tum ayarlari sil
+ *   /quietplease dump                   tam listeyi quietplease-tracks.txt dosyasina yazar
+ *   /quietplease gui                    ayar panelini acar
  */
-public final class MusicBoxCommands {
+public final class QuietPleaseCommands {
 
     private static final int VOLUME_STEP = 10;
 
@@ -53,12 +53,12 @@ public final class MusicBoxCommands {
             (ctx, b) -> SharedSuggestionProvider.suggestResource(
                     MusicLibrary.scan().values().stream().flatMap(List::stream).map(MusicTrack::id), b);
 
-    private MusicBoxCommands() {}
+    private QuietPleaseCommands() {}
 
     public static void register(RegisterClientCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> d = event.getDispatcher();
-        d.register(Commands.literal("musicbox")
-                .executes(MusicBoxCommands::summary)
+        d.register(Commands.literal("quietplease")
+                .executes(QuietPleaseCommands::summary)
                 .then(Commands.literal("list")
                         .then(Commands.argument("mod", StringArgumentType.word()).suggests(MODS)
                                 .executes(ctx -> listMod(ctx, StringArgumentType.getString(ctx, "mod")))))
@@ -78,15 +78,15 @@ public final class MusicBoxCommands {
                                 .then(Commands.literal("on").executes(ctx -> setModEnabled(ctx, true)))))
                 .then(Commands.literal("reset")
                         .then(Commands.argument("track", ResourceLocationArgument.id()).suggests(TRACKS)
-                                .executes(MusicBoxCommands::reset)))
-                .then(Commands.literal("resetall").executes(MusicBoxCommands::resetAll))
-                .then(Commands.literal("dump").executes(MusicBoxCommands::dump))
-                .then(Commands.literal("gui").executes(MusicBoxCommands::openGui)));
+                                .executes(QuietPleaseCommands::reset)))
+                .then(Commands.literal("resetall").executes(QuietPleaseCommands::resetAll))
+                .then(Commands.literal("dump").executes(QuietPleaseCommands::dump))
+                .then(Commands.literal("gui").executes(QuietPleaseCommands::openGui)));
     }
 
     private static int openGui(CommandContext<CommandSourceStack> ctx) {
         // Sohbet ekrani, komut baska bir ekran actiysa kendini kapatmaz (NeoForge duzeltmesi)
-        Minecraft.getInstance().setScreen(new MusicBoxScreen(null));
+        Minecraft.getInstance().setScreen(new QuietPleaseScreen(null));
         return 1;
     }
 
@@ -116,16 +116,16 @@ public final class MusicBoxCommands {
             MutableComponent line = Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
                     .append(Component.literal(MusicLibrary.modName(mod)).withStyle(Style.EMPTY
                             .withColor(ChatFormatting.AQUA).withUnderlined(true)
-                            .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/musicbox list " + mod))
+                            .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/quietplease list " + mod))
                             .withHoverEvent(hover(Lang.tr("cmd.show_tracks")))))
                     .append(counts.withStyle(ChatFormatting.GRAY));
             if (off > 0) line.append(Component.literal(" (").append(Lang.tr("count.off", off)).append(")").withStyle(ChatFormatting.RED));
             say(ctx, line);
         });
 
-        say(ctx, button(Lang.tr("cmd.open_panel"), "/musicbox gui", Lang.tr("cmd.open_panel.tooltip"), ChatFormatting.GREEN));
+        say(ctx, button(Lang.tr("cmd.open_panel"), "/quietplease gui", Lang.tr("cmd.open_panel.tooltip"), ChatFormatting.GREEN));
         say(ctx, Lang.tr("cmd.full_list").withStyle(ChatFormatting.GRAY)
-                .append(button(Component.literal("/musicbox dump"), "/musicbox dump", Lang.tr("cmd.dump.tooltip"), ChatFormatting.YELLOW)));
+                .append(button(Component.literal("/quietplease dump"), "/quietplease dump", Lang.tr("cmd.dump.tooltip"), ChatFormatting.YELLOW)));
         return total;
     }
 
@@ -137,9 +137,9 @@ public final class MusicBoxCommands {
         }
         say(ctx, Component.literal("♪ " + MusicLibrary.modName(mod) + " (").append(Lang.count("tracks", tracks.size())).append(")  ")
                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
-                .append(button(Lang.tr("cmd.disable_all"), "/musicbox mod " + mod + " off", Lang.tr("cmd.disable_all.tooltip"), ChatFormatting.RED))
+                .append(button(Lang.tr("cmd.disable_all"), "/quietplease mod " + mod + " off", Lang.tr("cmd.disable_all.tooltip"), ChatFormatting.RED))
                 .append(" ")
-                .append(button(Lang.tr("cmd.enable_all"), "/musicbox mod " + mod + " on", Lang.tr("cmd.enable_all.tooltip"), ChatFormatting.GREEN)));
+                .append(button(Lang.tr("cmd.enable_all"), "/quietplease mod " + mod + " on", Lang.tr("cmd.enable_all.tooltip"), ChatFormatting.GREEN)));
         for (MusicTrack t : tracks) say(ctx, trackLine(t));
         return tracks.size();
     }
@@ -163,15 +163,15 @@ public final class MusicBoxCommands {
         if (s.enabled()) {
             line.append(Component.literal("  ").append(Lang.tr("cmd.volume", s.volume())).append(" ").withStyle(
                             s.volume() == MusicSettings.DEFAULT_VOLUME ? ChatFormatting.GRAY : ChatFormatting.YELLOW))
-                    .append(button(Component.literal("[−]"), "/musicbox volume " + id + " " + Math.max(0, s.volume() - VOLUME_STEP),
+                    .append(button(Component.literal("[−]"), "/quietplease volume " + id + " " + Math.max(0, s.volume() - VOLUME_STEP),
                             Lang.tr("cmd.volume_down.tooltip", VOLUME_STEP), ChatFormatting.AQUA))
-                    .append(button(Component.literal("[+]"), "/musicbox volume " + id + " " + Math.min(100, s.volume() + VOLUME_STEP),
+                    .append(button(Component.literal("[+]"), "/quietplease volume " + id + " " + Math.min(100, s.volume() + VOLUME_STEP),
                             Lang.tr("cmd.volume_up.tooltip", VOLUME_STEP), ChatFormatting.AQUA))
                     .append(" ")
-                    .append(button(Lang.tr("cmd.turn_off"), "/musicbox off " + id, Lang.tr("cmd.turn_off.tooltip"), ChatFormatting.RED));
+                    .append(button(Lang.tr("cmd.turn_off"), "/quietplease off " + id, Lang.tr("cmd.turn_off.tooltip"), ChatFormatting.RED));
         } else {
             line.append(Component.literal("  ").append(Lang.tr("cmd.is_off")).append(" ").withStyle(ChatFormatting.RED))
-                    .append(button(Lang.tr("cmd.turn_on"), "/musicbox on " + id, Lang.tr("cmd.turn_on.tooltip"), ChatFormatting.GREEN));
+                    .append(button(Lang.tr("cmd.turn_on"), "/quietplease on " + id, Lang.tr("cmd.turn_on.tooltip"), ChatFormatting.GREEN));
         }
         return line;
     }
@@ -239,7 +239,7 @@ public final class MusicBoxCommands {
         try {
             file = writeDump();
         } catch (IOException e) {
-            MusicBox.LOGGER.error("Liste yazilamadi", e);
+            QuietPlease.LOGGER.error("Liste yazilamadi", e);
             ctx.getSource().sendFailure(Lang.tr("cmd.dump_failed", String.valueOf(e.getMessage())));
             return 0;
         }
@@ -250,10 +250,10 @@ public final class MusicBoxCommands {
         return 1;
     }
 
-    /** Tum listeyi oyun klasorundeki musicbox-tracks.txt dosyasina yazar. */
+    /** Tum listeyi oyun klasorundeki quietplease-tracks.txt dosyasina yazar. */
     public static Path writeDump() throws IOException {
         Map<String, List<MusicTrack>> lib = MusicLibrary.scan();
-        StringBuilder sb = new StringBuilder("Music Box - music tracks found\n\n");
+        StringBuilder sb = new StringBuilder("Quiet Please - music tracks found\n\n");
         lib.forEach((mod, tracks) -> {
             sb.append("== ").append(MusicLibrary.modName(mod)).append(" (").append(mod).append(") - ")
                     .append(tracks.size()).append(" tracks ==\n");
@@ -266,7 +266,7 @@ public final class MusicBoxCommands {
             sb.append('\n');
         });
 
-        Path file = Minecraft.getInstance().gameDirectory.toPath().resolve("musicbox-tracks.txt");
+        Path file = Minecraft.getInstance().gameDirectory.toPath().resolve("quietplease-tracks.txt");
         Files.writeString(file, sb, StandardCharsets.UTF_8);
         return file;
     }

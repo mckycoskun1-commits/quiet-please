@@ -1,6 +1,6 @@
-package com.musicbox.music;
+package com.quietplease.music;
 
-import com.musicbox.Lang;
+import com.quietplease.Lang;
 import java.util.Set;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -23,7 +23,7 @@ public record MusicTrack(ResourceLocation id, Set<ResourceLocation> events, Kind
         /** Adi muzik gibi degil ama uzun/akisli calinan bir ses (bazi modlar muzigi boyle kaydeder). */
         OTHER("other");
 
-        /** Ceviri anahtarinin son kismi (musicbox.kind.music) ve dosya ciktisindaki ad. */
+        /** Ceviri anahtarinin son kismi (quietplease.kind.music) ve dosya ciktisindaki ad. */
         public final String id;
 
         Kind(String id) {

@@ -1,8 +1,8 @@
-package com.musicbox.mixin;
+package com.quietplease.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
-import com.musicbox.music.MusicSettings;
+import com.quietplease.music.MusicSettings;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.SoundEngine;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,7 +20,7 @@ public abstract class SoundEngineMixin {
     @ModifyExpressionValue(method = "play",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"))
-    private float musicbox$volumeOnPlay(float original, @Local(argsOnly = true) SoundInstance sound) {
+    private float quietplease$volumeOnPlay(float original, @Local(argsOnly = true) SoundInstance sound) {
         return original * MusicSettings.factor(sound);
     }
 
@@ -30,7 +30,7 @@ public abstract class SoundEngineMixin {
      */
     @Inject(method = "calculateVolume(Lnet/minecraft/client/resources/sounds/SoundInstance;)F",
             at = @At("RETURN"), cancellable = true)
-    private void musicbox$volumeWhilePlaying(SoundInstance sound, CallbackInfoReturnable<Float> cir) {
+    private void quietplease$volumeWhilePlaying(SoundInstance sound, CallbackInfoReturnable<Float> cir) {
         float factor = MusicSettings.factor(sound);
         if (factor != 1.0F) cir.setReturnValue(cir.getReturnValueF() * factor);
     }

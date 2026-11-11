@@ -1,6 +1,6 @@
-package com.musicbox;
+package com.quietplease;
 
-import com.musicbox.music.MusicSettings;
+import com.quietplease.music.MusicSettings;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 
 /**
- * Sadece gelistirme sirasinda (MUSICBOX_AUTODUMP ayarliyken) calisan kucuk bir oz-test.
+ * Sadece gelistirme sirasinda (QUIETPLEASE_AUTODUMP ayarliyken) calisan kucuk bir oz-test.
  * Ayarlari gecici olarak degistirir, kontrol eder ve geri alir; dosyaya hicbir sey kaydetmez.
  */
 final class DevSelfTest {
@@ -71,12 +71,12 @@ final class DevSelfTest {
             if (Math.abs(withSetting - base * 0.4F) > 0.001F) failures.add("ses: %40 bekleniyordu, " + base + " -> " + withSetting);
             if (disabled != 0F) failures.add("ses: kapali parca 0 olmali, gelen " + disabled);
             if (Math.abs(after - base) > 0.001F) failures.add("ses: sifirlaninca " + base + " beklenirdi, gelen " + after);
-            MusicBox.LOGGER.info("SELFTEST ses: taban={} %40={} kapali={} sifir={}", base, withSetting, disabled, after);
+            QuietPlease.LOGGER.info("SELFTEST ses: taban={} %40={} kapali={} sifir={}", base, withSetting, disabled, after);
         } catch (ReflectiveOperationException e) {
             failures.add("ses testi calistirilamadi: " + e);
         }
 
-        if (failures.isEmpty()) MusicBox.LOGGER.info("SELFTEST BASARILI ({} menu parcasi ile)", files.size());
-        else failures.forEach(f -> MusicBox.LOGGER.error("SELFTEST HATA: {}", f));
+        if (failures.isEmpty()) QuietPlease.LOGGER.info("SELFTEST BASARILI ({} menu parcasi ile)", files.size());
+        else failures.forEach(f -> QuietPlease.LOGGER.error("SELFTEST HATA: {}", f));
     }
 }

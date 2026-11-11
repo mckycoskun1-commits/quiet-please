@@ -1,9 +1,9 @@
-package com.musicbox.music;
+package com.quietplease.music;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.musicbox.MusicBox;
+import com.quietplease.QuietPlease;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -21,7 +21,7 @@ import net.neoforged.fml.loading.FMLPaths;
 /**
  * Her parca icin kullanici ayarlari: ses seviyesi (%0-100) ve acik/kapali.
  *
- * config/musicbox.json dosyasinda saklanir. Sadece varsayilandan farkli olan parcalar yazilir:
+ * config/quietplease.json dosyasinda saklanir. Sadece varsayilandan farkli olan parcalar yazilir:
  * <pre>
  * {
  *   "tracks": {
@@ -52,7 +52,7 @@ public final class MusicSettings {
     private MusicSettings() {}
 
     private static Path file() {
-        return FMLPaths.CONFIGDIR.get().resolve(MusicBox.MODID + ".json");
+        return FMLPaths.CONFIGDIR.get().resolve(QuietPlease.MODID + ".json");
     }
 
     // ---------------------------------------------------------------- okuma (oyun icinden cagrilir)
@@ -150,11 +150,11 @@ public final class MusicSettings {
                     put(id, new TrackSetting(Math.max(0, Math.min(100, volume)), enabled));
                 }
             } catch (Exception e) {
-                MusicBox.LOGGER.error("{} okunamadi, varsayilan ayarlar kullaniliyor", path, e);
+                QuietPlease.LOGGER.error("{} okunamadi, varsayilan ayarlar kullaniliyor", path, e);
             }
         }
         recount();
-        MusicBox.LOGGER.info("Music Box ayarlari yuklendi: {} parca ozel ayarli, {} kapali", SETTINGS.size(), disabledCount);
+        QuietPlease.LOGGER.info("Quiet Please ayarlari yuklendi: {} parca ozel ayarli, {} kapali", SETTINGS.size(), disabledCount);
     }
 
     public static void save() {
@@ -171,7 +171,7 @@ public final class MusicSettings {
             Files.createDirectories(file().getParent());
             Files.writeString(file(), GSON.toJson(root), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            MusicBox.LOGGER.error("{} yazilamadi", file(), e);
+            QuietPlease.LOGGER.error("{} yazilamadi", file(), e);
         }
     }
 }

@@ -1,12 +1,12 @@
-package com.musicbox.gui;
+package com.quietplease.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.musicbox.MusicBox;
-import com.musicbox.Lang;
-import com.musicbox.music.MusicLibrary;
-import com.musicbox.music.MusicPreview;
-import com.musicbox.music.MusicSettings;
-import com.musicbox.music.MusicTrack;
+import com.quietplease.QuietPlease;
+import com.quietplease.Lang;
+import com.quietplease.music.MusicLibrary;
+import com.quietplease.music.MusicPreview;
+import com.quietplease.music.MusicSettings;
+import com.quietplease.music.MusicTrack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -36,14 +36,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * Music Box paneli: tum muzikler modlara gore gruplanmis halde, her parca icin
+ * Quiet Please paneli: tum muzikler modlara gore gruplanmis halde, her parca icin
  * dinleme (onizleme), ses kaydiricisi ve acik/kapali dugmesi.
  */
-public class MusicBoxScreen extends Screen {
+public class QuietPleaseScreen extends Screen {
 
     // ------------------------------------------------------------------ gorunum ayarlari
 
-    private static final ResourceLocation LOGO = ResourceLocation.fromNamespaceAndPath(MusicBox.MODID, "textures/gui/logo.png");
+    private static final ResourceLocation LOGO = ResourceLocation.fromNamespaceAndPath(QuietPlease.MODID, "textures/gui/logo.png");
 
     /** Ikondaki sicak turuncu isiltiyla uyumlu vurgu rengi. */
     private static final int ACCENT = 0xFFE89A3C;
@@ -73,8 +73,8 @@ public class MusicBoxScreen extends Screen {
     private String modFilter = ""; // "" = tum modlar
     private boolean showOther = false;
 
-    public MusicBoxScreen(@Nullable Screen parent) {
-        super(Component.literal("Music Box"));
+    public QuietPleaseScreen(@Nullable Screen parent) {
+        super(Component.literal("Quiet Please"));
         this.parent = parent;
     }
 
@@ -176,7 +176,7 @@ public class MusicBoxScreen extends Screen {
 
     /** Logo + baslik + ozet satiri. */
     private void renderHeader(GuiGraphics g) {
-        Component title = Component.literal("Music Box").withStyle(ChatFormatting.BOLD);
+        Component title = Component.literal("Quiet Please").withStyle(ChatFormatting.BOLD);
         long off = allTracks.stream().filter(t -> MusicSettings.isDisabled(t.id())).count();
         long custom = allTracks.stream().filter(t -> !MusicSettings.isDisabled(t.id())
                 && MusicSettings.get(t.id()).volume() != MusicSettings.DEFAULT_VOLUME).count();

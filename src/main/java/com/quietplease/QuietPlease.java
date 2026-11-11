@@ -1,8 +1,8 @@
-package com.musicbox;
+package com.quietplease;
 
 import com.mojang.logging.LogUtils;
-import com.musicbox.gui.MusicBoxScreen;
-import com.musicbox.music.MusicSettings;
+import com.quietplease.gui.QuietPleaseScreen;
+import com.quietplease.music.MusicSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
@@ -24,44 +24,45 @@ import net.neoforged.neoforge.common.NeoForge;
 import org.slf4j.Logger;
 
 /**
- * Music Box ana sinifi.
+ * Quiet Please ana sinifi.
  *
  * Mod sadece istemci tarafinda (oyuncunun bilgisayarinda) calisir: dist = Dist.CLIENT
  * oldugu icin sunucuda bu sinif hic yuklenmez.
  */
-@Mod(value = MusicBox.MODID, dist = Dist.CLIENT)
-public class MusicBox {
-    public static final String MODID = "musicbox";
+@Mod(value = QuietPlease.MODID, dist = Dist.CLIENT)
+public class QuietPlease {
+    public static final String MODID = "quietplease";
     public static final Logger LOGGER = LogUtils.getLogger();
 
     private static boolean autoDumpDone = false;
 
-    public MusicBox(IEventBus modEventBus, ModContainer container) {
+    public QuietPlease(IEventBus modEventBus, ModContainer container) {
         MusicSettings.load();
         modEventBus.addListener(this::onClientSetup);
-        NeoForge.EVENT_BUS.addListener(MusicBoxCommands::register);
-        NeoForge.EVENT_BUS.addListener(MusicBox::onClientTick);
-        NeoForge.EVENT_BUS.addListener(MusicBox::onScreenInit);
-        NeoForge.EVENT_BUS.addListener(MusicBox::addOptionsButton);
+        NeoForge.EVENT_BUS.addListener(QuietPleaseCommands::register);
+        NeoForge.EVENT_BUS.addListener(QuietPlease::onClientTick);
+        NeoForge.EVENT_BUS.addListener(QuietPlease::onScreenInit);
+        NeoForge.EVENT_BUS.addListener(QuietPlease::addOptionsButton);
 
-        // Mods listesinde Music Box > "Config" dugmesi paneli acar
-        container.registerExtensionPoint(IConfigScreenFactory.class, (mod, parent) -> new MusicBoxScreen(parent));
+        // Mods listesinde Quiet Please > "Config" dugmesi paneli acar
+        container.registerExtensionPoint(IConfigScreenFactory.class, (mod, parent) -> new QuietPleaseScreen(parent));
     }
 
     private void onClientSetup(FMLClientSetupEvent event) {
-        LOGGER.info("Music Box yuklendi.");
+        LOGGER.info("Quiet Please yuklendi.");
     }
 
     /**
      * Ayarlar (Options) ve Muzik ve Sesler (Music & Sounds) ekranlarinin sag ust kosesine
-     * paneli acan bir "Music Box" dugmesi ekler.
+     * paneli acan bir "Quiet Please" dugmesi ekler.
      */
     private static void addOptionsButton(ScreenEvent.Init.Post event) {
         Screen screen = event.getScreen();
         if (!(screen instanceof OptionsScreen) && !(screen instanceof SoundOptionsScreen)) return;
-        int w = 90;
-        event.addListener(Button.builder(Lang.tr("options.button"),
-                        b -> Minecraft.getInstance().setScreen(new MusicBoxScreen(screen)))
+        Component label = Lang.tr("options.button");
+        int w = Math.max(90, Minecraft.getInstance().font.width(label) + 16);
+        event.addListener(Button.builder(label,
+                        b -> Minecraft.getInstance().setScreen(new QuietPleaseScreen(screen)))
                 .bounds(screen.width - w - 6, 6, w, 20)
                 .tooltip(Tooltip.create(Lang.tr("options.button.tooltip")))
                 .build());
@@ -73,28 +74,29 @@ public class MusicBox {
     }
 
     /**
-     * Gelistirme testi (MUSICBOX_AUTODUMP=gui): paneli acar, ornek ayarlar ve bir onizlemeyle
+     * Gelistirme testi (QUIETPLEASE_AUTODUMP=gui): paneli acar, ornek ayarlar ve bir onizlemeyle
      * ekran goruntusu alir, sonra ornek ayarlari geri alir.
      */
     private static int guiTestTicks = -1;
 
     private static void guiTestTick(Minecraft mc) {
         guiTestTicks++;
-        var tracks = com.musicbox.music.MusicLibrary.scan().get("minecraft");
+        var tracks = com.quietplease.music.MusicLibrary.scan().get("minecraft");
         switch (guiTestTicks) {
             case 100 -> {
                 MusicSettings.setEnabled(tracks.get(2).id(), false);
                 MusicSettings.setVolume(tracks.get(3).id(), 40);
-                mc.setScreen(new MusicBoxScreen(new TitleScreen()));
+                mc.setScreen(new QuietPleaseScreen(new TitleScreen()));
             }
-            case 105 -> com.musicbox.music.MusicPreview.play(tracks.get(1));
-            case 125 -> shot(mc, "musicbox-panel.png");
+            case 105 -> com.quietplease.music.MusicPreview.play(tracks.get(1));
+            case 125 -> shot(mc, "quietplease-panel.png");
             case 130 -> {
                 MusicSettings.reset(tracks.get(2).id());
                 MusicSettings.reset(tracks.get(3).id());
                 mc.setScreen(new OptionsScreen(new TitleScreen(), mc.options)); // panel kapanir ve kaydeder
-                guiTestTicks = -1;
             }
+            case 145 -> shot(mc, "quietplease-options.png");
+            case 150 -> guiTestTicks = -1;
             default -> { }
         }
     }
@@ -105,20 +107,20 @@ public class MusicBox {
     }
 
     /**
-     * Gelistirme/test kolayligi: MUSICBOX_AUTODUMP ortam degiskeni ayarliysa, ana menu ilk acildiginda
-     * (tum sesler yuklenmis olur) oz-testi calistirir ve muzik listesini musicbox-tracks.txt dosyasina yazar.
-     * MUSICBOX_AUTODUMP=gui ise Ayarlar ekranlarinin ekran goruntulerini de alir.
+     * Gelistirme/test kolayligi: QUIETPLEASE_AUTODUMP ortam degiskeni ayarliysa, ana menu ilk acildiginda
+     * (tum sesler yuklenmis olur) oz-testi calistirir ve muzik listesini quietplease-tracks.txt dosyasina yazar.
+     * QUIETPLEASE_AUTODUMP=gui ise Ayarlar ekranlarinin ekran goruntulerini de alir.
      */
     private static void onScreenInit(ScreenEvent.Init.Post event) {
         if (FMLEnvironment.production) return; // gercek oyunda (launcher'dan acilinca) hic calismaz
-        String mode = System.getenv("MUSICBOX_AUTODUMP");
+        String mode = System.getenv("QUIETPLEASE_AUTODUMP");
         if (autoDumpDone || !(event.getScreen() instanceof TitleScreen) || mode == null) return;
         autoDumpDone = true;
         try {
             DevSelfTest.run();
-            LOGGER.info("MUSICBOX_AUTODUMP: liste yazildi -> {}", MusicBoxCommands.writeDump().toAbsolutePath());
+            LOGGER.info("QUIETPLEASE_AUTODUMP: liste yazildi -> {}", QuietPleaseCommands.writeDump().toAbsolutePath());
         } catch (Exception e) {
-            LOGGER.error("MUSICBOX_AUTODUMP basarisiz", e);
+            LOGGER.error("QUIETPLEASE_AUTODUMP basarisiz", e);
         }
         if (mode.equals("gui")) guiTestTicks = 0;
     }

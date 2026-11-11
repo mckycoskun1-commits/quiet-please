@@ -1,4 +1,4 @@
-package com.musicbox.music;
+package com.quietplease.music;
 
 import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;

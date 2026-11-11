@@ -39,7 +39,7 @@ displayTest="IGNORE_ALL_VERSION"
 #displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
 
 # A file name (in the root of the mod JAR) containing a logo for display
-logoFile="musicbox.png"
+logoFile="quietplease.png"
 
 # A text field displayed in the mod UI
 credits="Built with NeoForge. Disc and note block icons in the panel are Minecraft's own items."
@@ -51,12 +51,12 @@ authors="mckyc"
 description='''
 Take control of the music in your modpack.
 
-Music Box lists every music track the game knows about, grouped by the mod it comes from. Turn off the tracks you don't like, lower the ones that are too loud, or preview any track before deciding.
+Quiet Please lists every music track the game knows about, grouped by the mod it comes from. Turn off the tracks you don't like, lower the ones that are too loud, or preview any track before deciding.
 
 - Per-track volume (0-100%) and on/off switch
 - Disable all music of a mod with one click
 - Search, mod filter and in-panel preview
-- Open it from Options or Music & Sounds (top-right "♪ Music Box" button)
+- Open it from Options or Music & Sounds (top-right "♪ Quiet Please" button)
 - Client-side only: works on any server, no server install needed
 '''
 

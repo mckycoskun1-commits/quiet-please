@@ -19,9 +19,9 @@ group = mod_group_id
 
 // OneDrive, eşitlediği dosyaları özel bir türe (reparse point) çeviriyor ve Gradle bu dosyaları
 // okuyamıyor. Proje bir OneDrive klasöründeyse derleme çıktıları ve test oyununun klasörü
-// kullanıcı klasöründeki .musicbox-dev altına alınır. Bitmiş jar ayrıca dist/ klasörüne kopyalanır.
+// kullanıcı klasöründeki .quietplease-dev altına alınır. Bitmiş jar ayrıca dist/ klasörüne kopyalanır.
 def onOneDrive = projectDir.absolutePath.toLowerCase().contains('onedrive')
-def devRoot = new File(System.getProperty('user.home'), '.musicbox-dev')
+def devRoot = new File(System.getProperty('user.home'), '.quietplease-dev')
 if (onOneDrive) {
     layout.buildDirectory = new File(devRoot, 'build')
 }
