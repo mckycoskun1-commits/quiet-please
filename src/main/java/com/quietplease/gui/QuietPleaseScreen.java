@@ -77,6 +77,9 @@ public class QuietPleaseScreen extends Screen {
     private List<MusicTrack> nowPlaying = List.of();
     private int nowPlayingIndex = 0;
     private TrackList list;
+    @Nullable
+    private CycleButton<String> modButton;
+    private List<String> modValues = List.of();
 
     // Filtreler (ekran yeniden boyutlaninca korunsun diye alanlarda tutuluyor)
     private String query = "";
@@ -118,9 +121,11 @@ public class QuietPleaseScreen extends Screen {
         mods.add("");
         mods.addAll(library.keySet());
         if (!mods.contains(modFilter)) modFilter = "";
-        addRenderableWidget(CycleButton.<String>builder(m -> m.isEmpty() ? Lang.tr("screen.mod.all") : Component.literal(MusicLibrary.modName(m)))
+        modValues = mods;
+        modButton = addRenderableWidget(CycleButton.<String>builder(m -> m.isEmpty() ? Lang.tr("screen.mod.all") : Component.literal(MusicLibrary.modName(m)))
                 .withValues(mods)
                 .withInitialValue(modFilter)
+                .withTooltip(v -> Tooltip.create(Lang.tr("screen.mod.tooltip")))
                 .create(x + searchW + 4, y, modW, 20, Lang.tr("screen.mod"), (b, value) -> {
                     modFilter = value;
                     rebuildList();
@@ -253,6 +258,16 @@ public class QuietPleaseScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // Mod filtresi: sol tik bir sonraki moda gecer (Minecraft'in kendi davranisi), sag tik bir oncekine doner.
+        if (button == 1 && modButton != null && modButton.isMouseOver(mouseX, mouseY) && !modValues.isEmpty()) {
+            int i = modValues.indexOf(modButton.getValue());
+            String previous = modValues.get(Math.floorMod(i - 1, modValues.size()));
+            modButton.setValue(previous); // setValue geri cagrimi tetiklemez, filtreyi kendimiz uyguluyoruz
+            modFilter = previous;
+            rebuildList();
+            modButton.playDownSound(minecraft.getSoundManager());
+            return true;
+        }
         if (button == 0 && !nowPlaying.isEmpty() && overNowPlaying(mouseX, mouseY)) {
             // Tiklaninca calan parcayi listede goster; birden fazla parca caliyorsa her tiklamada siradakine gec.
             MusicTrack shown = nowPlaying.get(Math.floorMod(nowPlayingIndex, nowPlaying.size()));

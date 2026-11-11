@@ -13,7 +13,7 @@
 | Kategoriler | **Utility**, **Management** |
 | Etiket önerileri | music, sound, volume, audio, modpack, client-side |
 | İkon | `art/quietplease-icon.png` (1024 px) |
-| Galeri | `docs/screenshots/panel-en.png`, `docs/screenshots/options-button.png` |
+| Galeri | `docs/screenshots/panel-en.png`, `docs/screenshots/options-button.png`, `docs/screenshots/pause-menu.png` |
 | Lisans | Şu an **All Rights Reserved** (`gradle.properties` → `mod_license`) |
 
 ## Kısa açıklama (summary, ~100 karakter)
@@ -36,12 +36,13 @@ Big modpacks bring a lot of music – and not all of it fits together.
 - 🔉 **Per-track volume** from 0 to 100 %
 - 📦 **Disable all music of a mod** with one click
 - ▶ **Preview** any track inside the panel (background music pauses while you listen)
+- 🟢 **See what is playing right now** – in the panel and right under the button in the ESC menu, so you can find a song even if you don't know its name
 - 🔍 Search, mod filter, and an optional "ambient" view for long ambience loops
 - 💿 Works for vanilla music, music discs and modded boss/biome music
 - 🌍 English and Turkish
 
 ## How to open it
-**Options → ♪ Quiet Please** (top-right corner), or **Options → Music & Sounds → ♪ Quiet Please**,
+**Esc → ♪ Quiet Please** (top-right corner), **Options → ♪ Quiet Please**, or **Options → Music & Sounds → ♪ Quiet Please**,
 or **Mods → Quiet Please → Config**. Power users can also use `/quietplease` in chat.
 
 ## Good to know

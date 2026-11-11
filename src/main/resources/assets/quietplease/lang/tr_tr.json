@@ -18,6 +18,7 @@
   "quietplease.screen.search": "Parça ara...",
   "quietplease.screen.mod": "Mod",
   "quietplease.screen.mod.all": "Tümü",
+  "quietplease.screen.mod.tooltip": "Sol tık: sonraki mod · Sağ tık: önceki mod",
   "quietplease.screen.ambient": "Ortam",
   "quietplease.screen.ambient.show": "Göster",
   "quietplease.screen.ambient.hide": "Gizle",

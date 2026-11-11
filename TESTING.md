@@ -11,6 +11,7 @@ Proje klasöründe:
 .\gradlew.bat runClient
 ```
 
+1. [ ] Dünyadayken **ESC** → sağ üstte **♪ Quiet Please** düğmesi, altında çalan şarkının adı var.
 1. [ ] Ana menü → **Options** → sağ üstte **♪ Quiet Please** düğmesi var ve paneli açıyor.
 2. [ ] **Options → Music & Sounds** ekranında da aynı düğme var.
 3. [ ] **Mods → Quiet Please → Config** paneli açıyor.
@@ -22,7 +23,7 @@ Proje klasöründe:
 5. [ ] **Ses kaydırıcısını fareyle sürüklemek** çalışıyor ve önizleme çalarken ses anında değişiyor.
 6. [ ] Bir parçayı **Kapalı** yap → adı üstü çizili, ikonu kararık görünüyor.
 7. [ ] Bir mod başlığında **Hepsini kapat / Hepsini aç** çalışıyor.
-8. [ ] **Arama kutusu** ve **Mod** filtresi listeyi daraltıyor; **Ortam: Göster** Nether ortam seslerini ekliyor.
+8. [ ] **Arama kutusu** ve **Mod** filtresi listeyi daraltıyor; Mod düğmesinde sağ tık bir önceki moda dönüyor; **Ortam: Göster** Nether ortam seslerini ekliyor.
 9. [ ] Paneli kapatıp oyunu yeniden açınca ayarlar duruyor.
 10. [ ] Bir dünyaya gir, sohbete `/quietplease` yaz → mod adına tıklayınca liste geliyor; **[−] [+] [Kapat] [Aç]** düğmeleri çalışıyor.
 11. [ ] Creative'de bir **Jukebox** koy, *Music Disc - cat* tak:

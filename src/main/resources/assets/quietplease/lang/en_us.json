@@ -18,6 +18,7 @@
   "quietplease.screen.search": "Search tracks...",
   "quietplease.screen.mod": "Mod",
   "quietplease.screen.mod.all": "All",
+  "quietplease.screen.mod.tooltip": "Left click: next mod · Right click: previous mod",
   "quietplease.screen.ambient": "Ambient",
   "quietplease.screen.ambient.show": "Show",
   "quietplease.screen.ambient.hide": "Hide",
