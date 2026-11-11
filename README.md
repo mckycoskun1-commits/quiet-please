@@ -35,7 +35,7 @@ Test oyununa başka mod eklemek için jar'ları `%USERPROFILE%\.quietplease-dev\
 - `src/main/resources/assets/quietplease/lang/` çeviriler (İngilizce ve Türkçe)
 - `src/main/templates/META-INF/neoforge.mods.toml` mod bilgileri (ad, yazar, açıklama)
 - `gradle.properties` Minecraft/NeoForge sürümleri, mod kimliği (`quietplease`), sürüm ve lisans
-- `art/` ikonun büyük hali ve Windows klasör ikonu
+- `art/quietplease-icon.png` ikonun büyük hali (1024 px, Modrinth ikonu) · `art/musicbox.ico` Windows klasör ikonu
 - `docs/` mod sayfası taslağı ve ekran görüntüleri
 - `TESTING.md` elle test listesi
 

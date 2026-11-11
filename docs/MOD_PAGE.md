@@ -12,7 +12,7 @@
 | Ortam (environment) | Client: **required** · Server: **unsupported** (sadece istemci) |
 | Kategoriler | **Utility**, **Management** |
 | Etiket önerileri | music, sound, volume, audio, modpack, client-side |
-| İkon | `art/quietplease-icon-original.png` (1024 px) |
+| İkon | `art/quietplease-icon.png` (1024 px) |
 | Galeri | `docs/screenshots/panel-en.png`, `docs/screenshots/options-button.png` |
 | Lisans | Şu an **All Rights Reserved** (`gradle.properties` → `mod_license`) |
 
