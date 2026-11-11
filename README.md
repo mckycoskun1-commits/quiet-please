@@ -4,7 +4,8 @@ Minecraft 1.21.1 (NeoForge) için istemci tarafı bir mod. Mod paketlerindeki m�
 yönetmeyi amaçlar: her müziğin sesini ayrı ayrı kısmak ya da hiç çalınmamasını sağlamak.
 
 > İlk adı "Music Box" idi; Modrinth'te aynı adlı iki mod olduğu için **Quiet Please** olarak değiştirildi.
-> Masaüstündeki klasör adları (`MusicBox`, `musicbox`) eski adla kaldı. Klasör ikonu `art/quietplease.ico` dosyasına bağlı.
+> Proje `C:\Users\mckyc\QuietPlease` klasöründe (OneDrive dışında); masaüstünde **Quiet Please** kısayolu var.
+> Klasör ve kısayol ikonu `art/quietplease.ico` dosyasına bağlı.
 
 ## Komutlar
 
@@ -16,16 +17,15 @@ Proje klasöründe (PowerShell):
 | Modu yüklenmiş halde Minecraft'ı açar (test için) | `.\gradlew.bat runClient` |
 | Derleme çıktılarını siler | `.\gradlew.bat clean` |
 
+- Derleme çıktıları `build/`, test oyununun klasörü (modlar, ayarlar, loglar, ekran görüntüleri) `run/` içinde.
+- Bitmiş jar ayrıca `dist/` klasörüne kopyalanır.
+- Test oyununa başka mod eklemek için jar'ları `run/mods` klasörüne koy.
+
 ### OneDrive notu
 
-Proje OneDrive'daki Masaüstünde. OneDrive eşitlediği dosyaları Gradle'ın okuyamadığı bir türe çevirdiği için,
-proje bir OneDrive klasöründeyken (bkz. `build.gradle` başı):
-
-- derleme çıktıları → `%USERPROFILE%\.quietplease-dev\build`
-- test oyununun klasörü (modlar, ayarlar, loglar, ekran görüntüleri) → `%USERPROFILE%\.quietplease-dev\run`
-- bitmiş jar ayrıca → proje içindeki `dist/`
-
-Test oyununa başka mod eklemek için jar'ları `%USERPROFILE%\.quietplease-dev\run\mods` klasörüne koy.
+Projeyi OneDrive'daki bir klasöre koyma: OneDrive eşitlediği dosyaları Gradle'ın okuyamadığı bir türe çeviriyor.
+Yine de oraya konursa `build.gradle` bunu fark edip derleme çıktılarını ve test oyununu
+`%USERPROFILE%\.quietplease-dev` altına alır.
 
 ## Klasör yapısı
 
