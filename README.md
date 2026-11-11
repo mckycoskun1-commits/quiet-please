@@ -4,7 +4,7 @@ Minecraft 1.21.1 (NeoForge) için istemci tarafı bir mod. Mod paketlerindeki m�
 yönetmeyi amaçlar: her müziğin sesini ayrı ayrı kısmak ya da hiç çalınmamasını sağlamak.
 
 > İlk adı "Music Box" idi; Modrinth'te aynı adlı iki mod olduğu için **Quiet Please** olarak değiştirildi.
-> Klasör adları (`MusicBox`, `musicbox`) ve `art/musicbox.ico` eski adla kaldı (klasör ikonu bu yola bağlı).
+> Masaüstündeki klasör adları (`MusicBox`, `musicbox`) eski adla kaldı. Klasör ikonu `art/quietplease.ico` dosyasına bağlı.
 
 ## Komutlar
 
@@ -35,7 +35,7 @@ Test oyununa başka mod eklemek için jar'ları `%USERPROFILE%\.quietplease-dev\
 - `src/main/resources/assets/quietplease/lang/` çeviriler (İngilizce ve Türkçe)
 - `src/main/templates/META-INF/neoforge.mods.toml` mod bilgileri (ad, yazar, açıklama)
 - `gradle.properties` Minecraft/NeoForge sürümleri, mod kimliği (`quietplease`), sürüm ve lisans
-- `art/quietplease-icon.png` ikonun büyük hali (1024 px, Modrinth ikonu) · `art/musicbox.ico` Windows klasör ikonu
+- `art/quietplease-icon.png` ikonun büyük hali (1024 px, Modrinth ikonu) · `art/quietplease.ico` Windows klasör ikonu
 - `docs/` mod sayfası taslağı ve ekran görüntüleri
 - `TESTING.md` elle test listesi
 
