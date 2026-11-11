@@ -5,7 +5,7 @@ yönetmeyi amaçlar: her müziğin sesini ayrı ayrı kısmak ya da hiç çalın
 
 > İlk adı "Music Box" idi; Modrinth'te aynı adlı iki mod olduğu için **Quiet Please** olarak değiştirildi.
 > Proje `C:\Users\mckyc\QuietPlease` klasöründe (OneDrive dışında); masaüstünde **Quiet Please** kısayolu var.
-> Klasör ve kısayol ikonu `art/quietplease.ico` dosyasına bağlı.
+> Klasör ve kısayol ikonu `art/quietplease-folder.ico` dosyasına bağlı.
 
 ## Komutlar
 
@@ -35,7 +35,7 @@ Yine de oraya konursa `build.gradle` bunu fark edip derleme çıktılarını ve 
 - `src/main/resources/assets/quietplease/lang/` çeviriler (İngilizce ve Türkçe)
 - `src/main/templates/META-INF/neoforge.mods.toml` mod bilgileri (ad, yazar, açıklama)
 - `gradle.properties` Minecraft/NeoForge sürümleri, mod kimliği (`quietplease`), sürüm ve lisans
-- `art/quietplease-icon.png` ikonun büyük hali (1024 px, Modrinth ikonu) · `art/quietplease.ico` Windows klasör ikonu
+- `art/quietplease-icon.png` ikonun büyük hali (1024 px, Modrinth ikonu) · `art/quietplease-folder.ico` Windows klasör ikonu
 - `docs/` mod sayfası taslağı ve ekran görüntüleri
 - `TESTING.md` elle test listesi
 
