@@ -460,10 +460,16 @@ public class MusicBoxScreen extends Screen {
     private static ItemStack iconFor(MusicTrack track) {
         return switch (track.kind()) {
             case DISC -> {
-                // "minecraft:records/cat" -> "minecraft:music_disc_cat" (cogu mod da ayni adlandirmayi kullanir)
-                ResourceLocation item = ResourceLocation.tryBuild(track.namespace(), "music_disc_" + track.shortName());
-                yield item == null ? new ItemStack(Items.MUSIC_DISC_13)
-                        : BuiltInRegistries.ITEM.getOptional(item).map(ItemStack::new).orElse(new ItemStack(Items.MUSIC_DISC_13));
+                // Plak esyasini bulmaya calis: "minecraft:records/cat" -> "minecraft:music_disc_cat";
+                // bircok mod da esyaya ses olayiyla ayni adi verir ("cataclysm:ignis_music_disc").
+                List<String> candidates = new ArrayList<>();
+                candidates.add("music_disc_" + track.shortName());
+                track.events().forEach(e -> candidates.add(e.getPath().replace('.', '_')));
+                for (String path : candidates) {
+                    ResourceLocation item = ResourceLocation.tryBuild(track.namespace(), path);
+                    if (item != null && BuiltInRegistries.ITEM.containsKey(item)) yield new ItemStack(BuiltInRegistries.ITEM.get(item));
+                }
+                yield new ItemStack(Items.MUSIC_DISC_13);
             }
             case MUSIC -> new ItemStack(Items.NOTE_BLOCK);
             case OTHER -> new ItemStack(Items.ECHO_SHARD);

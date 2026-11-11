@@ -74,7 +74,8 @@ public final class MusicLibrary {
         boolean music = file.getPath().startsWith("music/");
         for (ResourceLocation e : events) {
             String p = e.getPath().toLowerCase(Locale.ROOT);
-            if (p.startsWith("music_disc") || p.contains("record")) disc = true;
+            // Plak olaylari: "music_disc.cat" (vanilla), "ignis_music_disc" (Cataclysm), "..._record" vb.
+            if (p.startsWith("music_disc") || p.endsWith("_disc") || p.endsWith(".disc") || p.contains("record")) disc = true;
             else if (p.contains("music") || p.contains("soundtrack") || p.contains("song")) music = true;
         }
         if (disc) return MusicTrack.Kind.DISC;

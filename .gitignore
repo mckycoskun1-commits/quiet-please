@@ -42,3 +42,6 @@ repo/
 ### Windows ###
 desktop.ini
 Thumbs.db
+
+### Bitmis jar kopyalari ###
+dist/

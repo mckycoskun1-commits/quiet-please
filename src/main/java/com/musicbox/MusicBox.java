@@ -16,6 +16,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
@@ -109,6 +110,7 @@ public class MusicBox {
      * MUSICBOX_AUTODUMP=gui ise Ayarlar ekranlarinin ekran goruntulerini de alir.
      */
     private static void onScreenInit(ScreenEvent.Init.Post event) {
+        if (FMLEnvironment.production) return; // gercek oyunda (launcher'dan acilinca) hic calismaz
         String mode = System.getenv("MUSICBOX_AUTODUMP");
         if (autoDumpDone || !(event.getScreen() instanceof TitleScreen) || mode == null) return;
         autoDumpDone = true;

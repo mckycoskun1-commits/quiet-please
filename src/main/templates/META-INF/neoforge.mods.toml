@@ -42,15 +42,22 @@ displayTest="IGNORE_ALL_VERSION"
 logoFile="musicbox.png"
 
 # A text field displayed in the mod UI
-#credits="" #optional
+credits="Built with NeoForge. Disc and note block icons in the panel are Minecraft's own items."
 
 # The authors of the mod, displayed in the mod UI (optional)
-#authors=""
+authors="mckyc"
 
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Control every music track in your modpack: lower the volume of single tracks or turn them off completely.
-Modpaketindeki her muzigi ayri ayri yonet: tek tek sesini kis ya da tamamen kapat.
+Take control of the music in your modpack.
+
+Music Box lists every music track the game knows about, grouped by the mod it comes from. Turn off the tracks you don't like, lower the ones that are too loud, or preview any track before deciding.
+
+- Per-track volume (0-100%) and on/off switch
+- Disable all music of a mod with one click
+- Search, mod filter and in-panel preview
+- Open it from Options or Music & Sounds (top-right "♪ Music Box" button)
+- Client-side only: works on any server, no server install needed
 '''
 
 # The [[mixins]] block allows you to declare your mixin config to FML so that it gets loaded.
