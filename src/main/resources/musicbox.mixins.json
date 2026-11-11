@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.musicbox.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "SoundEngineMixin",
+    "WeighedSoundEventsMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
