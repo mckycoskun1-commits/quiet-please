@@ -193,6 +193,8 @@ publishing {
 // Bitmiş jar'ı proje içindeki dist/ klasörüne kopyala (kolay bulunsun diye).
 // Gradle'ın Copy görevi yerine düz dosya kopyası: OneDrive'daki hedef klasörü takip etmeye çalışmaz.
 tasks.named('jar') {
+    def licenseName = "LICENSE_${mod_id}"
+    from('LICENSE') { rename { licenseName } } // MIT lisans metni jar'in icinde de olsun
     def distDir = file('dist')
     doLast {
         distDir.mkdirs()

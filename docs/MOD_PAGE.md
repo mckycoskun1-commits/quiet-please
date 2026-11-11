@@ -14,7 +14,7 @@
 | Etiket önerileri | music, sound, volume, audio, modpack, client-side |
 | İkon | `art/quietplease-icon.png` (1024 px) |
 | Galeri | `docs/screenshots/panel-en.png`, `docs/screenshots/options-button.png`, `docs/screenshots/pause-menu.png` |
-| Lisans | Şu an **All Rights Reserved** (`gradle.properties` → `mod_license`) |
+| Lisans | **MIT** (`LICENSE` dosyası) |
 
 ## Kısa açıklama (summary, ~100 karakter)
 
@@ -28,7 +28,6 @@
 Big modpacks bring a lot of music – and not all of it fits together.
 **Quiet Please** lets you decide, track by track, what you actually want to hear.
 
-![Panel](panel-en.png)
 
 ## Features
 - 🎵 **Every music track in one list**, grouped by the mod it comes from
