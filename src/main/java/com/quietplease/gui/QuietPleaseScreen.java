@@ -7,6 +7,7 @@ import com.quietplease.music.MusicLibrary;
 import com.quietplease.music.MusicPreview;
 import com.quietplease.music.MusicSettings;
 import com.quietplease.music.MusicTrack;
+import com.quietplease.music.NowPlaying;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -56,8 +57,13 @@ public class QuietPleaseScreen extends Screen {
     private static final int TEXT = 0xFFF2E6C9;
     private static final int MUTED = 0xFF9A8C78;
 
+    private static final int PLAYING = 0xFF7EE08A;      // oyunda su an calan parca (yesil)
+    private static final int PLAYING_BG = 0x2470D080;
+
     private static final int ROW_HEIGHT = 24;
-    private static final int TOP = 58;
+    private static final int NOW_PLAYING_Y = 56;
+    private static final int NOW_PLAYING_H = 16;
+    private static final int TOP = 78;
     private static final int BOTTOM_MARGIN = 36;
     private static final int MAX_ROW_WIDTH = 420;
 
@@ -66,6 +72,10 @@ public class QuietPleaseScreen extends Screen {
 
     private Map<String, List<MusicTrack>> library = Map.of();
     private List<MusicTrack> allTracks = List.of();
+    private Map<ResourceLocation, MusicTrack> tracksById = Map.of();
+    /** Oyunda su an calan parcalar (her tick'te guncellenir). */
+    private List<MusicTrack> nowPlaying = List.of();
+    private int nowPlayingIndex = 0;
     private TrackList list;
 
     // Filtreler (ekran yeniden boyutlaninca korunsun diye alanlarda tutuluyor)
@@ -84,6 +94,8 @@ public class QuietPleaseScreen extends Screen {
     protected void init() {
         library = MusicLibrary.scan();
         allTracks = library.values().stream().flatMap(List::stream).toList();
+        tracksById = allTracks.stream().collect(Collectors.toMap(MusicTrack::id, t -> t, (a, b) -> a));
+        nowPlaying = NowPlaying.find(tracksById);
 
         // Ust satir: arama | mod filtresi | ortam sesleri
         int rowW = Math.min(width - 20, MAX_ROW_WIDTH);
@@ -169,6 +181,7 @@ public class QuietPleaseScreen extends Screen {
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.render(g, mouseX, mouseY, partialTick);
         renderHeader(g);
+        renderNowPlaying(g, mouseX, mouseY);
         if (list.children().isEmpty()) {
             g.drawCenteredString(font, Lang.tr("screen.no_results"), width / 2, TOP + 24, MUTED);
         }
@@ -199,15 +212,75 @@ public class QuietPleaseScreen extends Screen {
         g.drawString(font, summary, x + logo + 6, y + 13, MUTED);
     }
 
+    // ------------------------------------------------------------------ "su an calan" cubugu
+
+    private int barLeft() {
+        return list.getRowLeft() - 6;
+    }
+
+    private int barRight() {
+        return list.getScrollbarPosition() + 10;
+    }
+
+    private boolean overNowPlaying(double mouseX, double mouseY) {
+        return mouseX >= barLeft() && mouseX < barRight()
+                && mouseY >= NOW_PLAYING_Y && mouseY < NOW_PLAYING_Y + NOW_PLAYING_H;
+    }
+
+    /** Listenin ustunde: oyunda su an hangi parca caliyor (oyuncu muzigin adini bilmese de bulabilsin diye). */
+    private void renderNowPlaying(GuiGraphics g, int mouseX, int mouseY) {
+        int left = barLeft();
+        int right = barRight();
+        int top = NOW_PLAYING_Y;
+        boolean hover = !nowPlaying.isEmpty() && overNowPlaying(mouseX, mouseY);
+        g.fill(left, top, right, top + NOW_PLAYING_H, hover ? 0x5070D080 : PLAYING_BG);
+        g.fill(left, top, left + 2, top + NOW_PLAYING_H, nowPlaying.isEmpty() ? MUTED : PLAYING);
+        int textY = top + (NOW_PLAYING_H - 8) / 2;
+
+        if (nowPlaying.isEmpty()) {
+            g.drawString(font, Lang.tr("screen.now_playing.none"), left + 8, textY, MUTED);
+            return;
+        }
+        MusicTrack shown = nowPlaying.get(Math.floorMod(nowPlayingIndex, nowPlaying.size()));
+        drawEqualizer(g, left + 7, top + NOW_PLAYING_H - 4, PLAYING);
+        MutableComponent line = Lang.tr("screen.now_playing").append(" ")
+                .append(Component.literal(shown.shortName()).withStyle(s -> s.withColor(PLAYING & 0xFFFFFF)))
+                .append(Component.literal("  " + MusicLibrary.modName(shown.namespace())).withStyle(ChatFormatting.GRAY));
+        if (nowPlaying.size() > 1) line.append(Component.literal("  ")).append(Lang.tr("screen.now_playing.more", nowPlaying.size() - 1).withStyle(ChatFormatting.DARK_GRAY));
+        g.drawString(font, line, left + 20, textY, TEXT);
+        if (hover) setTooltipForNextRenderPass(Lang.tr("screen.now_playing.tooltip"));
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0 && !nowPlaying.isEmpty() && overNowPlaying(mouseX, mouseY)) {
+            // Tiklaninca calan parcayi listede goster; birden fazla parca caliyorsa her tiklamada siradakine gec.
+            MusicTrack shown = nowPlaying.get(Math.floorMod(nowPlayingIndex, nowPlaying.size()));
+            nowPlayingIndex++;
+            query = shown.shortName();
+            modFilter = "";
+            if (shown.kind() == MusicTrack.Kind.OTHER) showOther = true;
+            minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
+                    net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            rebuildWidgets();
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
     @Override
     public void tick() {
         MusicPreview.isActive(); // biten onizlemeyi temizler, boylece arka plan muzigi geri gelebilir
+        nowPlaying = NowPlaying.find(tracksById);
     }
 
-    /** Panel acikken oyun duraklamasin; duraklarsa sesler de durur ve onizleme calismaz. */
+    /**
+     * Panel acikken tek oyunculu oyun duraklar. Onizleme yine de calar: Minecraft duraklarken sadece o an
+     * calan sesleri bekletir, yeni baslatilan sesler calar (bkz. MusicPreview).
+     */
     @Override
     public boolean isPauseScreen() {
-        return false;
+        return true;
     }
 
     @Override
@@ -262,6 +335,15 @@ public class QuietPleaseScreen extends Screen {
         @Override
         protected void renderListSeparators(GuiGraphics g) {
             // cerceve zaten ayiriyor
+        }
+    }
+
+    /** Calan parcanin yaninda ziplayan uc kucuk cubuk. */
+    private static void drawEqualizer(GuiGraphics g, int x, int baseY, int color) {
+        double t = System.currentTimeMillis() / 140.0;
+        for (int i = 0; i < 3; i++) {
+            int h = 2 + (int) Math.round((Math.sin(t + i * 1.9) * 0.5 + 0.5) * 7);
+            g.fill(x + i * 3, baseY - h, x + i * 3 + 2, baseY, color);
         }
     }
 
@@ -362,12 +444,16 @@ public class QuietPleaseScreen extends Screen {
         public void render(GuiGraphics g, int index, int top, int left, int width, int height,
                            int mouseX, int mouseY, boolean hovering, float partialTick) {
             boolean enabled = !MusicSettings.isDisabled(track.id());
-            boolean playing = MusicPreview.isPlaying(track.id());
+            boolean playing = MusicPreview.isPlaying(track.id());       // panelde onizleniyor
+            boolean inGame = !playing && nowPlaying.contains(track);    // oyunda su an caliyor
 
             // satir zemini
             if (playing) {
                 g.fill(left - 3, top - 1, left + width + 3, top + height + 1, 0x30E89A3C);
                 g.fill(left - 3, top - 1, left - 1, top + height + 1, ACCENT);
+            } else if (inGame) {
+                g.fill(left - 3, top - 1, left + width + 3, top + height + 1, PLAYING_BG);
+                g.fill(left - 3, top - 1, left - 1, top + height + 1, PLAYING);
             } else if (hovering) {
                 g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_HOVER);
             } else if (alternate) {
@@ -401,16 +487,23 @@ public class QuietPleaseScreen extends Screen {
             // ad
             int nameX = iconX + 20;
             int textY = top + (height - 8) / 2;
-            int eqW = playing ? 12 : 0;
-            int nameMaxW = slider.getX() - 8 - nameX - eqW;
+            Component playingTag = Lang.tr("screen.playing_tag");
+            int extraW = playing ? 12 : inGame ? 14 + font.width(playingTag) : 0;
+            int nameMaxW = slider.getX() - 8 - nameX - extraW;
             String name = track.shortName();
             if (font.width(name) > nameMaxW) name = font.plainSubstrByWidth(name, nameMaxW - font.width("…")) + "…";
             if (enabled) {
-                g.drawString(font, name, nameX, textY, playing ? GOLD : TEXT);
+                g.drawString(font, name, nameX, textY, playing ? GOLD : inGame ? PLAYING : TEXT);
             } else {
                 g.drawString(font, Component.literal(name).withStyle(ChatFormatting.STRIKETHROUGH), nameX, textY, 0xFF6A6058);
             }
-            if (playing) drawEqualizer(g, nameX + font.width(name) + 5, top + height - 5);
+            int afterName = nameX + font.width(name) + 5;
+            if (playing) {
+                drawEqualizer(g, afterName, top + height - 5, ACCENT);
+            } else if (inGame) {
+                drawEqualizer(g, afterName, top + height - 5, PLAYING);
+                g.drawString(font, playingTag, afterName + 12, textY, PLAYING);
+            }
 
             play.render(g, mouseX, mouseY, partialTick);
             slider.render(g, mouseX, mouseY, partialTick);
@@ -419,15 +512,6 @@ public class QuietPleaseScreen extends Screen {
             // ad/ikon uzerine gelince ayrintilar
             if (hovering && mouseX >= iconX && mouseX < slider.getX() - 4) {
                 setTooltipForNextRenderPass(details());
-            }
-        }
-
-        /** Calan parcanin yaninda zipplayan uc kucuk cubuk. */
-        private void drawEqualizer(GuiGraphics g, int x, int baseY) {
-            double t = System.currentTimeMillis() / 140.0;
-            for (int i = 0; i < 3; i++) {
-                int h = 2 + (int) Math.round((Math.sin(t + i * 1.9) * 0.5 + 0.5) * 7);
-                g.fill(x + i * 3, baseY - h, x + i * 3 + 2, baseY, ACCENT);
             }
         }
 

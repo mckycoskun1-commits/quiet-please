@@ -88,15 +88,26 @@ public class QuietPlease {
                 MusicSettings.setVolume(tracks.get(3).id(), 40);
                 mc.setScreen(new QuietPleaseScreen(new TitleScreen()));
             }
-            case 105 -> com.quietplease.music.MusicPreview.play(tracks.get(1));
-            case 125 -> shot(mc, "quietplease-panel.png");
-            case 130 -> {
+            case 118 -> {
+                LOGGER.info("GUITEST muzik ses seviyesi: {}", mc.options.getSoundSourceVolume(net.minecraft.sounds.SoundSource.MUSIC));
+                shot(mc, "quietplease-panel.png"); // "su an calan" cubugu, onizleme yok
+            }
+            case 120 -> {
+                mc.getSoundManager().pause(); // ESC ile duraklatilmis oyunu taklit et: calan sesler bekler
+                LOGGER.info("GUITEST onizleme basladi: {}", com.quietplease.music.MusicPreview.play(tracks.get(1)));
+            }
+            case 140 -> {
+                LOGGER.info("GUITEST onizleme (duraklatilmisken) caliyor mu: {}", com.quietplease.music.MusicPreview.isActive());
+                shot(mc, "quietplease-preview.png");
+            }
+            case 145 -> {
+                mc.getSoundManager().resume();
                 MusicSettings.reset(tracks.get(2).id());
                 MusicSettings.reset(tracks.get(3).id());
                 mc.setScreen(new OptionsScreen(new TitleScreen(), mc.options)); // panel kapanir ve kaydeder
             }
-            case 145 -> shot(mc, "quietplease-options.png");
-            case 150 -> guiTestTicks = -1;
+            case 160 -> shot(mc, "quietplease-options.png");
+            case 165 -> guiTestTicks = -1;
             default -> { }
         }
     }

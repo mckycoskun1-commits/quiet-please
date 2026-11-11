@@ -32,6 +32,11 @@
   "quietplease.screen.off": "Kapalı",
   "quietplease.screen.volume": "Ses %%%s",
   "quietplease.screen.events": "Çalan olaylar:",
+  "quietplease.screen.now_playing": "Şu an çalıyor:",
+  "quietplease.screen.now_playing.none": "Şu an müzik çalmıyor",
+  "quietplease.screen.now_playing.more": "+%s parça daha",
+  "quietplease.screen.now_playing.tooltip": "Listede bulmak için tıkla",
+  "quietplease.screen.playing_tag": "çalıyor",
 
   "quietplease.cmd.summary": "♪ Quiet Please: %2$s içinde %1$s bulundu",
   "quietplease.cmd.show_tracks": "Parçaları göstermek için tıkla",

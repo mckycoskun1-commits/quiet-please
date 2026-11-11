@@ -15,6 +15,10 @@ Proje klasöründe:
 2. [ ] **Options → Music & Sounds** ekranında da aynı düğme var.
 3. [ ] **Mods → Quiet Please → Config** paneli açıyor.
 4. [ ] Panelde **▶**'a basınca parça çalıyor, **■** ile duruyor; çalan satırda ekolayzır zıplıyor.
+    - Oyunun Müzik sesi %0 iken de önizleme duyuluyor.
+    - Panel açıkken (tek oyunculu) oyun duruyor.
+    - Üstteki **Now playing** çubuğu çalan müziği gösteriyor; tıklayınca o parça listede çıkıyor.
+    - Oyunda çalan parçanın satırında yeşil **playing** etiketi var.
 5. [ ] **Ses kaydırıcısını fareyle sürüklemek** çalışıyor ve önizleme çalarken ses anında değişiyor.
 6. [ ] Bir parçayı **Kapalı** yap → adı üstü çizili, ikonu kararık görünüyor.
 7. [ ] Bir mod başlığında **Hepsini kapat / Hepsini aç** çalışıyor.

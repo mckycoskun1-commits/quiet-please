@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.AbstractSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.resources.sounds.Sound;
+import net.minecraft.client.sounds.ChannelAccess;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.client.sounds.Weighted;
@@ -25,7 +26,9 @@ public final class MusicPreview {
         final ResourceLocation trackId;
 
         PreviewSound(ResourceLocation eventId, Sound target, ResourceLocation trackId) {
-            super(eventId, SoundSource.MUSIC, SoundInstance.createUnseededRandom());
+            // MASTER kanalindan calar: oyuncunun "Muzik" kaydiricisi %0 olsa bile onizleme duyulur
+            // (MUSIC kanalindan calinca oyun sesi hic baslatmiyordu).
+            super(eventId, SoundSource.MASTER, SoundInstance.createUnseededRandom());
             this.target = target;
             this.trackId = trackId;
             this.attenuation = SoundInstance.Attenuation.NONE;
@@ -70,9 +73,16 @@ public final class MusicPreview {
         }
     }
 
-    /** Su an bir onizleme caliyor mu? Parca kendiliginden bittiyse durumu da temizler. */
+    /**
+     * Su an bir onizleme caliyor mu? Parca kendiliginden bittiyse durumu da temizler.
+     * Oyun duraklatilmisken Minecraft biten sesleri temizlemedigi icin ses kanalinin durumuna da bakilir.
+     */
     public static boolean isActive() {
-        if (current != null && !Minecraft.getInstance().getSoundManager().isActive(current)) current = null;
+        if (current == null) return false;
+        SoundManager sm = Minecraft.getInstance().getSoundManager();
+        ChannelAccess.ChannelHandle channel = sm.soundEngine.instanceToChannel.get(current);
+        boolean finished = !sm.isActive(current) || (channel != null && channel.isStopped());
+        if (finished) stop();
         return current != null;
     }
 

@@ -32,6 +32,11 @@
   "quietplease.screen.off": "Off",
   "quietplease.screen.volume": "Volume: %s%%",
   "quietplease.screen.events": "Played by:",
+  "quietplease.screen.now_playing": "Now playing:",
+  "quietplease.screen.now_playing.none": "No music is playing right now",
+  "quietplease.screen.now_playing.more": "+%s more",
+  "quietplease.screen.now_playing.tooltip": "Click to find it in the list",
+  "quietplease.screen.playing_tag": "playing",
 
   "quietplease.cmd.summary": "♪ Quiet Please: %1$s from %2$s",
   "quietplease.cmd.show_tracks": "Click to show the tracks",
