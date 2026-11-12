@@ -9,6 +9,7 @@ import com.quietplease.music.MusicPreview;
 import com.quietplease.music.MusicSettings;
 import com.quietplease.music.MusicTrack;
 import com.quietplease.music.NowPlaying;
+import com.quietplease.music.Playlist;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -45,21 +46,21 @@ public class QuietPleaseScreen extends Screen {
 
     // ------------------------------------------------------------------ gorunum ayarlari
 
-    private static final ResourceLocation LOGO = ResourceLocation.fromNamespaceAndPath(QuietPlease.MODID, "textures/gui/logo.png");
+    static final ResourceLocation LOGO = ResourceLocation.fromNamespaceAndPath(QuietPlease.MODID, "textures/gui/logo.png");
 
     /** Ikondaki sicak turuncu isiltiyla uyumlu vurgu rengi. */
-    private static final int ACCENT = 0xFFE89A3C;
-    private static final int ACCENT_SOFT = 0x80E89A3C;
-    private static final int PANEL_BG = 0xB0100C08;
-    private static final int HEADER_BG = 0x803A2210;
-    private static final int ROW_ALT = 0x10FFFFFF;
-    private static final int ROW_HOVER = 0x24FFD9A0;
-    private static final int GOLD = 0xFFFFC966;
-    private static final int TEXT = 0xFFF2E6C9;
-    private static final int MUTED = 0xFF9A8C78;
+    static final int ACCENT = 0xFFE89A3C;
+    static final int ACCENT_SOFT = 0x80E89A3C;
+    static final int PANEL_BG = 0xB0100C08;
+    static final int HEADER_BG = 0x803A2210;
+    static final int ROW_ALT = 0x10FFFFFF;
+    static final int ROW_HOVER = 0x24FFD9A0;
+    static final int GOLD = 0xFFFFC966;
+    static final int TEXT = 0xFFF2E6C9;
+    static final int MUTED = 0xFF9A8C78;
 
-    private static final int PLAYING = 0xFF7EE08A;      // oyunda su an calan parca (yesil)
-    private static final int PLAYING_BG = 0x2470D080;
+    static final int PLAYING = 0xFF7EE08A;      // oyunda su an calan parca (yesil)
+    static final int PLAYING_BG = 0x2470D080;
 
     private static final int ROW_HEIGHT = 24;
     private static final int NOW_PLAYING_Y = 56;
@@ -67,6 +68,8 @@ public class QuietPleaseScreen extends Screen {
     private static final int TOP = 78;
     private static final int BOTTOM_MARGIN = 36;
     private static final int MAX_ROW_WIDTH = 420;
+    /** Mod filtresindeki "★ Calma listesi" secenegi (bir mod kimligi olamaz). */
+    private static final String PLAYLIST_FILTER = "#playlist";
 
     @Nullable
     private final Screen parent;
@@ -115,6 +118,13 @@ public class QuietPleaseScreen extends Screen {
                 .bounds(x, 6, Math.max(60, font.width(settingsLabel) + 12), 20)
                 .tooltip(Tooltip.create(Lang.tr("settings.button.tooltip")))
                 .build());
+        // ... sagda Calma listesi
+        Component playlistLabel = Lang.tr("playlist.button");
+        int playlistW = Math.max(60, font.width(playlistLabel) + 12);
+        addRenderableWidget(Button.builder(playlistLabel, b -> minecraft.setScreen(new QuietPlaylistScreen(this)))
+                .bounds(x + rowW - playlistW, 6, playlistW, 20)
+                .tooltip(Tooltip.create(Lang.tr("playlist.open.tooltip")))
+                .build());
 
         EditBox search = new EditBox(font, x + 1, y + 1, searchW - 2, 18, Lang.tr("screen.search"));
         search.setHint(Lang.tr("screen.search").withStyle(ChatFormatting.DARK_GRAY));
@@ -127,10 +137,13 @@ public class QuietPleaseScreen extends Screen {
 
         List<String> mods = new ArrayList<>();
         mods.add("");
+        mods.add(PLAYLIST_FILTER);
         mods.addAll(library.keySet());
         if (!mods.contains(modFilter)) modFilter = "";
         modValues = mods;
-        modButton = addRenderableWidget(CycleButton.<String>builder(m -> m.isEmpty() ? Lang.tr("screen.mod.all") : Component.literal(MusicLibrary.modName(m)))
+        modButton = addRenderableWidget(CycleButton.<String>builder(m -> m.isEmpty() ? Lang.tr("screen.mod.all")
+                        : m.equals(PLAYLIST_FILTER) ? Lang.tr("screen.mod.playlist").withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
+                        : Component.literal(MusicLibrary.modName(m)))
                 .withValues(mods)
                 .withInitialValue(modFilter)
                 .withTooltip(v -> Tooltip.create(Lang.tr("screen.mod.tooltip")))
@@ -172,11 +185,13 @@ public class QuietPleaseScreen extends Screen {
         if (list == null) return;
         String q = query.trim().toLowerCase(Locale.ROOT);
         list.clear();
+        boolean playlistOnly = modFilter.equals(PLAYLIST_FILTER);
         library.forEach((mod, tracks) -> {
-            if (!modFilter.isEmpty() && !modFilter.equals(mod)) return;
+            if (!modFilter.isEmpty() && !playlistOnly && !modFilter.equals(mod)) return;
             String modName = MusicLibrary.modName(mod);
             List<MusicTrack> visible = tracks.stream()
-                    .filter(t -> showOther || t.kind() != MusicTrack.Kind.OTHER)
+                    .filter(t -> !playlistOnly || Playlist.contains(t.id()))
+                    .filter(t -> showOther || playlistOnly || t.kind() != MusicTrack.Kind.OTHER)
                     .filter(t -> q.isEmpty()
                             || t.id().toString().toLowerCase(Locale.ROOT).contains(q)
                             || modName.toLowerCase(Locale.ROOT).contains(q))
@@ -362,7 +377,7 @@ public class QuietPleaseScreen extends Screen {
     }
 
     /** Calan parcanin yaninda ziplayan uc kucuk cubuk. */
-    private static void drawEqualizer(GuiGraphics g, int x, int baseY, int color) {
+    static void drawEqualizer(GuiGraphics g, int x, int baseY, int color) {
         double t = System.currentTimeMillis() / 140.0;
         for (int i = 0; i < 3; i++) {
             int h = 2 + (int) Math.round((Math.sin(t + i * 1.9) * 0.5 + 0.5) * 7);
@@ -445,6 +460,7 @@ public class QuietPleaseScreen extends Screen {
         private final boolean alternate;
         private final ItemStack icon;
         private final Button play;
+        private final Button star;
         private final VolumeSlider slider;
         private final Button toggle;
 
@@ -456,6 +472,10 @@ public class QuietPleaseScreen extends Screen {
                 if (MusicPreview.isPlaying(track.id())) MusicPreview.stop();
                 else MusicPreview.play(track);
             }).size(20, 20).tooltip(Tooltip.create(Lang.tr("screen.play.tooltip"))).build();
+            this.star = Button.builder(Component.empty(), b -> {
+                Playlist.toggle(track.id());
+                MusicSettings.save();
+            }).size(20, 20).build();
             this.slider = new VolumeSlider(track);
             this.toggle = Button.builder(Component.empty(), b -> {
                 MusicSettings.setEnabled(track.id(), MusicSettings.isDisabled(track.id()));
@@ -489,6 +509,12 @@ public class QuietPleaseScreen extends Screen {
             play.setMessage(playing
                     ? Component.literal("■").withStyle(s -> s.withColor(ACCENT & 0xFFFFFF))
                     : Component.literal("▶"));
+            boolean starred = Playlist.contains(track.id());
+            star.setPosition(left + 22, by);
+            star.setMessage(starred
+                    ? Component.literal("★").withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
+                    : Component.literal("☆").withStyle(ChatFormatting.GRAY));
+            star.setTooltip(Tooltip.create(Lang.tr(starred ? "screen.star.remove" : "screen.star.add")));
             toggle.setPosition(left + width - TOGGLE_W, by);
             toggle.setMessage(enabled
                     ? Lang.tr("screen.on").withStyle(ChatFormatting.GREEN)
@@ -497,7 +523,7 @@ public class QuietPleaseScreen extends Screen {
             slider.active = enabled;
 
             // ikon (kapaliysa karartilir)
-            int iconX = left + 24;
+            int iconX = left + 46;
             int iconY = top + (height - 16) / 2;
             g.renderItem(icon, iconX, iconY);
             if (!enabled) {
@@ -529,6 +555,7 @@ public class QuietPleaseScreen extends Screen {
             }
 
             play.render(g, mouseX, mouseY, partialTick);
+            star.render(g, mouseX, mouseY, partialTick);
             slider.render(g, mouseX, mouseY, partialTick);
             toggle.render(g, mouseX, mouseY, partialTick);
 
@@ -554,17 +581,17 @@ public class QuietPleaseScreen extends Screen {
 
         @Override
         public List<? extends GuiEventListener> children() {
-            return List.of(play, slider, toggle);
+            return List.of(play, star, slider, toggle);
         }
 
         @Override
         public List<? extends NarratableEntry> narratables() {
-            return List.of(play, slider, toggle);
+            return List.of(play, star, slider, toggle);
         }
     }
 
     /** Satir ikonu: plaklar icin oyundaki plak esyasi, muzikler icin nota blogu, ortam sesleri icin yanki parcasi. */
-    private static ItemStack iconFor(MusicTrack track) {
+    static ItemStack iconFor(MusicTrack track) {
         return switch (track.kind()) {
             case DISC -> {
                 // Plak esyasini bulmaya calis: "minecraft:records/cat" -> "minecraft:music_disc_cat";

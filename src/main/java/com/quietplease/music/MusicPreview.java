@@ -91,7 +91,7 @@ public final class MusicPreview {
     }
 
     /** Ses motorunun icinden cagrilir: durum degistirmez, sadece okur. */
-    static boolean hasPreview() {
+    public static boolean hasPreview() {
         return current != null;
     }
 }

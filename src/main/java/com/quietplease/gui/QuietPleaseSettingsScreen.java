@@ -53,7 +53,14 @@ public class QuietPleaseSettingsScreen extends Screen {
                 .create(right, y, BUTTON_W, 20, Lang.tr("settings.options_button"), (b, v) -> ModOptions.optionsButton = v));
         y += ROW;
 
-        y += 8;
+        // Calma listesi
+        addRenderableWidget(toggle("settings.playlist_mode", ModOptions.playlistMode)
+                .create(left, y, BUTTON_W, 20, Lang.tr("settings.playlist_mode"), (b, v) -> ModOptions.playlistMode = v));
+        addRenderableWidget(Button.builder(Lang.tr("playlist.button"), b -> minecraft.setScreen(new QuietPlaylistScreen(this)))
+                .bounds(right, y, BUTTON_W, 20)
+                .tooltip(Tooltip.create(Lang.tr("playlist.open.tooltip")))
+                .build());
+        y += ROW + 8;
 
         // Sarki arasi
         addRenderableWidget(CycleButton.<ModOptions.Gap>builder(ModOptions.Gap::displayName)

@@ -6,6 +6,8 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.quietplease.gui.QuietPleaseScreen;
+import com.quietplease.gui.QuietPleaseSettingsScreen;
+import com.quietplease.gui.QuietPlaylistScreen;
 import com.quietplease.music.MusicLibrary;
 import com.quietplease.music.MusicSettings;
 import com.quietplease.music.MusicTrack;
@@ -42,6 +44,8 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
  *   /quietplease resetall               tum ayarlari sil
  *   /quietplease dump                   tam listeyi quietplease-tracks.txt dosyasina yazar
  *   /quietplease gui                    ayar panelini acar
+ *   /quietplease settings               Ayarlar ekranini acar
+ *   /quietplease playlist               calma listesi panelini acar
  */
 public final class QuietPleaseCommands {
 
@@ -81,12 +85,18 @@ public final class QuietPleaseCommands {
                                 .executes(QuietPleaseCommands::reset)))
                 .then(Commands.literal("resetall").executes(QuietPleaseCommands::resetAll))
                 .then(Commands.literal("dump").executes(QuietPleaseCommands::dump))
-                .then(Commands.literal("gui").executes(QuietPleaseCommands::openGui)));
+                .then(Commands.literal("gui").executes(QuietPleaseCommands::openGui))
+                .then(Commands.literal("settings").executes(ctx -> open(new QuietPleaseSettingsScreen(null))))
+                .then(Commands.literal("playlist").executes(ctx -> open(new QuietPlaylistScreen(null)))));
     }
 
     private static int openGui(CommandContext<CommandSourceStack> ctx) {
+        return open(new QuietPleaseScreen(null));
+    }
+
+    private static int open(net.minecraft.client.gui.screens.Screen screen) {
         // Sohbet ekrani, komut baska bir ekran actiysa kendini kapatmaz (NeoForge duzeltmesi)
-        Minecraft.getInstance().setScreen(new QuietPleaseScreen(null));
+        Minecraft.getInstance().setScreen(screen);
         return 1;
     }
 

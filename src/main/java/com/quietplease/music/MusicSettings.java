@@ -170,6 +170,12 @@ public final class MusicSettings {
             QuietPlease.LOGGER.error("Ayarlar okunamadi, varsayilanlar kullaniliyor", e);
             ModOptions.reset();
         }
+        try {
+            Playlist.read(root != null && root.has("playlist") ? root.getAsJsonObject("playlist") : null);
+        } catch (Exception e) {
+            QuietPlease.LOGGER.error("Calma listesi okunamadi, bos liste kullaniliyor", e);
+            Playlist.read(null);
+        }
         recount();
     }
 
@@ -185,6 +191,7 @@ public final class MusicSettings {
         JsonObject root = new JsonObject();
         root.add("tracks", tracks);
         root.add("options", ModOptions.write());
+        root.add("playlist", Playlist.write());
         return root;
     }
 

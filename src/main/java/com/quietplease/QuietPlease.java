@@ -56,6 +56,7 @@ public class QuietPlease {
 
     private static void onClientTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
+        com.quietplease.music.Playlist.clientTick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
     }
 
@@ -90,6 +91,27 @@ public class QuietPlease {
             // Menu muzigi calarken: Ayarlar ve ESC menusundeki dugme + altindaki "calan sarki" yazisi
             case 120 -> mc.setScreen(new OptionsScreen(new TitleScreen(), mc.options));
             case 135 -> shot(mc, "quietplease-options.png");
+            // Ayarlar ekrani
+            case 136 -> mc.setScreen(new com.quietplease.gui.QuietPleaseSettingsScreen(new TitleScreen()));
+            case 141 -> shot(mc, "quietplease-settings.png");
+            // Calma listesi: birkac ornek sarki, ilki hemen calsin (ilerleme cubugu gorunsun)
+            case 142 -> {
+                playlistBackup = com.quietplease.music.Playlist.snapshot();
+                playlistModeBackup = com.quietplease.music.ModOptions.playlistMode;
+                com.quietplease.music.Playlist.clear();
+                for (int i : new int[] {4, 9, 1, 12, 6}) {
+                    if (i < tracks.size()) com.quietplease.music.Playlist.add(tracks.get(i).id());
+                }
+                com.quietplease.music.ModOptions.playlistMode = true;
+                com.quietplease.music.Playlist.playNow(0);
+                mc.setScreen(new com.quietplease.gui.QuietPlaylistScreen(new TitleScreen()));
+            }
+            case 150 -> {
+                var playing = com.quietplease.music.Playlist.playing();
+                boolean ok = playing != null && playing.trackId.equals(com.quietplease.music.Playlist.tracks().get(0));
+                LOGGER.info("GUITEST calma listesi menude: {} ({})", ok ? "BASARILI" : "HATA", playing == null ? "calmiyor" : playing.trackId);
+                shot(mc, "quietplease-playlist.png");
+            }
             // (ESC menusu test edilemiyor: PauseScreen bir dunya/oyuncu ister, ana menude acilinca coker)
             // Onizleme (arka plan muzigini susturur, o yuzden en sona)
             case 155 -> {
@@ -122,19 +144,44 @@ public class QuietPlease {
                     return;
                 }
                 int t = guiTestTicks - worldJoinTick;
-                if (t == 60) mc.getMusicManager().startPlaying(net.minecraft.sounds.Musics.GAME);
-                else if (t == 100) mc.pauseGame(false);             // ESC
+                if (t == 60) {
+                    // Calma listesi modu acik: oyunun "oyun muzigi" yerine listedeki siradaki parca calmali
+                    expectedNext = (com.quietplease.music.Playlist.position() + 1) % com.quietplease.music.Playlist.size();
+                    mc.getMusicManager().stopPlaying();
+                    mc.getMusicManager().startPlaying(net.minecraft.sounds.Musics.GAME);
+                } else if (t == 70 || t == 85) {
+                    var playing = com.quietplease.music.Playlist.playing();
+                    var expected = com.quietplease.music.Playlist.tracks().get(expectedNext);
+                    boolean ok = playing != null && playing.trackId.equals(expected)
+                            && com.quietplease.music.Playlist.position() == expectedNext;
+                    LOGGER.info("GUITEST calma listesi {}: {} (beklenen {}, calan {})", t == 70 ? "oyun muzigi yerine" : "Atla sonrasi",
+                            ok ? "BASARILI" : "HATA", expected, playing == null ? "yok" : playing.trackId);
+                    if (t == 70) {
+                        expectedNext = (expectedNext + 1) % com.quietplease.music.Playlist.size();
+                        com.quietplease.music.MusicControl.skip();
+                    }
+                } else if (t == 100) mc.pauseGame(false);             // ESC
                 else if (t == 120) shot(mc, "quietplease-pause.png");
                 else if (t == 122) mc.setScreen(new QuietPleaseScreen(mc.screen));
                 else if (t == 140) {
                     LOGGER.info("GUITEST oyun ici panel: oyun duraklatildi mi: {}", mc.isPaused());
                     shot(mc, "quietplease-ingame.png");
-                } else if (t == 145) guiTestTicks = -1;
+                } else if (t == 145) {
+                    // Ornek calma listesini geri al
+                    if (playlistBackup != null) com.quietplease.music.Playlist.restore(playlistBackup);
+                    com.quietplease.music.ModOptions.playlistMode = playlistModeBackup;
+                    MusicSettings.save();
+                    LOGGER.info("GUITEST bitti");
+                    guiTestTicks = -1;
+                }
             }
         }
     }
 
     private static int worldJoinTick = -1;
+    private static int expectedNext = 0;
+    private static com.google.gson.JsonObject playlistBackup;
+    private static boolean playlistModeBackup;
 
     private static void shot(Minecraft mc, String name) {
         net.minecraft.client.Screenshot.grab(mc.gameDirectory, name, mc.getMainRenderTarget(),

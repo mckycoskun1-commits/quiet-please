@@ -1,6 +1,8 @@
 package com.quietplease;
 
+import com.quietplease.music.ModOptions;
 import com.quietplease.music.MusicSettings;
+import com.quietplease.music.Playlist;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -15,6 +17,8 @@ import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.client.sounds.Weighted;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.Music;
+import net.minecraft.sounds.Musics;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -76,7 +80,140 @@ final class DevSelfTest {
             failures.add("ses testi calistirilamadi: " + e);
         }
 
+        // 4) Calma listesi ve sarki arasi (ayarlar test sonunda geri alinir)
+        testPlaylist(files, failures);
+
         if (failures.isEmpty()) QuietPlease.LOGGER.info("SELFTEST BASARILI ({} menu parcasi ile)", files.size());
         else failures.forEach(f -> QuietPlease.LOGGER.error("SELFTEST HATA: {}", f));
+    }
+
+    private static void check(List<String> failures, boolean ok, String what) {
+        if (!ok) failures.add(what);
+    }
+
+    private static void testPlaylist(List<ResourceLocation> menuFiles, List<String> failures) {
+        if (menuFiles.size() < 4) {
+            failures.add("calma listesi: en az 4 menu parcasi gerekiyordu, " + menuFiles.size() + " var");
+            return;
+        }
+        com.google.gson.JsonObject backup = Playlist.snapshot();
+        boolean modeBackup = ModOptions.playlistMode;
+        ModOptions.Gap gapBackup = ModOptions.gap;
+        ResourceLocation a = menuFiles.get(0), b = menuFiles.get(1), c = menuFiles.get(2), d = menuFiles.get(3);
+        java.util.function.Predicate<ResourceLocation> all = id -> true;
+        try {
+            // Sirayla, sonra basa sar
+            Playlist.clear();
+            Playlist.add(a);
+            Playlist.add(b);
+            Playlist.add(c);
+            Playlist.add(a); // ayni parca iki kez eklenmez
+            Playlist.setRepeat(Playlist.Repeat.REPEAT_LIST);
+            check(failures, Playlist.size() == 3, "calma listesi: tekrar eklenen parca listede iki kez");
+            check(failures, Playlist.upcoming().equals(List.of(0, 1, 2)), "calma listesi: baslangic sirasi " + Playlist.upcoming());
+            List<Integer> order = new ArrayList<>();
+            for (int i = 0; i < 4; i++) order.add(Playlist.advanceForTest(all));
+            check(failures, order.equals(List.of(0, 1, 2, 0)), "calma listesi: tekrar sirasi " + order);
+            Playlist.advanceForTest(all); // simdi b caliyor (sira 1)
+            check(failures, Playlist.upcoming().equals(List.of(2, 0)) && Playlist.isNextRound(0) && !Playlist.isNextRound(2),
+                    "calma listesi: siradakiler " + Playlist.upcoming());
+
+            // Calinamayan parca atlanir
+            Playlist.setNext(0);
+            List<Integer> skipped = new ArrayList<>();
+            for (int i = 0; i < 3; i++) skipped.add(Playlist.advanceForTest(id -> !id.equals(b)));
+            check(failures, skipped.equals(List.of(0, 2, 0)), "calma listesi: kapali parcayi atlama " + skipped);
+
+            // Calandan once silinince siradaki yine dogru
+            Playlist.setNext(1);
+            Playlist.advanceForTest(all); // b caliyor
+            Playlist.removeAt(0);         // a silindi
+            int next = Playlist.advanceForTest(all);
+            check(failures, next >= 0 && Playlist.tracks().get(next).equals(c), "calma listesi: silmeden sonra siradaki c olmaliydi");
+
+            // Sonda dur -> -1, liste degisince yeniden baslar
+            Playlist.clear();
+            Playlist.add(a);
+            Playlist.add(b);
+            Playlist.setRepeat(Playlist.Repeat.STOP);
+            List<Integer> stop = new ArrayList<>();
+            for (int i = 0; i < 3; i++) stop.add(Playlist.advanceForTest(all));
+            check(failures, stop.equals(List.of(0, 1, -1)) && Playlist.hasEnded(), "calma listesi: sonda dur " + stop);
+            check(failures, Playlist.advanceForTest(all) == -1, "calma listesi: bittikten sonra -1 kalmali");
+            Playlist.setNext(0);
+            check(failures, !Playlist.hasEnded() && Playlist.advanceForTest(all) == 0, "calma listesi: ▶ sonrasi yeniden baslamali");
+
+            // Tasima ve karistirma: calan parca basta kalir
+            Playlist.clear();
+            for (ResourceLocation id : List.of(a, b, c, d)) Playlist.add(id);
+            Playlist.setRepeat(Playlist.Repeat.REPEAT_LIST);
+            Playlist.advanceForTest(all);
+            Playlist.advanceForTest(all); // b caliyor (sira 1)
+            Playlist.swap(2, 3);
+            check(failures, Playlist.tracks().equals(List.of(a, b, d, c)), "calma listesi: yer degistirme " + Playlist.tracks());
+            Playlist.shuffle();
+            check(failures, Playlist.tracks().get(0).equals(b) && Playlist.position() == 0
+                    && new HashSet<>(Playlist.tracks()).equals(Set.of(a, b, c, d)), "calma listesi: karistirma " + Playlist.tracks());
+
+            // Surekli karistir: tur bitince liste karisir, ayni parca arka arkaya gelmez
+            Playlist.setRepeat(Playlist.Repeat.SHUFFLE);
+            for (int round = 0; round < 20; round++) {
+                ResourceLocation last = null;
+                for (int i = 0; i < 4; i++) {
+                    int idx = Playlist.advanceForTest(all);
+                    ResourceLocation now = Playlist.tracks().get(idx);
+                    if (now.equals(last)) failures.add("calma listesi: surekli karistirmada ayni parca arka arkaya");
+                    last = now;
+                }
+            }
+            check(failures, Playlist.size() == 4, "calma listesi: karistirmada parca kayboldu");
+
+            // Arka plan muzigi tanimi
+            check(failures, ModOptions.isBackground(Musics.MENU) && ModOptions.isBackground(Musics.GAME)
+                    && ModOptions.isBackground(Musics.END) && ModOptions.isBackground(Musics.UNDER_WATER)
+                    && ModOptions.isBackground(Musics.createGameMusic(SoundEvents.MUSIC_BIOME_BASALT_DELTAS)),
+                    "arka plan: menu/oyun/End/su alti/Nether arka plan sayilmali");
+            check(failures, !ModOptions.isBackground(Musics.END_BOSS) && !ModOptions.isBackground(Musics.CREDITS)
+                    && !ModOptions.isBackground(new Music(SoundEvents.MUSIC_GAME, 0, 0, true)),
+                    "arka plan: ejderha/jenerik/mod boss muzigi arka plan sayilmamali");
+
+            // Sarki arasi
+            ModOptions.gap = ModOptions.Gap.VANILLA;
+            check(failures, ModOptions.adjustGap(Musics.GAME) == Musics.GAME, "sarki arasi: Vanilla'da ayni nesne donmeli");
+            ModOptions.gap = ModOptions.Gap.NONE;
+            Music none = ModOptions.adjustGap(Musics.GAME);
+            check(failures, none.getMinDelay() == 20 && none.getMaxDelay() == 20 && ModOptions.isBackground(none)
+                    && none.getEvent() == Musics.GAME.getEvent(), "sarki arasi: Yok -> 20 tick");
+            ModOptions.gap = ModOptions.Gap.SHORT;
+            Music shortGap = ModOptions.adjustGap(Musics.MENU);
+            check(failures, shortGap.getMinDelay() == 600 && shortGap.getMaxDelay() == 1200 && shortGap.replaceCurrentMusic(),
+                    "sarki arasi: Kisa -> 600-1200 tick");
+            check(failures, ModOptions.adjustGap(Musics.END_BOSS) == Musics.END_BOSS, "sarki arasi: ejderha muzigi degismemeli");
+
+            // Devralma: mod kapaliyken hic, aciksa sadece arka plan muziginde
+            Playlist.clear();
+            Playlist.add(c);
+            Playlist.setRepeat(Playlist.Repeat.REPEAT_LIST);
+            ModOptions.playlistMode = false;
+            check(failures, Playlist.startInstead(Musics.MENU) == null, "devralma: mod kapaliyken devralmamali");
+            ModOptions.playlistMode = true;
+            check(failures, Playlist.startInstead(Musics.END_BOSS) == null, "devralma: ejderha muzigini devralmamali");
+            var sound = Playlist.startInstead(Musics.MENU);
+            if (sound != null) sound.resolve(Minecraft.getInstance().getSoundManager()); // getSound() resolve ile dolar
+            check(failures, sound instanceof Playlist.PlaylistSound ps && ps.trackId.equals(c)
+                    && sound.getSound() != null && sound.getSound().getLocation().equals(c), "devralma: menu muziginde listedeki parca calmali");
+            MusicSettings.setEnabled(c, false);
+            check(failures, Playlist.startInstead(Musics.MENU) == null, "devralma: tek parca kapaliysa oyunun muzigi calmali");
+            MusicSettings.reset(c);
+            QuietPlease.LOGGER.info("SELFTEST calma listesi: {} hata", failures.size());
+        } catch (RuntimeException e) {
+            failures.add("calma listesi testi coktu: " + e);
+            QuietPlease.LOGGER.error("SELFTEST calma listesi", e);
+        } finally {
+            Playlist.restore(backup);
+            ModOptions.playlistMode = modeBackup;
+            ModOptions.gap = gapBackup;
+            MusicSettings.save(); // startInstead sirayi kaydetmisti: eski hali geri yaz
+        }
     }
 }
