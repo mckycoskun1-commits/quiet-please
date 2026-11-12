@@ -30,6 +30,14 @@ public class QuietPlease {
         com.quietplease.music.Playlist.clientTick(mc);
         QuietPleaseKeys.tick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
+        if (!autoDumpDone && mc.screen instanceof TitleScreen && mc.getOverlay() == null) onScreenInit(mc.screen);
+        if (mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen
+                && System.getenv("QUIETPLEASE_AUTODUMP") != null
+                && com.quietplease.platform.Services.PLATFORM.isDevelopment()) {
+            mc.options.onboardAccessibility = false;
+            mc.options.save();
+            mc.setScreen(new TitleScreen(true));
+        }
     }
 
     /**
@@ -168,7 +176,7 @@ public class QuietPlease {
     public static void onScreenInit(Screen screen) {
         if (!com.quietplease.platform.Services.PLATFORM.isDevelopment()) return;
         String mode = System.getenv("QUIETPLEASE_AUTODUMP");
-        if (autoDumpDone || !(screen instanceof TitleScreen) || mode == null) return;
+        if (autoDumpDone || !(screen instanceof TitleScreen) || mode == null || Minecraft.getInstance().getOverlay() != null) return;
         autoDumpDone = true;
         try {
             DevSelfTest.run();
