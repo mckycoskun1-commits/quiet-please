@@ -83,6 +83,29 @@ final class DevSelfTest {
         // 4) Calma listesi ve sarki arasi (ayarlar test sonunda geri alinir)
         testPlaylist(files, failures);
 
+        // 5) Hazir ayar: disa aktar, degistir, ice aktar -> eski hal; gecici dosya silinir
+        String preset = "selftest-tmp";
+        try {
+            MusicSettings.exportPreset(preset);
+            boolean mode = ModOptions.playlistMode;
+            MusicSettings.setVolume(keep, 25);
+            ModOptions.playlistMode = !mode;
+            MusicSettings.importPreset(preset);
+            if (MusicSettings.get(keep).volume() != 100 || ModOptions.playlistMode != mode) {
+                failures.add("hazir ayar: ice aktarinca eski hal gelmedi");
+            }
+            if (!MusicSettings.presetNames().contains(preset)) failures.add("hazir ayar: oneri listesinde yok");
+            if (MusicSettings.isValidPresetName("../x") || !MusicSettings.isValidPresetName("my_pack-2")) {
+                failures.add("hazir ayar: ad kontrolu yanlis");
+            }
+        } catch (Exception e) {
+            failures.add("hazir ayar testi calistirilamadi: " + e);
+        } finally {
+            try {
+                java.nio.file.Files.deleteIfExists(MusicSettings.presetFile(preset));
+            } catch (java.io.IOException ignored) {}
+        }
+
         if (failures.isEmpty()) QuietPlease.LOGGER.info("SELFTEST BASARILI ({} menu parcasi ile)", files.size());
         else failures.forEach(f -> QuietPlease.LOGGER.error("SELFTEST HATA: {}", f));
     }

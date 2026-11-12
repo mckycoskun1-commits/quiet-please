@@ -47,6 +47,8 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
  *   /quietplease settings               Ayarlar ekranini acar
  *   /quietplease playlist               calma listesi panelini acar
  *   /quietplease skip                   calan arka plan sarkisini atlar
+ *   /quietplease export <ad>            tum ayarlari config/quietplease-presets/<ad>.json dosyasina yazar
+ *   /quietplease import <ad>            o dosyayi yukler
  */
 public final class QuietPleaseCommands {
 
@@ -57,6 +59,9 @@ public final class QuietPleaseCommands {
     private static final SuggestionProvider<CommandSourceStack> TRACKS =
             (ctx, b) -> SharedSuggestionProvider.suggestResource(
                     MusicLibrary.scan().values().stream().flatMap(List::stream).map(MusicTrack::id), b);
+
+    private static final SuggestionProvider<CommandSourceStack> PRESETS =
+            (ctx, b) -> SharedSuggestionProvider.suggest(MusicSettings.presetNames(), b);
 
     private QuietPleaseCommands() {}
 
@@ -89,7 +94,13 @@ public final class QuietPleaseCommands {
                 .then(Commands.literal("gui").executes(QuietPleaseCommands::openGui))
                 .then(Commands.literal("settings").executes(ctx -> open(new QuietPleaseSettingsScreen(null))))
                 .then(Commands.literal("playlist").executes(ctx -> open(new QuietPlaylistScreen(null))))
-                .then(Commands.literal("skip").executes(QuietPleaseCommands::skip)));
+                .then(Commands.literal("skip").executes(QuietPleaseCommands::skip))
+                .then(Commands.literal("export")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .executes(ctx -> exportPreset(ctx, StringArgumentType.getString(ctx, "name")))))
+                .then(Commands.literal("import")
+                        .then(Commands.argument("name", StringArgumentType.word()).suggests(PRESETS)
+                                .executes(ctx -> importPreset(ctx, StringArgumentType.getString(ctx, "name"))))));
     }
 
     private static int skip(CommandContext<CommandSourceStack> ctx) {
@@ -250,6 +261,45 @@ public final class QuietPleaseCommands {
             say(ctx, Lang.tr("cmd.not_loaded", id.toString())
                     .withStyle(ChatFormatting.YELLOW));
         }
+        return 1;
+    }
+
+    // ------------------------------------------------------------------ hazir ayarlar
+
+    private static int exportPreset(CommandContext<CommandSourceStack> ctx, String name) {
+        if (!MusicSettings.isValidPresetName(name)) {
+            ctx.getSource().sendFailure(Lang.tr("cmd.preset.bad_name", name));
+            return 0;
+        }
+        try {
+            Path file = MusicSettings.exportPreset(name);
+            say(ctx, Lang.tr("cmd.preset.exported", name).withStyle(ChatFormatting.GREEN)
+                    .append(" ")
+                    .append(Component.literal(file.getFileName().toString()).withStyle(Style.EMPTY
+                            .withColor(ChatFormatting.YELLOW).withUnderlined(true)
+                            .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getParent().toAbsolutePath().toString())))));
+            return 1;
+        } catch (IOException e) {
+            QuietPlease.LOGGER.error("Hazir ayar yazilamadi", e);
+            ctx.getSource().sendFailure(Lang.tr("cmd.dump_failed", String.valueOf(e.getMessage())));
+            return 0;
+        }
+    }
+
+    private static int importPreset(CommandContext<CommandSourceStack> ctx, String name) {
+        if (!MusicSettings.isValidPresetName(name) || !Files.exists(MusicSettings.presetFile(name))) {
+            ctx.getSource().sendFailure(Lang.tr("cmd.preset.missing", name));
+            return 0;
+        }
+        try {
+            MusicSettings.importPreset(name);
+        } catch (Exception e) {
+            QuietPlease.LOGGER.error("Hazir ayar okunamadi", e);
+            ctx.getSource().sendFailure(Lang.tr("cmd.preset.failed", name, String.valueOf(e.getMessage())));
+            return 0;
+        }
+        MusicSettings.applyToPlayingSounds();
+        say(ctx, Lang.tr("cmd.preset.imported", name).withStyle(ChatFormatting.GREEN));
         return 1;
     }
 

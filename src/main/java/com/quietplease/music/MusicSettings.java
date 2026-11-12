@@ -195,6 +195,50 @@ public final class MusicSettings {
         return root;
     }
 
+    // ---------------------------------------------------------------- hazir ayarlar (preset)
+
+    /** Hazir ayar adi: sadece harf, rakam, _ ve - (dosya adi olarak guvenli). */
+    public static boolean isValidPresetName(String name) {
+        return name.matches("[A-Za-z0-9_-]{1,64}");
+    }
+
+    private static Path presetDir() {
+        return FMLPaths.CONFIGDIR.get().resolve(QuietPlease.MODID + "-presets");
+    }
+
+    public static Path presetFile(String name) {
+        return presetDir().resolve(name + ".json");
+    }
+
+    /** Tum ayarlari (parcalar, ayarlar, calma listesi) config/quietplease-presets/&lt;ad&gt;.json dosyasina yazar. */
+    public static Path exportPreset(String name) throws IOException {
+        Path path = presetFile(name);
+        Files.createDirectories(path.getParent());
+        Files.writeString(path, GSON.toJson(writeRoot()), StandardCharsets.UTF_8);
+        return path;
+    }
+
+    /** Hazir ayari yukler ve config/quietplease.json olarak kaydeder. */
+    public static void importPreset(String name) throws IOException {
+        JsonObject root = GSON.fromJson(Files.readString(presetFile(name), StandardCharsets.UTF_8), JsonObject.class);
+        if (root == null) throw new IOException("empty file");
+        readRoot(root);
+        save();
+    }
+
+    /** Kayitli hazir ayarlarin adlari (komut onerileri icin). */
+    public static java.util.List<String> presetNames() {
+        try (var files = Files.list(presetDir())) {
+            return files.map(p -> p.getFileName().toString())
+                    .filter(n -> n.endsWith(".json"))
+                    .map(n -> n.substring(0, n.length() - 5))
+                    .filter(MusicSettings::isValidPresetName)
+                    .sorted().toList();
+        } catch (IOException e) {
+            return java.util.List.of();
+        }
+    }
+
     public static void save() {
         try {
             Files.createDirectories(file().getParent());

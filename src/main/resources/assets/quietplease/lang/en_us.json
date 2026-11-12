@@ -136,5 +136,11 @@
 
   "quietplease.cmd.skip.next": "Skipped – the next playlist song starts now.",
   "quietplease.cmd.skip.gap": "Skipped – the next song comes after the music gap (Settings → Music gap).",
-  "quietplease.cmd.skip.nothing": "No background music is playing right now (discs and boss music can't be skipped)."
+  "quietplease.cmd.skip.nothing": "No background music is playing right now (discs and boss music can't be skipped).",
+
+  "quietplease.cmd.preset.bad_name": "\"%s\" can't be a preset name. Use only letters, numbers, _ and -.",
+  "quietplease.cmd.preset.exported": "Preset \"%s\" saved:",
+  "quietplease.cmd.preset.missing": "No preset called \"%s\" in config/quietplease-presets.",
+  "quietplease.cmd.preset.failed": "Could not load preset \"%1$s\": %2$s",
+  "quietplease.cmd.preset.imported": "Preset \"%s\" loaded: track settings, options and playlist."
 }

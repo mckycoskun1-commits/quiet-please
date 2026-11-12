@@ -136,5 +136,11 @@
 
   "quietplease.cmd.skip.next": "Atlandı – çalma listesindeki sıradaki şarkı şimdi başlıyor.",
   "quietplease.cmd.skip.gap": "Atlandı – sıradaki şarkı şarkı arasından sonra gelecek (Ayarlar → Şarkı arası).",
-  "quietplease.cmd.skip.nothing": "Şu an çalan bir arka plan müziği yok (plaklar ve boss müzikleri atlanamaz)."
+  "quietplease.cmd.skip.nothing": "Şu an çalan bir arka plan müziği yok (plaklar ve boss müzikleri atlanamaz).",
+
+  "quietplease.cmd.preset.bad_name": "\"%s\" hazır ayar adı olamaz. Sadece harf, rakam, _ ve - kullan.",
+  "quietplease.cmd.preset.exported": "\"%s\" hazır ayarı kaydedildi:",
+  "quietplease.cmd.preset.missing": "config/quietplease-presets içinde \"%s\" adlı bir hazır ayar yok.",
+  "quietplease.cmd.preset.failed": "\"%1$s\" hazır ayarı yüklenemedi: %2$s",
+  "quietplease.cmd.preset.imported": "\"%s\" hazır ayarı yüklendi: parça ayarları, ayarlar ve çalma listesi."
 }
