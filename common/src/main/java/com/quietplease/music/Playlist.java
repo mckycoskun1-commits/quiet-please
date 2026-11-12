@@ -84,7 +84,7 @@ public final class Playlist {
         }
 
         @Override
-        public WeighedSoundEvents getOrResolve(SoundManager manager) {
+        public WeighedSoundEvents resolve(SoundManager manager) {
             this.sound = target;
             return manager.getSoundEvent(this.identifier);
         }

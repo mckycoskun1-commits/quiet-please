@@ -56,7 +56,7 @@ final class DevSelfTest {
         // 3) Ses seviyesi: ses motorunun hesabi %40 ile carpilmali.
         try {
             SimpleSoundInstance music = SimpleSoundInstance.forMusic(SoundEvents.MUSIC_MENU.value());
-            music.getOrResolve(sm);
+            music.resolve(sm);
             Identifier file = music.getSound().getLocation();
             Field engineField = SoundManager.class.getDeclaredField("soundEngine");
             engineField.setAccessible(true);
@@ -222,7 +222,7 @@ final class DevSelfTest {
             ModOptions.playlistMode = true;
             check(failures, Playlist.startInstead(Musics.END_BOSS) == null, "devralma: ejderha muzigini devralmamali");
             var sound = Playlist.startInstead(Musics.MENU);
-            if (sound != null) sound.getOrResolve(Minecraft.getInstance().getSoundManager()); // getSound() resolve ile dolar
+            if (sound != null) sound.resolve(Minecraft.getInstance().getSoundManager()); // getSound() resolve ile dolar
             check(failures, sound instanceof Playlist.PlaylistSound ps && ps.trackId.equals(c)
                     && sound.getSound() != null && sound.getSound().getLocation().equals(c), "devralma: menu muziginde listedeki parca calmali");
             MusicSettings.setEnabled(c, false);

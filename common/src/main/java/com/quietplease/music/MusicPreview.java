@@ -36,7 +36,7 @@ public final class MusicPreview {
         }
 
         @Override
-        public WeighedSoundEvents getOrResolve(SoundManager manager) {
+        public WeighedSoundEvents resolve(SoundManager manager) {
             this.sound = target; // oyunun rastgele secimini atla
             return manager.getSoundEvent(this.identifier);
         }

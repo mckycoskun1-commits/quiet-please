@@ -69,7 +69,7 @@ public class QuietPlease {
                 shot(mc, "quietplease-panel.png"); // "su an calan" cubugu, onizleme yok
             }
             // Menu muzigi calarken: Ayarlar ve ESC menusundeki dugme + altindaki "calan sarki" yazisi
-            case 120 -> mc.gui.setScreen(new OptionsScreen(new TitleScreen(), mc.options));
+            case 120 -> mc.gui.setScreen(new OptionsScreen(new TitleScreen(), mc.options, false));
             case 135 -> shot(mc, "quietplease-options.png");
             // Ayarlar ekrani
             case 136 -> mc.gui.setScreen(new com.quietplease.gui.QuietPleaseSettingsScreen(new TitleScreen()));
