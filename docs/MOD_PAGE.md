@@ -30,21 +30,23 @@ Big modpacks bring a lot of music – and not all of it fits together.
 
 
 ## Features
-- 🎵 **Every music track in one list**, grouped by the mod it comes from
-- 🔇 **Turn off** any track – the game simply picks another one instead
-- 🔉 **Per-track volume** from 0 to 100 %
-- 📦 **Disable all music of a mod** with one click
-- ▶ **Preview** any track inside the panel (background music pauses while you listen)
-- 🟢 **See what is playing right now** – in the panel and right under the button in the ESC menu, so you can find a song even if you don't know its name
-- 🔍 Search, mod filter, and an optional "ambient" view for long ambience loops
-- 📃 **Background playlist** – pick the songs and their order, like a music player: queue with progress bar, move up/down, shuffle, repeat. Boss, dragon and credits music still interrupt it
-- ⏭ **Skip** the current background song (button, `/quietplease skip` or a key you choose)
-- ⌨ **Key bindings** (unbound by default) to open the panel and skip a song
-- ⏱ **Music gap** – shorten (or remove) the long silence between background songs
-- ⚙ **Settings screen** – hide the menu buttons or the now-playing text
-- 💾 **Presets** – `/quietplease export <name>` / `import <name>` to share a setup
-- 💿 Works for vanilla music, music discs and modded boss/biome music
-- 🌍 English and Turkish
+- **Every music track in one list**, grouped by the mod it comes from
+- **Turn off** any track – the game simply picks another one instead
+- **Per-track volume** from 0 to 100 %
+- **Disable all music of a mod** with one click
+- **Preview** any track inside the panel (background music pauses while you listen)
+- **See what is playing right now** – in the panel and right under the button in the ESC menu, so you can find a song even if you don't know its name
+- Search, mod filter, and an optional "ambient" view for long ambience loops
+- Works for vanilla music, music discs and modded boss/biome music
+- English and Turkish
+
+## Coming in 1.1.0
+- **Background playlist** – pick the songs and their order, like a music player: queue with progress bar, move up/down, shuffle, repeat. Boss, dragon and credits music still interrupt it
+- **Skip** the current background song (button, `/quietplease skip` or a key you choose)
+- **Key bindings** (unbound by default) to open the panel and skip a song
+- **Music gap** – shorten (or remove) the long silence between background songs
+- **Settings screen** – hide the menu buttons or the now-playing text
+- **Presets** – `/quietplease export <name>` / `import <name>` to share a setup
 
 ## How to open it
 **Esc → ♪ Quiet Please** (top-right corner), **Options → ♪ Quiet Please**, or **Options → Music & Sounds → ♪ Quiet Please**,
@@ -65,20 +67,22 @@ Büyük mod paketleri bir sürü müzik getirir ve hepsi birbirine uymaz.
 **Quiet Please** ile neyi duymak istediğine parça parça sen karar verirsin.
 
 ## Özellikler
-- 🎵 **Tüm müzikler tek listede**, geldikleri moda göre gruplanmış
-- 🔇 İstediğin parçayı **kapat** – oyun onun yerine başka bir parça seçer
-- 🔉 Her parça için **%0–100 ses ayarı**
-- 📦 Bir modun **tüm müziklerini tek tıkla kapat**
-- ▶ Panelde **dinleyerek önizle** (dinlerken arka plan müziği susar)
-- 🔍 Arama, mod filtresi ve uzun ortam sesleri için ayrı görünüm
-- 📃 **Arka plan çalma listesi** – şarkıları ve sırasını sen seç, bir müzik çalar gibi: ilerleme çubuklu sıra, yukarı/aşağı taşıma, karıştırma, tekrar. Boss, ejderha ve jenerik müzikleri yine araya girer
-- ⏭ Çalan arka plan şarkısını **atla** (düğme, `/quietplease skip` ya da seçtiğin bir tuş)
-- ⌨ Paneli açmak ve şarkı atlamak için **kısayol tuşları** (varsayılan olarak boş)
-- ⏱ **Şarkı arası** – arka plan şarkıları arasındaki uzun sessizliği kısalt ya da kaldır
-- ⚙ **Ayarlar ekranı** – menü düğmelerini ya da çalan şarkı yazısını gizle
-- 💾 **Hazır ayarlar** – `/quietplease export <ad>` / `import <ad>` ile ayarları paylaş
-- 💿 Vanilla müzikler, plaklar ve modların boss/biyom müzikleriyle çalışır
-- 🌍 İngilizce ve Türkçe
+- **Tüm müzikler tek listede**, geldikleri moda göre gruplanmış
+- İstediğin parçayı **kapat** – oyun onun yerine başka bir parça seçer
+- Her parça için **%0–100 ses ayarı**
+- Bir modun **tüm müziklerini tek tıkla kapat**
+- Panelde **dinleyerek önizle** (dinlerken arka plan müziği susar)
+- Arama, mod filtresi ve uzun ortam sesleri için ayrı görünüm
+- Vanilla müzikler, plaklar ve modların boss/biyom müzikleriyle çalışır
+- İngilizce ve Türkçe
+
+## 1.1.0 ile gelecekler
+- **Arka plan çalma listesi** – şarkıları ve sırasını sen seç, bir müzik çalar gibi: ilerleme çubuklu sıra, yukarı/aşağı taşıma, karıştırma, tekrar. Boss, ejderha ve jenerik müzikleri yine araya girer
+- Çalan arka plan şarkısını **atla** (düğme, `/quietplease skip` ya da seçtiğin bir tuş)
+- Paneli açmak ve şarkı atlamak için **kısayol tuşları** (varsayılan olarak boş)
+- **Şarkı arası** – arka plan şarkıları arasındaki uzun sessizliği kısalt ya da kaldır
+- **Ayarlar ekranı** – menü düğmelerini ya da çalan şarkı yazısını gizle
+- **Hazır ayarlar** – `/quietplease export <ad>` / `import <ad>` ile ayarları paylaş
 
 ## Nasıl açılır
 **Ayarlar → ♪ Quiet Please** (sağ üst köşe), **Ayarlar → Müzik ve Sesler → ♪ Quiet Please**
