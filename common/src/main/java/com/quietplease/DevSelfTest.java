@@ -38,7 +38,7 @@ final class DevSelfTest {
         RandomSource random = RandomSource.create(42);
 
         // 1) Parca atlama: music.menu icinde sonuncu haric hepsini kapat, 300 kez sec.
-        WeighedSoundEvents menu = sm.getSoundEvent(ResourceLocation.withDefaultNamespace("music.menu"));
+        WeighedSoundEvents menu = sm.getSoundEvent(new ResourceLocation("music.menu"));
         List<ResourceLocation> files = new ArrayList<>();
         for (Weighted<Sound> w : ((com.quietplease.mixin.WeighedSoundEventsAccessor) menu).quietplease$getList()) if (w instanceof Sound s) files.add(s.getLocation());
         ResourceLocation keep = files.get(files.size() - 1);

@@ -16,8 +16,8 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.options.OptionsScreen;
-import net.minecraft.client.gui.screens.options.SoundOptionsScreen;
+import net.minecraft.client.gui.screens.OptionsScreen;
+import net.minecraft.client.gui.screens.SoundOptionsScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -42,7 +42,7 @@ public final class MenuButton {
     /** Dugme bu ekrana eklensin mi? Ayarlar ekranindan ESC menusu ve Ayarlar icin ayri ayri kapatilabilir. */
     private static boolean isTarget(Screen screen) {
         if (screen instanceof PauseScreen pause) {
-            return ModOptions.pauseMenuButton && pause.showsPauseMenu(); // F3+Esc menusuz duraklamada yok
+            return ModOptions.pauseMenuButton && ((com.quietplease.mixin.PauseScreenAccessor) pause).quietplease$showsPauseMenu(); // F3+Esc menusuz duraklamada yok
         }
         return ModOptions.optionsButton && (screen instanceof OptionsScreen || screen instanceof SoundOptionsScreen);
     }

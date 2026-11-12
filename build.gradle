@@ -59,8 +59,8 @@ subprojects {
                 minecraft_version     : rootProject.minecraft_version,
                 minecraft_version_range: rootProject.minecraft_version_range,
                 fabric_loader_version : rootProject.fabric_loader_version,
-                forge_version_range   : rootProject.forge_version_range,
-                neoforge_version_range: rootProject.neoforge_version_range,
+                forge_version_range   : rootProject.findProperty("forge_version_range") ?: "",
+                neoforge_version_range: rootProject.findProperty("neoforge_version_range") ?: "",
                 java_version          : rootProject.java_version
         ]
         inputs.properties props

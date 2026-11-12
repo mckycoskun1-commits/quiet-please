@@ -19,7 +19,8 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 @Mod(QuietPlease.MODID)
 public final class QuietPleaseForge {
 
-    public QuietPleaseForge(FMLJavaModLoadingContext context) {
+    public QuietPleaseForge() {
+        FMLJavaModLoadingContext context = FMLJavaModLoadingContext.get();
         if (FMLEnvironment.dist != Dist.CLIENT) return;
         QuietPlease.init();
         context.getModEventBus().addListener((RegisterKeyMappingsEvent event) -> QuietPleaseKeys.all().forEach(event::register));

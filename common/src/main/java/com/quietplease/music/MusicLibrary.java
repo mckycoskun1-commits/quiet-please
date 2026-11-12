@@ -43,7 +43,7 @@ public final class MusicLibrary {
                 if (!(entry instanceof Sound sound)) continue;
                 if (sound.getType() != Sound.Type.FILE) continue;
                 ResourceLocation file = sound.getLocation();
-                if (file.equals(SoundManager.EMPTY_SOUND_LOCATION)
+                if (file.equals(SoundManager.EMPTY_SOUND.getLocation())
                         || file.equals(SoundManager.INTENTIONALLY_EMPTY_SOUND_LOCATION)) continue;
                 eventsByFile.computeIfAbsent(file, k -> new LinkedHashSet<>()).add(eventId);
                 streamByFile.merge(file, sound.shouldStream(), Boolean::logicalOr);

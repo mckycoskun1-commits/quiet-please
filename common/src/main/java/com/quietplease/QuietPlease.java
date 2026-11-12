@@ -9,8 +9,8 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.gui.screens.options.OptionsScreen;
-import net.minecraft.client.gui.screens.options.SoundOptionsScreen;
+import net.minecraft.client.gui.screens.OptionsScreen;
+import net.minecraft.client.gui.screens.SoundOptionsScreen;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 
@@ -30,6 +30,14 @@ public class QuietPlease {
         com.quietplease.music.Playlist.clientTick(mc);
         QuietPleaseKeys.tick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
+        if (!autoDumpDone && mc.screen instanceof TitleScreen && mc.getOverlay() == null) onScreenInit(mc.screen);
+        if (mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen
+                && System.getenv("QUIETPLEASE_AUTODUMP") != null
+                && com.quietplease.platform.Services.PLATFORM.isDevelopment()) {
+            mc.options.onboardAccessibility = false;
+            mc.options.save();
+            mc.setScreen(new TitleScreen(true));
+        }
     }
 
     /**
@@ -105,7 +113,7 @@ public class QuietPlease {
                         new net.minecraft.world.level.GameRules(), net.minecraft.world.level.WorldDataConfiguration.DEFAULT);
                 mc.createWorldOpenFlows().createFreshLevel(settings.levelName(), settings,
                         new net.minecraft.world.level.levelgen.WorldOptions(0L, false, false),
-                        net.minecraft.world.level.levelgen.presets.WorldPresets::createNormalWorldDimensions, new TitleScreen());
+                        net.minecraft.world.level.levelgen.presets.WorldPresets::createNormalWorldDimensions);
                 worldJoinTick = -1;
             }
             default -> {
@@ -168,7 +176,7 @@ public class QuietPlease {
     public static void onScreenInit(Screen screen) {
         if (!com.quietplease.platform.Services.PLATFORM.isDevelopment()) return;
         String mode = System.getenv("QUIETPLEASE_AUTODUMP");
-        if (autoDumpDone || !(screen instanceof TitleScreen) || mode == null) return;
+        if (autoDumpDone || !(screen instanceof TitleScreen) || mode == null || Minecraft.getInstance().getOverlay() != null) return;
         autoDumpDone = true;
         try {
             DevSelfTest.run();

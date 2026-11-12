@@ -99,6 +99,7 @@ public class QuietPleaseSettingsScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        renderBackground(g);
         super.render(g, mouseX, mouseY, partialTick);
         g.drawCenteredString(font, title, width / 2, 14, 0xFFFFC966);
         // Sarki arasinin kisa aciklamasi, kaydiricilarin altinda

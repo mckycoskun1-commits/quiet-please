@@ -224,6 +224,7 @@ public class QuietPlaylistScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        renderBackground(g);
         super.render(g, mouseX, mouseY, partialTick);
         renderHeader(g);
         if (!addMode) renderNowPlaying(g);
@@ -353,7 +354,9 @@ public class QuietPlaylistScreen extends Screen {
 
     private class RowList extends ContainerObjectSelectionList<Row> {
         RowList(Minecraft mc, int width, int height, int y) {
-            super(mc, width, height, y, ROW_HEIGHT);
+            super(mc, width, y + height, y, y + height, ROW_HEIGHT);
+            setRenderBackground(false);
+            setRenderTopAndBottom(false);
         }
 
         void clear() {
@@ -375,18 +378,15 @@ public class QuietPlaylistScreen extends Screen {
         }
 
         @Override
-        protected void renderListBackground(GuiGraphics g) {
+        protected void renderBackground(GuiGraphics g) {
             int left = getRowLeft() - 6;
             int right = getScrollbarPosition() + 6 + 4;
-            int top = getY() - 2;
-            int bottom = getBottom() + 2;
+            int top = y0 - 2;
+            int bottom = y1 + 2;
             g.fill(left, top, right, bottom, PANEL_BG);
             g.renderOutline(left - 1, top - 1, right - left + 2, bottom - top + 2, ACCENT_SOFT);
             g.fillGradient(left, top, right, top + 6, 0x30E89A3C, 0x00E89A3C);
         }
-
-        @Override
-        protected void renderListSeparators(GuiGraphics g) {}
     }
 
     private abstract static class Row extends ContainerObjectSelectionList.Entry<Row> {}
