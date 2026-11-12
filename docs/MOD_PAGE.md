@@ -37,6 +37,11 @@ Big modpacks bring a lot of music – and not all of it fits together.
 - ▶ **Preview** any track inside the panel (background music pauses while you listen)
 - 🟢 **See what is playing right now** – in the panel and right under the button in the ESC menu, so you can find a song even if you don't know its name
 - 🔍 Search, mod filter, and an optional "ambient" view for long ambience loops
+- 📃 **Background playlist** – pick the songs and their order, like a music player: queue with progress bar, move up/down, shuffle, repeat. Boss, dragon and credits music still interrupt it
+- ⏭ **Skip** the current background song (button or `/quietplease skip`)
+- ⏱ **Music gap** – shorten (or remove) the long silence between background songs
+- ⚙ **Settings screen** – hide the menu buttons or the now-playing text
+- 💾 **Presets** – `/quietplease export <name>` / `import <name>` to share a setup
 - 💿 Works for vanilla music, music discs and modded boss/biome music
 - 🌍 English and Turkish
 
@@ -65,6 +70,11 @@ Büyük mod paketleri bir sürü müzik getirir ve hepsi birbirine uymaz.
 - 📦 Bir modun **tüm müziklerini tek tıkla kapat**
 - ▶ Panelde **dinleyerek önizle** (dinlerken arka plan müziği susar)
 - 🔍 Arama, mod filtresi ve uzun ortam sesleri için ayrı görünüm
+- 📃 **Arka plan çalma listesi** – şarkıları ve sırasını sen seç, bir müzik çalar gibi: ilerleme çubuklu sıra, yukarı/aşağı taşıma, karıştırma, tekrar. Boss, ejderha ve jenerik müzikleri yine araya girer
+- ⏭ Çalan arka plan şarkısını **atla** (düğme ya da `/quietplease skip`)
+- ⏱ **Şarkı arası** – arka plan şarkıları arasındaki uzun sessizliği kısalt ya da kaldır
+- ⚙ **Ayarlar ekranı** – menü düğmelerini ya da çalan şarkı yazısını gizle
+- 💾 **Hazır ayarlar** – `/quietplease export <ad>` / `import <ad>` ile ayarları paylaş
 - 💿 Vanilla müzikler, plaklar ve modların boss/biyom müzikleriyle çalışır
 - 🌍 İngilizce ve Türkçe
 
@@ -75,6 +85,17 @@ ya da **Modlar → Quiet Please → Yapılandırma**. Sohbette `/quietplease` ko
 ## Bilmen gerekenler
 - **Sadece istemci tarafı.** Sunucuya kurulması gerekmez, her sunucuya girebilirsin.
 - Ayarlar `config/quietplease.json` dosyasında; mod paketi yapanlar hazır ayarlı bir dosya ekleyebilir.
+```
+
+## 1.1.0 sürüm notu (taslak, `improvements` dalı – henüz yayınlanmadı)
+
+```markdown
+## 1.1.0 – Playlist and settings
+- Background playlist with its own queue panel (play now, move, remove, shuffle, repeat modes, progress bar)
+- Skip button in the panel and /quietplease skip
+- Settings screen: menu buttons on/off, now-playing text on/off, ambient default, music gap (Vanilla / Short / None / Custom)
+- Presets: /quietplease export <name> and /quietplease import <name>
+- Long track names no longer run past the now-playing bar
 ```
 
 ## İlk sürüm notu (changelog)

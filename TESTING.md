@@ -43,3 +43,49 @@ Bitmiş mod dosyası: `dist/quietplease-1.0.0.jar`
        bu Quiet Please'tan değil, ama gerçek oyunda da sorun olmadığını görmek lazım).
 6. [ ] Boss müziği olan bir modla dene (Cataclysm, Mowzie's Mobs): boss müziği kapatılınca çalmıyor / kısılınca kısılıyor.
 7. [ ] Bir sunucuya bağlan (sunucuda Quiet Please yok) → sorunsuz bağlanıyor.
+
+## C. `improvements` dalı (1.1.0): Ayarlar, çalma listesi, Atla, hazır ayarlar
+
+Önce dalı aç ve test oyununu başlat:
+
+```
+git switch improvements
+.\gradlew.bat runClient
+```
+
+Bu dalın jar'ı `dist/quietplease-1.1.0.jar` olur (1.0.0 jar'ına dokunmaz).
+
+### Ayarlar
+1. [ ] Panelde sol üstte **Settings / Ayarlar** düğmesi Ayarlar ekranını açıyor; **Done** panele geri dönüyor.
+2. [ ] **Now playing text: OFF** → ESC menüsünde ve Options'ta düğmenin yanındaki şarkı adı kayboluyor.
+3. [ ] **Button in ESC menu: OFF** → ESC menüsünde ♪ Quiet Please yok; **Button in Options: OFF** → Options ve Music & Sounds'ta yok.
+       Panel yine **Mods → Quiet Please → Config** ve `/quietplease gui` ile açılıyor.
+4. [ ] **Ambient in list: ON** → panel her açıldığında "Ambient: Show" ile başlıyor.
+5. [ ] **Music gap: None** → bir dünyada bir şarkı bitince sıradaki ~1 sn içinde başlıyor. **Short** → 30–60 sn.
+       **Custom** → kaydırıcılar aktifleşiyor; en kısa > en uzun yapılamıyor (diğeri kendini düzeltiyor).
+6. [ ] Oyunu kapatıp açınca ayarlar duruyor (`run/config/quietplease.json` içinde `"options"`).
+
+### Çalma listesi
+7. [ ] Panelde bir parçanın **☆** düğmesine bas → **★** oluyor; Mod filtresinde **★ Playlist** sadece onları gösteriyor.
+8. [ ] Sağ üstte **Playlist / Çalma listesi** → panel açılıyor; **Add songs** sekmesinde arama ve mod filtresi çalışıyor, **+ Add** / **✓ Added**.
+9. [ ] **Queue** sekmesinde **▲/▼** sırayı değiştiriyor, **✕** çıkarıyor, **Clear** onay soruyor.
+10. [ ] **Playlist mode: ON**, **▶** bir şarkıda → o şarkı hemen çalıyor, üstte ilerleme çubuğu ve süre (ör. 0:12 / 3:21) ilerliyor;
+        ESC'de (tek oyunculu) oyun durunca süre de duruyor.
+11. [ ] **Skip ⏭** → sıradaki şarkı hemen başlıyor. **Shuffle** → çalan şarkı en üstte kalıyor, gerisi karışıyor.
+12. [ ] **Repeat: Stop at end** → son şarkı bitince vanilla müzik dönüyor ve üst çubukta "playlist ended" yazıyor.
+13. [ ] Ana menüde çalma listesi şarkısı çalarken menü müziği onu kesmiyor; bir dünyaya girince liste devam ediyor.
+14. [ ] **Boss müziği (asıl test):** `run/mods` içinde **L_Ender's Cataclysm** varken çalma listesi modu açık, Settings → Music gap: None.
+        Creative'de bir boss çağır (ör. `/summon cataclysm:ignis` ya da `cataclysm:netherite_monstrosity`):
+        boss müziği çalıyor (listeden bağımsız). Boss ölünce/uzaklaşınca liste kaldığı yerden devam ediyor.
+        Not: modun doğrudan çaldığı boss müziği MusicManager'dan geçmediği için, liste şarkısı o sırada da çalabilir (vanilla'da da böyle).
+15. [ ] **Ejderha:** End'de ejderha savaşı müziği liste şarkısını kesiyor (`/execute in minecraft:the_end run tp @s 0 80 0`).
+16. [ ] Bir parçayı **Off** yap → listede üstü çizili ve sırası gelince atlanıyor.
+17. [ ] Oyunu kapatıp açınca sıra, tekrar modu ve en son çalan yer korunuyor.
+
+### Atla ve hazır ayarlar
+18. [ ] Ana panelin "Now playing" çubuğundaki **Skip** ve sohbette `/quietplease skip`:
+        liste kapalıyken şarkı duruyor, sıradaki şarkı arası ayarına göre geliyor (Vanilla'da yani uzun süre gelmeyebilir).
+        Plak çalarken ya da hiç müzik yokken düğme pasif / komut "çalan arka plan müziği yok" diyor.
+19. [ ] `/quietplease export test1` → `run/config/quietplease-presets/test1.json` oluşuyor (sohbetteki ada tıklayınca klasör açılıyor).
+        Bir şeyleri değiştir, `/quietplease import test1` → eski hal geliyor (çalma listesi dahil). `import` yazarken ad öneriliyor.
+20. [ ] `/quietplease export ../x` reddediliyor.

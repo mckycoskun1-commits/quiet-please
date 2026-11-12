@@ -50,6 +50,7 @@ Yine de oraya konursa `build.gradle` bunu fark edip derleme çıktılarını ve 
 7. [ ] Elle test ([TESTING.md](TESTING.md)) – özellikle gerçek launcher ve The Aether
 8. [x] Ad kararı: **Quiet Please** (mod kimliği `quietplease`)
 9. [ ] Yayın ([docs/MOD_PAGE.md](docs/MOD_PAGE.md))
+10. [x] `improvements` dalı (1.1.0): Ayarlar ekranı, şarkı arası, çalma listesi, Atla, hazır ayarlar – elle test bekliyor
 
 ## Panel
 
@@ -61,6 +62,24 @@ Listenin üstündeki yeşil **Şu an çalıyor** çubuğu oyunda o an çalan mü
 Önizleme ana ses kanalından çalar, yani oyunun "Müzik" kaydırıcısı %0 olsa da duyulur.
 ESC menüsünde düğmenin hemen altında, Ayarlar ekranlarında düğmenin solunda o an çalan şarkının adı küçük yazıyla görünür.
 Mod filtresi düğmesinde sol tık sonraki moda, sağ tık önceki moda geçer.
+Çubuğun sağındaki **Atla** çalan arka plan şarkısını durdurur. Başlıkta solda **Ayarlar**, sağda **Çalma listesi** düğmesi var;
+her parça satırındaki **☆/★** parçayı çalma listesine ekler/çıkarır, mod filtresindeki **★ Çalma listesi** sadece listedekileri gösterir.
+
+## Ayarlar
+
+Paneldeki **Ayarlar** düğmesi ya da `/quietplease settings`: ESC menüsündeki ve Ayarlar ekranlarındaki düğme (ayrı ayrı),
+çalan şarkı yazısı, listede ortam sesleri, çalma listesi modu ve **şarkı arası** (iki arka plan şarkısı arasındaki sessizlik:
+Vanilla / Kısa 30–60 sn / Yok / Özel kaydırıcılar). Şarkı arası sadece arka plan müziğini değiştirir; ejderha, jenerik ve
+boss müzikleri etkilenmez. Tasarım ayrıntıları: [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md).
+
+## Çalma listesi
+
+Paneldeki **Çalma listesi** düğmesi, Ayarlar ekranı ya da `/quietplease playlist`. Bir müzik çalar gibi: üstte çalan şarkı ve
+ilerleme çubuğu, altında sıradaki şarkılar numaralı; **▶** şimdi çal, **▲/▼** sırada taşı, **✕** çıkar, **Şarkı ekle** sekmesinde
+arama ve mod filtresiyle ekleme, **Atla**, **Karıştır**, **Tekrar** (listeyi tekrarla / sürekli karıştır / sonda dur), **Temizle**.
+**Çalma listesi modu** açıkken oyun her arka plan şarkısı başlatacağında (menü, oyun, biyomlar, su altı, Nether, End) rastgele
+parça yerine listedeki sıradakini çalar. Ejderha/jenerik müziği ve modların doğrudan çaldığı boss müzikleri yine araya girer.
+Liste boşsa ya da mod kapalıysa her şey vanilla gibidir. Sıra `config/quietplease.json` dosyasında saklanır.
 
 ## Dil desteği
 
@@ -79,12 +98,17 @@ metinleri çevirmek yeterli.
 - `/quietplease reset <parça>` / `/quietplease resetall` ayarları sıfırla
 - `/quietplease dump` tam listeyi (ayarlarla birlikte) oyun klasöründeki `quietplease-tracks.txt` dosyasına yazar
 - `/quietplease gui` paneli açar
+- `/quietplease settings` / `/quietplease playlist` Ayarlar ekranını / çalma listesi panelini açar
+- `/quietplease skip` çalan arka plan şarkısını atlar
+- `/quietplease export <ad>` / `/quietplease import <ad>` tüm ayarları (çalma listesi dahil)
+  `config/quietplease-presets/<ad>.json` olarak kaydeder / yükler
 
-Ayarlar `config/quietplease.json` dosyasında saklanır.
+Ayarlar `config/quietplease.json` dosyasında saklanır (parça ayarları, `options` ve `playlist` bölümleri; eski dosyalar aynen yüklenir).
 
 ## Geliştirici notu
 
 Sadece geliştirme ortamında (`runClient`) ve `QUIETPLEASE_AUTODUMP` ortam değişkeni ayarlıyken: ana menüde küçük bir
-öz-test çalışır (parça atlama ve ses çarpanı), müzik listesi `quietplease-tracks.txt` dosyasına yazılır ve
-`QUIETPLEASE_AUTODUMP=gui` ise panel açılıp ekran görüntüsü alınır. Sonuçlar test oyununun `logs/latest.log`
+öz-test çalışır (parça atlama, ses çarpanı, çalma listesi seçimi, şarkı arası, hazır ayar), müzik listesi
+`quietplease-tracks.txt` dosyasına yazılır ve `QUIETPLEASE_AUTODUMP=gui` ise panel, Ayarlar ekranı ve çalma listesi paneli
+açılıp ekran görüntüsü alınır; bir deneme dünyasında çalma listesinin oyun müziğini devraldığı ve Atla'nın sıradakine geçtiği kontrol edilir. Sonuçlar test oyununun `logs/latest.log`
 dosyasında `SELFTEST` / `GUITEST` olarak görünür. Gerçek oyunda (launcher'dan) bu kod hiç çalışmaz.
