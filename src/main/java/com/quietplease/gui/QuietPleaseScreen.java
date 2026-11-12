@@ -3,6 +3,7 @@ package com.quietplease.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.quietplease.QuietPlease;
 import com.quietplease.Lang;
+import com.quietplease.music.ModOptions;
 import com.quietplease.music.MusicLibrary;
 import com.quietplease.music.MusicPreview;
 import com.quietplease.music.MusicSettings;
@@ -84,7 +85,7 @@ public class QuietPleaseScreen extends Screen {
     // Filtreler (ekran yeniden boyutlaninca korunsun diye alanlarda tutuluyor)
     private String query = "";
     private String modFilter = ""; // "" = tum modlar
-    private boolean showOther = false;
+    private boolean showOther = ModOptions.showAmbient;
 
     public QuietPleaseScreen(@Nullable Screen parent) {
         super(Component.literal("Quiet Please"));
@@ -107,6 +108,13 @@ public class QuietPleaseScreen extends Screen {
         int otherW = 96;
         int searchW = rowW - modW - otherW - 8;
         int y = 32;
+
+        // Baslikta: solda Ayarlar (ortadaki logoya carpmasin diye satirin kenarlarinda)
+        Component settingsLabel = Lang.tr("settings.button");
+        addRenderableWidget(Button.builder(settingsLabel, b -> minecraft.setScreen(new QuietPleaseSettingsScreen(this)))
+                .bounds(x, 6, Math.max(60, font.width(settingsLabel) + 12), 20)
+                .tooltip(Tooltip.create(Lang.tr("settings.button.tooltip")))
+                .build());
 
         EditBox search = new EditBox(font, x + 1, y + 1, searchW - 2, 18, Lang.tr("screen.search"));
         search.setHint(Lang.tr("screen.search").withStyle(ChatFormatting.DARK_GRAY));

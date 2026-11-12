@@ -1,6 +1,7 @@
 package com.quietplease.gui;
 
 import com.quietplease.Lang;
+import com.quietplease.music.ModOptions;
 import com.quietplease.music.MusicLibrary;
 import com.quietplease.music.MusicTrack;
 import com.quietplease.music.NowPlaying;
@@ -39,14 +40,20 @@ public final class MenuButton {
 
     private MenuButton() {}
 
+    /** Dugme bu ekrana eklensin mi? Ayarlar ekranindan ESC menusu ve Ayarlar icin ayri ayri kapatilabilir. */
     private static boolean isTarget(Screen screen) {
-        if (screen instanceof PauseScreen pause) return pause.showsPauseMenu(); // F3+Esc menusuz duraklamada yok
-        return screen instanceof OptionsScreen || screen instanceof SoundOptionsScreen;
+        if (screen instanceof PauseScreen pause) {
+            return ModOptions.pauseMenuButton && pause.showsPauseMenu(); // F3+Esc menusuz duraklamada yok
+        }
+        return ModOptions.optionsButton && (screen instanceof OptionsScreen || screen instanceof SoundOptionsScreen);
     }
 
     public static void onInit(ScreenEvent.Init.Post event) {
         Screen screen = event.getScreen();
-        if (!isTarget(screen)) return;
+        if (!isTarget(screen)) {
+            if (screen == buttonScreen) button = null; // ayar kapatildiysa eski dugmenin yazisi da cizilmesin
+            return;
+        }
         Component label = Lang.tr("options.button");
         int w = Math.max(90, Minecraft.getInstance().font.width(label) + 16);
         button = Button.builder(label, b -> Minecraft.getInstance().setScreen(new QuietPleaseScreen(screen)))
@@ -61,7 +68,7 @@ public final class MenuButton {
     }
 
     public static void onRender(ScreenEvent.Render.Post event) {
-        if (button == null || event.getScreen() != buttonScreen) return;
+        if (button == null || event.getScreen() != buttonScreen || !ModOptions.nowPlayingText) return;
         // Sadece muzik ve plaklar; Nether ortam sesi gibi uzun dongu sesleri burada gosterilmez
         List<MusicTrack> playing = NowPlaying.find(tracksById).stream()
                 .filter(t -> t.kind() != MusicTrack.Kind.OTHER).toList();

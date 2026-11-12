@@ -135,29 +135,46 @@ public final class MusicSettings {
     // ---------------------------------------------------------------- dosya
 
     public static void load() {
-        SETTINGS.clear();
         Path path = file();
+        JsonObject root = null;
         if (Files.exists(path)) {
             try {
-                JsonObject root = GSON.fromJson(Files.readString(path, StandardCharsets.UTF_8), JsonObject.class);
-                JsonObject tracks = root != null && root.has("tracks") ? root.getAsJsonObject("tracks") : new JsonObject();
-                for (String key : tracks.keySet()) {
-                    ResourceLocation id = ResourceLocation.tryParse(key);
-                    if (id == null) continue;
-                    JsonObject o = tracks.getAsJsonObject(key);
-                    int volume = o.has("volume") ? o.get("volume").getAsInt() : DEFAULT_VOLUME;
-                    boolean enabled = !o.has("enabled") || o.get("enabled").getAsBoolean();
-                    put(id, new TrackSetting(Math.max(0, Math.min(100, volume)), enabled));
-                }
+                root = GSON.fromJson(Files.readString(path, StandardCharsets.UTF_8), JsonObject.class);
             } catch (Exception e) {
                 QuietPlease.LOGGER.error("{} okunamadi, varsayilan ayarlar kullaniliyor", path, e);
             }
         }
-        recount();
+        readRoot(root);
         QuietPlease.LOGGER.info("Quiet Please ayarlari yuklendi: {} parca ozel ayarli, {} kapali", SETTINGS.size(), disabledCount);
     }
 
-    public static void save() {
+    /** Dosyanin tamamini okur. Eksik bolumler varsayilan olur; boylece eski dosyalar da aynen yuklenir. */
+    static void readRoot(JsonObject root) {
+        SETTINGS.clear();
+        try {
+            JsonObject tracks = root != null && root.has("tracks") ? root.getAsJsonObject("tracks") : new JsonObject();
+            for (String key : tracks.keySet()) {
+                ResourceLocation id = ResourceLocation.tryParse(key);
+                if (id == null) continue;
+                JsonObject o = tracks.getAsJsonObject(key);
+                int volume = o.has("volume") ? o.get("volume").getAsInt() : DEFAULT_VOLUME;
+                boolean enabled = !o.has("enabled") || o.get("enabled").getAsBoolean();
+                put(id, new TrackSetting(Math.max(0, Math.min(100, volume)), enabled));
+            }
+        } catch (Exception e) {
+            QuietPlease.LOGGER.error("Parca ayarlari okunamadi", e);
+        }
+        try {
+            ModOptions.read(root != null && root.has("options") ? root.getAsJsonObject("options") : null);
+        } catch (Exception e) {
+            QuietPlease.LOGGER.error("Ayarlar okunamadi, varsayilanlar kullaniliyor", e);
+            ModOptions.reset();
+        }
+        recount();
+    }
+
+    /** Dosyanin tamami: parca ayarlari + genel ayarlar. */
+    static JsonObject writeRoot() {
         JsonObject tracks = new JsonObject();
         new TreeMap<>(Map.copyOf(SETTINGS)).forEach((id, s) -> {
             JsonObject o = new JsonObject();
@@ -167,9 +184,14 @@ public final class MusicSettings {
         });
         JsonObject root = new JsonObject();
         root.add("tracks", tracks);
+        root.add("options", ModOptions.write());
+        return root;
+    }
+
+    public static void save() {
         try {
             Files.createDirectories(file().getParent());
-            Files.writeString(file(), GSON.toJson(root), StandardCharsets.UTF_8);
+            Files.writeString(file(), GSON.toJson(writeRoot()), StandardCharsets.UTF_8);
         } catch (IOException e) {
             QuietPlease.LOGGER.error("{} yazilamadi", file(), e);
         }
