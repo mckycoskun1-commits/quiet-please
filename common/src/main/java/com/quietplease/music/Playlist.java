@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.AbstractSoundInstance;
 import net.minecraft.client.resources.sounds.Sound;
@@ -25,7 +25,7 @@ import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.client.sounds.Weighted;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
@@ -72,9 +72,9 @@ public final class Playlist {
     /** Listedeki bir parcayi caldiran ses: rastgele secim yapmadan dogrudan o dosya (onizlemedeki yontem). */
     public static final class PlaylistSound extends AbstractSoundInstance {
         private final Sound target;
-        public final ResourceLocation trackId;
+        public final Identifier trackId;
 
-        PlaylistSound(ResourceLocation eventId, Sound target, ResourceLocation trackId) {
+        PlaylistSound(Identifier eventId, Sound target, Identifier trackId) {
             // SimpleSoundInstance.forMusic ile ayni ozellikler
             super(eventId, SoundSource.MUSIC, SoundInstance.createUnseededRandom());
             this.target = target;
@@ -84,13 +84,13 @@ public final class Playlist {
         }
 
         @Override
-        public WeighedSoundEvents resolve(SoundManager manager) {
+        public WeighedSoundEvents getOrResolve(SoundManager manager) {
             this.sound = target;
-            return manager.getSoundEvent(this.location);
+            return manager.getSoundEvent(this.identifier);
         }
     }
 
-    private static final List<ResourceLocation> QUEUE = new ArrayList<>();
+    private static final List<Identifier> QUEUE = new ArrayList<>();
     /** Calan (ya da en son calan) parcanin sirasi; -1 = henuz baslamadi. */
     private static int position = -1;
     private static Repeat repeat = Repeat.REPEAT_LIST;
@@ -106,13 +106,13 @@ public final class Playlist {
     private static PlaylistSound current;
     private static int elapsedTicks = 0;
     /** Ses dosyasi -> sure (sn); -1 = okunamadi. */
-    private static final Map<ResourceLocation, Integer> DURATIONS = new ConcurrentHashMap<>();
+    private static final Map<Identifier, Integer> DURATIONS = new ConcurrentHashMap<>();
 
     private Playlist() {}
 
     // ---------------------------------------------------------------- okuma
 
-    public static List<ResourceLocation> tracks() {
+    public static List<Identifier> tracks() {
         return Collections.unmodifiableList(QUEUE);
     }
 
@@ -124,7 +124,7 @@ public final class Playlist {
         return QUEUE.isEmpty();
     }
 
-    public static boolean contains(ResourceLocation id) {
+    public static boolean contains(Identifier id) {
         return QUEUE.contains(id);
     }
 
@@ -169,19 +169,19 @@ public final class Playlist {
 
     // ---------------------------------------------------------------- degistirme
 
-    public static void add(ResourceLocation id) {
+    public static void add(Identifier id) {
         if (QUEUE.contains(id)) return;
         QUEUE.add(id);
         changed();
     }
 
-    public static void remove(ResourceLocation id) {
+    public static void remove(Identifier id) {
         int i = QUEUE.indexOf(id);
         if (i >= 0) removeAt(i);
     }
 
     /** Ana paneldeki ☆/★ dugmesi. @return artik listede mi */
-    public static boolean toggle(ResourceLocation id) {
+    public static boolean toggle(Identifier id) {
         if (QUEUE.contains(id)) {
             remove(id);
             return false;
@@ -211,7 +211,7 @@ public final class Playlist {
     /** Karistir: calan parca basta kalir, gerisi karisir. */
     public static void shuffle() {
         if (position >= 0 && position < QUEUE.size()) {
-            ResourceLocation playing = QUEUE.remove(position);
+            Identifier playing = QUEUE.remove(position);
             Collections.shuffle(QUEUE, new java.util.Random(RANDOM.nextLong()));
             QUEUE.add(0, playing);
             position = 0;
@@ -253,10 +253,10 @@ public final class Playlist {
      *
      * @return sira numarasi; -1 = calinacak parca yok (oyunun kendi muzigi calsin)
      */
-    static int advance(Predicate<ResourceLocation> playable) {
+    static int advance(Predicate<Identifier> playable) {
         int n = QUEUE.size();
         if (n == 0 || ended) return -1;
-        ResourceLocation last = position >= 0 && position < n ? QUEUE.get(position) : null;
+        Identifier last = position >= 0 && position < n ? QUEUE.get(position) : null;
         for (int step = 0; step < n; step++) {
             int next = position + 1;
             if (next >= n) {
@@ -285,10 +285,10 @@ public final class Playlist {
 
     /** Bir parcanin dosyasini iceren ses olayini ve dosyayi bulur. */
     @Nullable
-    private static PlaylistSound createSound(ResourceLocation trackId) {
+    private static PlaylistSound createSound(Identifier trackId) {
         SoundManager sm = Minecraft.getInstance().getSoundManager();
         PlaylistSound fallback = null;
-        for (ResourceLocation eventId : sm.getAvailableSounds()) {
+        for (Identifier eventId : sm.getAvailableSounds()) {
             WeighedSoundEvents event = sm.getSoundEvent(eventId);
             if (event == null) continue;
             for (Weighted<Sound> w : ((com.quietplease.mixin.WeighedSoundEventsAccessor) event).quietplease$getList()) {
@@ -380,7 +380,7 @@ public final class Playlist {
     public static int durationSeconds(PlaylistSound sound) {
         Sound s = sound.getSound();
         if (s == null) return -1;
-        ResourceLocation path = s.getPath();
+        Identifier path = s.getPath();
         Integer known = DURATIONS.get(path);
         if (known != null) return known;
         DURATIONS.put(path, -1);
@@ -392,7 +392,7 @@ public final class Playlist {
      * Ogg Vorbis dosyasinin suresi: son Ogg sayfasinin "granul konumu" (toplam ornek sayisi) / ornekleme hizi.
      * Ornekleme hizi ilk sayfadaki Vorbis tanitim basligindadir.
      */
-    static int readOggSeconds(ResourceLocation path) {
+    static int readOggSeconds(Identifier path) {
         try (InputStream in = Minecraft.getInstance().getResourceManager().open(path)) {
             byte[] b = in.readAllBytes();
             long rate = 0;
@@ -437,7 +437,7 @@ public final class Playlist {
     }
 
     /** Oz-test icin {@link #advance} (ses calmadan). */
-    public static int advanceForTest(Predicate<ResourceLocation> playable) {
+    public static int advanceForTest(Predicate<Identifier> playable) {
         return advance(playable);
     }
 
@@ -451,7 +451,7 @@ public final class Playlist {
         if (o != null) {
             if (o.has("tracks")) {
                 for (JsonElement e : o.getAsJsonArray("tracks")) {
-                    ResourceLocation id = ResourceLocation.tryParse(e.getAsString());
+                    Identifier id = Identifier.tryParse(e.getAsString());
                     if (id != null && !QUEUE.contains(id)) QUEUE.add(id);
                 }
             }

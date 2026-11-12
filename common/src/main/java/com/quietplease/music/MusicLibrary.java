@@ -15,7 +15,7 @@ import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.client.sounds.Weighted;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Oyuna yuklenmis tum seslerin icinden muzikleri bulur ve geldikleri moda gore gruplar.
@@ -32,17 +32,17 @@ public final class MusicLibrary {
         SoundManager soundManager = Minecraft.getInstance().getSoundManager();
 
         // Ayni dosya birden fazla olayda kullanilabilir (ornegin calm1 hem music.game hem music.creative'de).
-        Map<ResourceLocation, Set<ResourceLocation>> eventsByFile = new HashMap<>();
-        Map<ResourceLocation, Boolean> streamByFile = new HashMap<>();
+        Map<Identifier, Set<Identifier>> eventsByFile = new HashMap<>();
+        Map<Identifier, Boolean> streamByFile = new HashMap<>();
 
-        for (ResourceLocation eventId : soundManager.getAvailableSounds()) {
+        for (Identifier eventId : soundManager.getAvailableSounds()) {
             WeighedSoundEvents event = soundManager.getSoundEvent(eventId);
             if (event == null) continue;
             for (Weighted<Sound> entry : ((com.quietplease.mixin.WeighedSoundEventsAccessor) event).quietplease$getList()) {
                 // Baska bir olaya yapilan referanslari atla; o olay zaten kendi basina taranacak.
                 if (!(entry instanceof Sound sound)) continue;
                 if (sound.getType() != Sound.Type.FILE) continue;
-                ResourceLocation file = sound.getLocation();
+                Identifier file = sound.getLocation();
                 if (file.equals(SoundManager.EMPTY_SOUND_LOCATION)
                         || file.equals(SoundManager.INTENTIONALLY_EMPTY_SOUND_LOCATION)) continue;
                 eventsByFile.computeIfAbsent(file, k -> new LinkedHashSet<>()).add(eventId);
@@ -68,10 +68,10 @@ public final class MusicLibrary {
     }
 
     /** Bu dosya muzik mi? Degilse null doner. */
-    private static MusicTrack.Kind classify(ResourceLocation file, Set<ResourceLocation> events, boolean stream) {
+    private static MusicTrack.Kind classify(Identifier file, Set<Identifier> events, boolean stream) {
         boolean disc = file.getPath().contains("records/");
         boolean music = file.getPath().startsWith("music/");
-        for (ResourceLocation e : events) {
+        for (Identifier e : events) {
             String p = e.getPath().toLowerCase(Locale.ROOT);
             // Plak olaylari: "music_disc.cat" (vanilla), "ignis_music_disc" (Cataclysm), "..._record" vb.
             if (p.startsWith("music_disc") || p.endsWith("_disc") || p.endsWith(".disc") || p.contains("record")) disc = true;

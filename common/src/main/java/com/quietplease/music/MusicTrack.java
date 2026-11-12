@@ -3,7 +3,7 @@ package com.quietplease.music;
 import com.quietplease.Lang;
 import java.util.Set;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Tek bir muzik parcasi (bir .ogg dosyasi).
@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation;
  * @param events bu dosyayi calabilen ses olaylari, ornegin minecraft:music.game
  * @param kind   muzik mi, plak mi, yoksa sadece uzun bir ses mi
  */
-public record MusicTrack(ResourceLocation id, Set<ResourceLocation> events, Kind kind) {
+public record MusicTrack(Identifier id, Set<Identifier> events, Kind kind) {
 
     public enum Kind {
         /** Arka plan muzigi (olay adinda "music" geciyor). */

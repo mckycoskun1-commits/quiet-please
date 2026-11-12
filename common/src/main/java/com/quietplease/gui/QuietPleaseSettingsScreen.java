@@ -6,7 +6,7 @@ import com.quietplease.music.MusicSettings;
 import java.util.function.IntConsumer;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -56,16 +56,15 @@ public class QuietPleaseSettingsScreen extends Screen {
         // Calma listesi
         addRenderableWidget(toggle("settings.playlist_mode", ModOptions.playlistMode)
                 .create(left, y, BUTTON_W, 20, Lang.tr("settings.playlist_mode"), (b, v) -> ModOptions.playlistMode = v));
-        addRenderableWidget(Button.builder(Lang.tr("playlist.button"), b -> minecraft.setScreen(new QuietPlaylistScreen(this)))
+        addRenderableWidget(Button.builder(Lang.tr("playlist.button"), b -> minecraft.gui.setScreen(new QuietPlaylistScreen(this)))
                 .bounds(right, y, BUTTON_W, 20)
                 .tooltip(Tooltip.create(Lang.tr("playlist.open.tooltip")))
                 .build());
         y += ROW + 8;
 
         // Sarki arasi
-        addRenderableWidget(CycleButton.<ModOptions.Gap>builder(ModOptions.Gap::displayName)
+        addRenderableWidget(CycleButton.<ModOptions.Gap>builder(ModOptions.Gap::displayName, ModOptions.gap)
                 .withValues(ModOptions.Gap.values())
-                .withInitialValue(ModOptions.gap)
                 .withTooltip(v -> Tooltip.create(Lang.tr("settings.gap." + v.id + ".tooltip")))
                 .create(left, y, BUTTON_W * 2 + 8, 20, Lang.tr("settings.gap"), (b, v) -> {
                     ModOptions.gap = v;
@@ -98,17 +97,17 @@ public class QuietPleaseSettingsScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        super.render(g, mouseX, mouseY, partialTick);
-        g.drawCenteredString(font, title, width / 2, 14, 0xFFFFC966);
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(g, mouseX, mouseY, partialTick);
+        g.centeredText(font, title, width / 2, 14, 0xFFFFC966);
         // Sarki arasinin kisa aciklamasi, kaydiricilarin altinda
         Component hint = Lang.tr("settings.gap.hint").withStyle(ChatFormatting.GRAY);
-        g.drawWordWrap(font, hint, width / 2 - BUTTON_W - 4, maxSlider.getY() + 28, BUTTON_W * 2 + 8, 0xFF9A8C78);
+        g.textWithWordWrap(font, hint, width / 2 - BUTTON_W - 4, maxSlider.getY() + 28, BUTTON_W * 2 + 8, 0xFF9A8C78);
     }
 
     @Override
     public void onClose() {
-        minecraft.setScreen(parent);
+        minecraft.gui.setScreen(parent);
     }
 
     @Override

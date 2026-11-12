@@ -17,7 +17,7 @@ public final class ForgePlatform implements Platform {
 
     @Override
     public Optional<String> modName(String modId) {
-        return ModList.get().getModContainerById(modId).map(c -> c.getModInfo().getDisplayName());
+        return ModList.getModContainerById(modId).map(c -> c.getModInfo().getDisplayName());
     }
 
     @Override

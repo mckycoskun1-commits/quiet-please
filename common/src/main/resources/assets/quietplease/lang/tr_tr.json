@@ -144,6 +144,7 @@
   "quietplease.cmd.preset.failed": "\"%1$s\" hazır ayarı yüklenemedi: %2$s",
   "quietplease.cmd.preset.imported": "\"%s\" hazır ayarı yüklendi: parça ayarları, ayarlar ve çalma listesi.",
   "key.categories.quietplease": "Quiet Please",
+  "key.category.quietplease.main": "Quiet Please",
   "key.quietplease.open": "Müzik panelini aç",
   "key.quietplease.skip": "Çalan şarkıyı atla"
 }

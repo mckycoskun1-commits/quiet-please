@@ -30,13 +30,13 @@ public class QuietPlease {
         com.quietplease.music.Playlist.clientTick(mc);
         QuietPleaseKeys.tick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
-        if (!autoDumpDone && mc.screen instanceof TitleScreen && mc.getOverlay() == null) onScreenInit(mc.screen);
-        if (mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen
+        if (!autoDumpDone && mc.gui.screen() instanceof TitleScreen && mc.gui.overlay() == null) onScreenInit(mc.gui.screen());
+        if (mc.gui.screen() instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen
                 && System.getenv("QUIETPLEASE_AUTODUMP") != null
                 && com.quietplease.platform.Services.PLATFORM.isDevelopment()) {
             mc.options.onboardAccessibility = false;
             mc.options.save();
-            mc.setScreen(new TitleScreen(true));
+            mc.gui.setScreen(new TitleScreen(true));
         }
     }
 
@@ -53,26 +53,26 @@ public class QuietPlease {
             case 100 -> {
                 MusicSettings.setEnabled(tracks.get(2).id(), false);
                 MusicSettings.setVolume(tracks.get(3).id(), 40);
-                mc.setScreen(new QuietPleaseScreen(new TitleScreen()));
+                mc.gui.setScreen(new QuietPleaseScreen(new TitleScreen()));
             }
             case 108 -> {
                 // Mod filtresine sag tik: "Tumu"den bir geri -> listenin son modu olmali
                 int w = mc.getWindow().getGuiScaledWidth();
                 int rowW = Math.min(w - 20, 420);
                 double x = (w - rowW) / 2.0 + (rowW - 150 - 96 - 8) + 4 + 75;
-                mc.screen.mouseClicked(x, 42, 1);
+                mc.gui.screen().mouseClicked(new net.minecraft.client.input.MouseButtonEvent(x, 42, new net.minecraft.client.input.MouseButtonInfo(1, 0)), false);
             }
             case 112 -> shot(mc, "quietplease-modfilter.png");
-            case 114 -> mc.setScreen(new QuietPleaseScreen(new TitleScreen())); // filtre sifirlansin
+            case 114 -> mc.gui.setScreen(new QuietPleaseScreen(new TitleScreen())); // filtre sifirlansin
             case 118 -> {
                 LOGGER.info("GUITEST muzik ses seviyesi: {}", mc.options.getSoundSourceVolume(net.minecraft.sounds.SoundSource.MUSIC));
                 shot(mc, "quietplease-panel.png"); // "su an calan" cubugu, onizleme yok
             }
             // Menu muzigi calarken: Ayarlar ve ESC menusundeki dugme + altindaki "calan sarki" yazisi
-            case 120 -> mc.setScreen(new OptionsScreen(new TitleScreen(), mc.options));
+            case 120 -> mc.gui.setScreen(new OptionsScreen(new TitleScreen(), mc.options));
             case 135 -> shot(mc, "quietplease-options.png");
             // Ayarlar ekrani
-            case 136 -> mc.setScreen(new com.quietplease.gui.QuietPleaseSettingsScreen(new TitleScreen()));
+            case 136 -> mc.gui.setScreen(new com.quietplease.gui.QuietPleaseSettingsScreen(new TitleScreen()));
             case 141 -> shot(mc, "quietplease-settings.png");
             // Calma listesi: birkac ornek sarki, ilki hemen calsin (ilerleme cubugu gorunsun)
             case 142 -> {
@@ -84,7 +84,7 @@ public class QuietPlease {
                 }
                 com.quietplease.music.ModOptions.playlistMode = true;
                 com.quietplease.music.Playlist.playNow(0);
-                mc.setScreen(new com.quietplease.gui.QuietPlaylistScreen(new TitleScreen()));
+                mc.gui.setScreen(new com.quietplease.gui.QuietPlaylistScreen(new TitleScreen()));
             }
             case 150 -> {
                 var playing = com.quietplease.music.Playlist.playing();
@@ -95,8 +95,8 @@ public class QuietPlease {
             // (ESC menusu test edilemiyor: PauseScreen bir dunya/oyuncu ister, ana menude acilinca coker)
             // Onizleme (arka plan muzigini susturur, o yuzden en sona)
             case 155 -> {
-                mc.setScreen(new QuietPleaseScreen(new TitleScreen()));
-                mc.getSoundManager().pause(); // ESC ile duraklatilmis oyunu taklit et: calan sesler bekler
+                mc.gui.setScreen(new QuietPleaseScreen(new TitleScreen()));
+                mc.getSoundManager().pauseAllExcept(); // ESC ile duraklatilmis oyunu taklit et: calan sesler bekler
                 LOGGER.info("GUITEST onizleme basladi: {}", com.quietplease.music.MusicPreview.play(tracks.get(1)));
             }
             case 175 -> {
@@ -109,8 +109,9 @@ public class QuietPlease {
                 MusicSettings.reset(tracks.get(3).id());
                 // Ikinci asama: bir deneme dunyasi olusturup ESC menusunu ve oyun ici paneli dene
                 var settings = new net.minecraft.world.level.LevelSettings("qptest-" + System.currentTimeMillis(),
-                        net.minecraft.world.level.GameType.CREATIVE, false, net.minecraft.world.Difficulty.PEACEFUL, true,
-                        new net.minecraft.world.level.GameRules(), net.minecraft.world.level.WorldDataConfiguration.DEFAULT);
+                        net.minecraft.world.level.GameType.CREATIVE,
+                        new net.minecraft.world.level.LevelSettings.DifficultySettings(net.minecraft.world.Difficulty.PEACEFUL, false, false),
+                        true, net.minecraft.world.level.WorldDataConfiguration.DEFAULT);
                 mc.createWorldOpenFlows().createFreshLevel(settings.levelName(), settings,
                         new net.minecraft.world.level.levelgen.WorldOptions(0L, false, false),
                         net.minecraft.world.level.levelgen.presets.WorldPresets::createNormalWorldDimensions, new TitleScreen());
@@ -142,7 +143,7 @@ public class QuietPlease {
                     }
                 } else if (t == 100) mc.pauseGame(false);             // ESC
                 else if (t == 120) shot(mc, "quietplease-pause.png");
-                else if (t == 122) mc.setScreen(new QuietPleaseScreen(mc.screen));
+                else if (t == 122) mc.gui.setScreen(new QuietPleaseScreen(mc.gui.screen()));
                 else if (t == 140) {
                     LOGGER.info("GUITEST oyun ici panel: oyun duraklatildi mi: {}", mc.isPaused());
                     shot(mc, "quietplease-ingame.png");
@@ -164,7 +165,7 @@ public class QuietPlease {
     private static boolean playlistModeBackup;
 
     private static void shot(Minecraft mc, String name) {
-        net.minecraft.client.Screenshot.grab(mc.gameDirectory, name, mc.getMainRenderTarget(),
+        net.minecraft.client.Screenshot.grab(mc.gameDirectory, name, mc.gameRenderer.mainRenderTarget(), 1,
                 msg -> LOGGER.info("GUITEST ekran goruntusu: {}", msg.getString()));
     }
 
@@ -176,7 +177,7 @@ public class QuietPlease {
     public static void onScreenInit(Screen screen) {
         if (!com.quietplease.platform.Services.PLATFORM.isDevelopment()) return;
         String mode = System.getenv("QUIETPLEASE_AUTODUMP");
-        if (autoDumpDone || !(screen instanceof TitleScreen) || mode == null || Minecraft.getInstance().getOverlay() != null) return;
+        if (autoDumpDone || !(screen instanceof TitleScreen) || mode == null || Minecraft.getInstance().gui.overlay() != null) return;
         autoDumpDone = true;
         try {
             DevSelfTest.run();

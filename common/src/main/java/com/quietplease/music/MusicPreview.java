@@ -9,7 +9,7 @@ import net.minecraft.client.sounds.ChannelAccess;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.client.sounds.Weighted;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
 
 /**
@@ -23,9 +23,9 @@ public final class MusicPreview {
     /** Rastgele secim yapmadan, dogrudan belirli bir dosyayi calan ses. */
     public static final class PreviewSound extends AbstractSoundInstance {
         private final Sound target;
-        final ResourceLocation trackId;
+        final Identifier trackId;
 
-        PreviewSound(ResourceLocation eventId, Sound target, ResourceLocation trackId) {
+        PreviewSound(Identifier eventId, Sound target, Identifier trackId) {
             // MASTER kanalindan calar: oyuncunun "Muzik" kaydiricisi %0 olsa bile onizleme duyulur
             // (MUSIC kanalindan calinca oyun sesi hic baslatmiyordu).
             super(eventId, SoundSource.MASTER, SoundInstance.createUnseededRandom());
@@ -36,9 +36,9 @@ public final class MusicPreview {
         }
 
         @Override
-        public WeighedSoundEvents resolve(SoundManager manager) {
+        public WeighedSoundEvents getOrResolve(SoundManager manager) {
             this.sound = target; // oyunun rastgele secimini atla
-            return manager.getSoundEvent(this.location);
+            return manager.getSoundEvent(this.identifier);
         }
     }
 
@@ -51,7 +51,7 @@ public final class MusicPreview {
     public static boolean play(MusicTrack track) {
         stop();
         SoundManager sm = Minecraft.getInstance().getSoundManager();
-        for (ResourceLocation eventId : track.events()) {
+        for (Identifier eventId : track.events()) {
             WeighedSoundEvents event = sm.getSoundEvent(eventId);
             if (event == null) continue;
             for (Weighted<Sound> w : ((com.quietplease.mixin.WeighedSoundEventsAccessor) event).quietplease$getList()) {
@@ -86,7 +86,7 @@ public final class MusicPreview {
         return current != null;
     }
 
-    public static boolean isPlaying(ResourceLocation trackId) {
+    public static boolean isPlaying(Identifier trackId) {
         return isActive() && current.trackId.equals(trackId);
     }
 

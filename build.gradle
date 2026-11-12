@@ -1,11 +1,6 @@
 plugins {
     id "dev.architectury.loom" version "1.17.493" apply false
-    id "architectury-plugin" version "3.5.170"
-    id "com.gradleup.shadow" version "9.6.1" apply false
-}
-
-architectury {
-    minecraft = project.minecraft_version
+    id "dev.architectury.loom-no-remap" version "1.17.493" apply false
 }
 
 allprojects {
@@ -14,8 +9,10 @@ allprojects {
 }
 
 subprojects {
-    apply plugin: "dev.architectury.loom"
-    apply plugin: "architectury-plugin"
+    apply plugin: "dev.architectury.loom-no-remap"
+
+    sourceSets.main.java.srcDir rootProject.file("common/src/main/java")
+    sourceSets.main.resources.srcDir rootProject.file("common/src/main/resources")
 
     base {
         archivesName = "${rootProject.mod_id}-${project.name}"
@@ -34,10 +31,8 @@ subprojects {
     dependencies {
         minecraft "net.minecraft:minecraft:${rootProject.minecraft_version}"
         compileOnly "com.google.code.findbugs:jsr305:3.0.2"
-        mappings loom.layered {
-            officialMojangMappings()
-            parchment("org.parchmentmc.data:parchment-${rootProject.parchment_minecraft_version}:${rootProject.parchment_mappings_version}@zip")
-        }
+        compileOnly "io.github.llamalad7:mixinextras-common:${rootProject.mixinextras_version}"
+        annotationProcessor "io.github.llamalad7:mixinextras-common:${rootProject.mixinextras_version}"
     }
 
     java {
@@ -76,12 +71,12 @@ subprojects {
 
 tasks.register("collectJars") {
     def platforms = project.enabled_platforms.split(",")
-    dependsOn platforms.collect { ":${it}:remapJar" }
+    dependsOn platforms.collect { ":${it}:jar" }
     def distDir = file("dist")
     doLast {
         distDir.mkdirs()
         platforms.each { name ->
-            def jar = project(":${name}").tasks.named("remapJar").get().archiveFile.get().asFile
+            def jar = project(":${name}").tasks.named("jar").get().archiveFile.get().asFile
             java.nio.file.Files.copy(jar.toPath(), new File(distDir, jar.name).toPath(),
                     java.nio.file.StandardCopyOption.REPLACE_EXISTING)
         }

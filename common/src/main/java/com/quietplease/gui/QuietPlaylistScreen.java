@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.CycleButton;
@@ -39,7 +39,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -60,7 +60,7 @@ public class QuietPlaylistScreen extends Screen {
     private final Screen parent;
 
     private Map<String, List<MusicTrack>> library = Map.of();
-    private Map<ResourceLocation, MusicTrack> tracksById = Map.of();
+    private Map<Identifier, MusicTrack> tracksById = Map.of();
     private RowList list;
     @Nullable
     private CycleButton<String> modButton;
@@ -132,9 +132,8 @@ public class QuietPlaylistScreen extends Screen {
             mods.addAll(library.keySet());
             if (!mods.contains(modFilter)) modFilter = "";
             modValues = mods;
-            modButton = addRenderableWidget(CycleButton.<String>builder(m -> m.isEmpty() ? Lang.tr("screen.mod.all") : Component.literal(MusicLibrary.modName(m)))
+            modButton = addRenderableWidget(CycleButton.<String>builder(m -> m.isEmpty() ? Lang.tr("screen.mod.all") : Component.literal(MusicLibrary.modName(m)), modFilter)
                     .withValues(mods)
-                    .withInitialValue(modFilter)
                     .withTooltip(v -> Tooltip.create(Lang.tr("screen.mod.tooltip")))
                     .create(x + rowW - modW, y, modW, 20, Lang.tr("screen.mod"), (b, value) -> {
                         modFilter = value;
@@ -172,18 +171,17 @@ public class QuietPlaylistScreen extends Screen {
                     }).bounds(x, by, bw, 20)
                     .tooltip(Tooltip.create(Lang.tr("playlist.shuffle.tooltip")))
                     .build());
-            addRenderableWidget(CycleButton.<Playlist.Repeat>builder(Playlist.Repeat::displayName)
+            addRenderableWidget(CycleButton.<Playlist.Repeat>builder(Playlist.Repeat::displayName, Playlist.repeat())
                     .withValues(Playlist.Repeat.values())
-                    .withInitialValue(Playlist.repeat())
                     .withTooltip(v -> Tooltip.create(Lang.tr("playlist.repeat." + v.id + ".tooltip")))
                     .displayOnlyValue()
                     .create(x + bw + 4, by, bw, 20, Lang.tr("playlist.repeat"), (b, v) -> {
                         Playlist.setRepeat(v);
                         rebuildList();
                     }));
-            addRenderableWidget(Button.builder(Lang.tr("playlist.clear"), b -> minecraft.setScreen(new ConfirmScreen(ok -> {
+            addRenderableWidget(Button.builder(Lang.tr("playlist.clear"), b -> minecraft.gui.setScreen(new ConfirmScreen(ok -> {
                         if (ok) Playlist.clear();
-                        minecraft.setScreen(this);
+                        minecraft.gui.setScreen(this);
                     }, Lang.tr("playlist.clear.confirm"), Lang.tr("playlist.clear.confirm.message", Playlist.size()))))
                     .bounds(x + 2 * (bw + 4), by, bw, 20)
                     .build()).active = !Playlist.isEmpty();
@@ -194,7 +192,7 @@ public class QuietPlaylistScreen extends Screen {
 
     private void rebuildList() {
         if (list == null) return;
-        double scroll = list.getScrollAmount();
+        double scroll = list.scrollAmount();
         boolean sameView = shownVersion != -1;
         list.clear();
         if (addMode) {
@@ -223,21 +221,21 @@ public class QuietPlaylistScreen extends Screen {
     // ------------------------------------------------------------------ cizim
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        super.render(g, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(g, mouseX, mouseY, partialTick);
         renderHeader(g);
         if (!addMode) renderNowPlaying(g);
         if (list.children().isEmpty()) {
             Component msg = addMode ? Lang.tr("screen.no_results") : Lang.tr("playlist.empty");
-            g.drawCenteredString(font, msg, width / 2, TOP + 20, MUTED);
-            if (!addMode) g.drawCenteredString(font, Lang.tr("playlist.empty.hint"), width / 2, TOP + 34, MUTED);
+            g.centeredText(font, msg, width / 2, TOP + 20, MUTED);
+            if (!addMode) g.centeredText(font, Lang.tr("playlist.empty.hint"), width / 2, TOP + 34, MUTED);
         } else if (!addMode && ModOptions.gap == ModOptions.Gap.VANILLA) {
             // Ipucu: vanilla sarki arasi oyunda 5-20 dk
-            g.drawCenteredString(font, Lang.tr("playlist.gap_hint"), width / 2, height - 40, MUTED);
+            g.centeredText(font, Lang.tr("playlist.gap_hint"), width / 2, height - 40, MUTED);
         }
     }
 
-    private void renderHeader(GuiGraphics g) {
+    private void renderHeader(GuiGraphicsExtractor g) {
         Component title = Lang.tr("playlist.title").withStyle(ChatFormatting.BOLD);
         MutableComponent summary = Lang.count("tracks", Playlist.size()).append(" · ")
                 .append(Lang.tr(ModOptions.playlistMode ? "playlist.mode_on" : "playlist.mode_off"));
@@ -246,12 +244,12 @@ public class QuietPlaylistScreen extends Screen {
         int x = (width - (logo + 6 + textW)) / 2;
         int y = 4;
         QuietPleaseScreen.drawLogo(g, x, y, logo);
-        g.drawString(font, title, x + logo + 6, y + 2, GOLD);
-        g.drawString(font, summary, x + logo + 6, y + 13, ModOptions.playlistMode ? PLAYING : MUTED);
+        g.text(font, title, x + logo + 6, y + 2, GOLD);
+        g.text(font, summary, x + logo + 6, y + 13, ModOptions.playlistMode ? PLAYING : MUTED);
     }
 
     /** En ustte: calma listesinden calan sarki, ilerleme cubugu ve sure. */
-    private void renderNowPlaying(GuiGraphics g) {
+    private void renderNowPlaying(GuiGraphicsExtractor g) {
         int left = rowX();
         int right = skip.getX() - 4;
         int top = BAR_Y;
@@ -268,10 +266,10 @@ public class QuietPlaylistScreen extends Screen {
             else if (Playlist.hasEnded()) line = Lang.tr("playlist.bar.ended");
             else {
                 List<Integer> order = Playlist.upcoming();
-                ResourceLocation next = order.isEmpty() ? Playlist.tracks().get(0) : Playlist.tracks().get(order.get(0));
+                Identifier next = order.isEmpty() ? Playlist.tracks().get(0) : Playlist.tracks().get(order.get(0));
                 line = Lang.tr("playlist.bar.next", Component.literal(shortName(next)).withStyle(s -> s.withColor(TEXT & 0xFFFFFF)));
             }
-            g.drawString(font, fit(line, right - left - 12), left + 8, top + 6, MUTED);
+            g.text(font, fit(line, right - left - 12), left + 8, top + 6, MUTED);
             return;
         }
 
@@ -282,8 +280,8 @@ public class QuietPlaylistScreen extends Screen {
         int timeW = font.width(time);
         MutableComponent line = Component.literal(shortName(playing.trackId)).withStyle(s -> s.withColor(PLAYING & 0xFFFFFF))
                 .append(Component.literal("  " + MusicLibrary.modName(playing.trackId.getNamespace())).withStyle(ChatFormatting.GRAY));
-        g.drawString(font, fit(line, right - left - 30 - timeW - 8), left + 20, top + 3, TEXT);
-        g.drawString(font, time, right - 4 - timeW, top + 3, MUTED);
+        g.text(font, fit(line, right - left - 30 - timeW - 8), left + 20, top + 3, TEXT);
+        g.text(font, time, right - 4 - timeW, top + 3, MUTED);
         // ilerleme cubugu
         int barL = left + 20;
         int barR = right - 4;
@@ -305,7 +303,7 @@ public class QuietPlaylistScreen extends Screen {
         return seconds / 60 + ":" + String.format("%02d", seconds % 60);
     }
 
-    private static String shortName(ResourceLocation id) {
+    private static String shortName(Identifier id) {
         String path = id.getPath();
         return path.substring(path.lastIndexOf('/') + 1);
     }
@@ -320,7 +318,10 @@ public class QuietPlaylistScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         // Mod filtresine sag tik: bir onceki mod (ana paneldeki gibi)
         if (button == 1 && modButton != null && modButton.isMouseOver(mouseX, mouseY) && !modValues.isEmpty()) {
             int i = modValues.indexOf(modButton.getValue());
@@ -331,7 +332,7 @@ public class QuietPlaylistScreen extends Screen {
             modButton.playDownSound(minecraft.getSoundManager());
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
@@ -341,7 +342,7 @@ public class QuietPlaylistScreen extends Screen {
 
     @Override
     public void onClose() {
-        minecraft.setScreen(parent);
+        minecraft.gui.setScreen(parent);
     }
 
     @Override
@@ -370,23 +371,23 @@ public class QuietPlaylistScreen extends Screen {
         }
 
         @Override
-        protected int getScrollbarPosition() {
+        protected int scrollBarX() {
             return getRowLeft() + getRowWidth() + 8;
         }
 
         @Override
-        protected void renderListBackground(GuiGraphics g) {
+        protected void extractListBackground(GuiGraphicsExtractor g) {
             int left = getRowLeft() - 6;
-            int right = getScrollbarPosition() + 6 + 4;
+            int right = scrollBarX() + 6 + 4;
             int top = getY() - 2;
             int bottom = getBottom() + 2;
             g.fill(left, top, right, bottom, PANEL_BG);
-            g.renderOutline(left - 1, top - 1, right - left + 2, bottom - top + 2, ACCENT_SOFT);
+            g.outline(left - 1, top - 1, right - left + 2, bottom - top + 2, ACCENT_SOFT);
             g.fillGradient(left, top, right, top + 6, 0x30E89A3C, 0x00E89A3C);
         }
 
         @Override
-        protected void renderListSeparators(GuiGraphics g) {}
+        protected void extractListSeparators(GuiGraphicsExtractor g) {}
     }
 
     private abstract static class Row extends ContainerObjectSelectionList.Entry<Row> {}
@@ -433,10 +434,13 @@ public class QuietPlaylistScreen extends Screen {
         }
 
         @Override
-        public void render(GuiGraphics g, int i, int top, int left, int width, int height,
-                           int mouseX, int mouseY, boolean hovering, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor g, int mouseX, int mouseY, boolean hovering, float partialTick) {
+            int top = getContentY();
+            int left = getContentX();
+            int width = getContentWidth();
+            int height = getContentHeight();
             if (index >= Playlist.size()) return; // liste degisti, yenilenmeyi bekliyor
-            ResourceLocation id = Playlist.tracks().get(index);
+            Identifier id = Playlist.tracks().get(index);
             MusicTrack track = tracksById.get(id);
             boolean disabled = MusicSettings.isDisabled(id);
             boolean missing = track == null;
@@ -448,7 +452,7 @@ public class QuietPlaylistScreen extends Screen {
 
             int textY = top + (height - 8) / 2;
             String num = number + ".";
-            g.drawString(font, num, left + 18 - font.width(num), textY, MUTED);
+            g.text(font, num, left + 18 - font.width(num), textY, MUTED);
             int nameX = left + 24;
             int buttonsX = left + width - 4 * 20 + 2;
             int x = buttonsX;
@@ -465,10 +469,10 @@ public class QuietPlaylistScreen extends Screen {
             else if (disabled) info.append(" · ").append(Lang.tr("screen.off"));
             MutableComponent line = name.withStyle(s -> s.withColor((disabled ? 0xFF6A6058 : color) & 0xFFFFFF))
                     .append(info.withStyle(missing ? ChatFormatting.RED : ChatFormatting.DARK_GRAY));
-            g.drawString(font, fit(line, buttonsX - 6 - nameX), nameX, textY, color);
+            g.text(font, fit(line, buttonsX - 6 - nameX), nameX, textY, color);
 
-            for (Button b : buttons) b.render(g, mouseX, mouseY, partialTick);
-            if (hovering && nextRound && mouseX < buttonsX) setTooltipForNextRenderPass(Lang.tr("playlist.next_round.tooltip"));
+            for (Button b : buttons) b.extractRenderState(g, mouseX, mouseY, partialTick);
+            if (hovering && nextRound && mouseX < buttonsX) g.setTooltipForNextFrame(font, Lang.tr("playlist.next_round.tooltip"), mouseX, mouseY);
         }
 
         @Override
@@ -493,14 +497,17 @@ public class QuietPlaylistScreen extends Screen {
         }
 
         @Override
-        public void render(GuiGraphics g, int i, int top, int left, int width, int height,
-                           int mouseX, int mouseY, boolean hovering, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor g, int mouseX, int mouseY, boolean hovering, float partialTick) {
+            int top = getContentY();
+            int left = getContentX();
+            int width = getContentWidth();
+            int height = getContentHeight();
             g.fill(left - 3, top - 1, left + width + 3, top + height + 1, HEADER_BG);
             g.fill(left - 3, top - 1, left - 1, top + height + 1, ACCENT);
             Component name = Component.literal(modName).withStyle(ChatFormatting.BOLD);
             int y = top + (height - 8) / 2;
-            g.drawString(font, name, left + 4, y, GOLD);
-            g.drawString(font, Lang.count("tracks", count), left + 10 + font.width(name), y, MUTED);
+            g.text(font, name, left + 4, y, GOLD);
+            g.text(font, Lang.count("tracks", count), left + 10 + font.width(name), y, MUTED);
         }
 
         @Override
@@ -530,12 +537,15 @@ public class QuietPlaylistScreen extends Screen {
         }
 
         @Override
-        public void render(GuiGraphics g, int i, int top, int left, int width, int height,
-                           int mouseX, int mouseY, boolean hovering, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor g, int mouseX, int mouseY, boolean hovering, float partialTick) {
+            int top = getContentY();
+            int left = getContentX();
+            int width = getContentWidth();
+            int height = getContentHeight();
             boolean in = Playlist.contains(track.id());
             if (hovering) g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_HOVER);
             else if (alternate) g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_ALT);
-            g.renderItem(icon, left + 2, top + (height - 16) / 2);
+            g.item(icon, left + 2, top + (height - 16) / 2);
             toggle.setPosition(left + width - toggle.getWidth(), top + (height - 18) / 2);
             toggle.setMessage(in ? Lang.tr("playlist.added").withStyle(ChatFormatting.GREEN) : Lang.tr("playlist.add"));
             toggle.setTooltip(Tooltip.create(Lang.tr(in ? "playlist.added.tooltip" : "playlist.add.tooltip")));
@@ -543,8 +553,8 @@ public class QuietPlaylistScreen extends Screen {
             MutableComponent name = Component.literal(track.shortName());
             if (disabled) name.withStyle(ChatFormatting.STRIKETHROUGH, ChatFormatting.DARK_GRAY);
             MutableComponent line = name.append(Component.literal("  ").append(track.kind().displayName()).withStyle(ChatFormatting.DARK_GRAY));
-            g.drawString(font, fit(line, toggle.getX() - 6 - (left + 22)), left + 22, top + (height - 8) / 2, in ? GOLD : TEXT);
-            toggle.render(g, mouseX, mouseY, partialTick);
+            g.text(font, fit(line, toggle.getX() - 6 - (left + 22)), left + 22, top + (height - 8) / 2, in ? GOLD : TEXT);
+            toggle.extractRenderState(g, mouseX, mouseY, partialTick);
         }
 
         @Override

@@ -24,13 +24,13 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Sohbet komutlari (sadece oyuncunun kendi bilgisayarinda calisir, sunucuya gitmez):
@@ -73,21 +73,21 @@ public final class QuietPleaseCommands {
                         .then(arg("mod", StringArgumentType.word()).suggests(MODS)
                                 .executes(ctx -> listMod(ctx, StringArgumentType.getString(ctx, "mod")))))
                 .then(lit("volume")
-                        .then(arg("track", ResourceLocationArgument.id()).suggests(TRACKS)
+                        .then(arg("track", IdentifierArgument.id()).suggests(TRACKS)
                                 .then(arg("percent", IntegerArgumentType.integer(0, 100))
                                         .executes(ctx -> setVolume(ctx, track(ctx), IntegerArgumentType.getInteger(ctx, "percent"))))))
                 .then(lit("off")
-                        .then(arg("track", ResourceLocationArgument.id()).suggests(TRACKS)
+                        .then(arg("track", IdentifierArgument.id()).suggests(TRACKS)
                                 .executes(ctx -> setEnabled(ctx, track(ctx), false))))
                 .then(lit("on")
-                        .then(arg("track", ResourceLocationArgument.id()).suggests(TRACKS)
+                        .then(arg("track", IdentifierArgument.id()).suggests(TRACKS)
                                 .executes(ctx -> setEnabled(ctx, track(ctx), true))))
                 .then(lit("mod")
                         .then(arg("mod", StringArgumentType.word()).suggests(MODS)
                                 .then(lit("off").executes(ctx -> setModEnabled(ctx, false)))
                                 .then(lit("on").executes(ctx -> setModEnabled(ctx, true)))))
                 .then(lit("reset")
-                        .then(arg("track", ResourceLocationArgument.id()).suggests(TRACKS)
+                        .then(arg("track", IdentifierArgument.id()).suggests(TRACKS)
                                 .executes(QuietPleaseCommands::reset)))
                 .then(lit("resetall").executes(QuietPleaseCommands::resetAll))
                 .then(lit("dump").executes(QuietPleaseCommands::dump))
@@ -116,12 +116,12 @@ public final class QuietPleaseCommands {
 
     private static int open(net.minecraft.client.gui.screens.Screen screen) {
         // Sohbet ekrani, komut baska bir ekran actiysa kendini kapatmaz (NeoForge duzeltmesi)
-        Minecraft.getInstance().setScreen(screen);
+        Minecraft.getInstance().gui.setScreen(screen);
         return 1;
     }
 
-    private static ResourceLocation track(CommandContext<?> ctx) {
-        return ctx.getArgument("track", ResourceLocation.class);
+    private static Identifier track(CommandContext<?> ctx) {
+        return ctx.getArgument("track", Identifier.class);
     }
 
     // ------------------------------------------------------------------ listeleme
@@ -146,7 +146,7 @@ public final class QuietPleaseCommands {
             MutableComponent line = Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
                     .append(Component.literal(MusicLibrary.modName(mod)).withStyle(Style.EMPTY
                             .withColor(ChatFormatting.AQUA).withUnderlined(true)
-                            .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/quietplease list " + mod))
+                            .withClickEvent(new ClickEvent.RunCommand("/quietplease list " + mod))
                             .withHoverEvent(hover(Lang.tr("cmd.show_tracks")))))
                     .append(counts.withStyle(ChatFormatting.GRAY));
             if (off > 0) line.append(Component.literal(" (").append(Lang.tr("count.off", off)).append(")").withStyle(ChatFormatting.RED));
@@ -188,7 +188,7 @@ public final class QuietPleaseCommands {
                 .append(Component.literal(t.shortName()).withStyle(Style.EMPTY
                         .withColor(s.enabled() ? ChatFormatting.WHITE : ChatFormatting.DARK_GRAY)
                         .withStrikethrough(!s.enabled())
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, details))));
+                        .withHoverEvent(new HoverEvent.ShowText(details))));
 
         if (s.enabled()) {
             line.append(Component.literal("  ").append(Lang.tr("cmd.volume", s.volume())).append(" ").withStyle(
@@ -208,18 +208,18 @@ public final class QuietPleaseCommands {
 
     // ------------------------------------------------------------------ ayar degistirme
 
-    private static int setVolume(CommandContext<?> ctx, ResourceLocation id, int percent) {
+    private static int setVolume(CommandContext<?> ctx, Identifier id, int percent) {
         MusicSettings.setVolume(id, percent);
         return changed(ctx, id);
     }
 
-    private static int setEnabled(CommandContext<?> ctx, ResourceLocation id, boolean enabled) {
+    private static int setEnabled(CommandContext<?> ctx, Identifier id, boolean enabled) {
         MusicSettings.setEnabled(id, enabled);
         return changed(ctx, id);
     }
 
     private static int reset(CommandContext<?> ctx) {
-        ResourceLocation id = track(ctx);
+        Identifier id = track(ctx);
         MusicSettings.reset(id);
         return changed(ctx, id);
     }
@@ -248,7 +248,7 @@ public final class QuietPleaseCommands {
     }
 
     /** Ayar degistikten sonra: kaydet, calan seslere uygula, guncel satiri goster. */
-    private static int changed(CommandContext<?> ctx, ResourceLocation id) {
+    private static int changed(CommandContext<?> ctx, Identifier id) {
         MusicSettings.save();
         MusicSettings.applyToPlayingSounds();
         MusicTrack track = MusicLibrary.scan().values().stream().flatMap(List::stream)
@@ -275,7 +275,7 @@ public final class QuietPleaseCommands {
                     .append(" ")
                     .append(Component.literal(file.getFileName().toString()).withStyle(Style.EMPTY
                             .withColor(ChatFormatting.YELLOW).withUnderlined(true)
-                            .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getParent().toAbsolutePath().toString())))));
+                            .withClickEvent(new ClickEvent.OpenFile(file.getParent().toAbsolutePath().toString())))));
             return 1;
         } catch (IOException e) {
             QuietPlease.LOGGER.error("Hazir ayar yazilamadi", e);
@@ -315,7 +315,7 @@ public final class QuietPleaseCommands {
         say(ctx, Lang.tr("cmd.dump_saved").withStyle(ChatFormatting.GREEN)
                 .append(Component.literal(file.getFileName().toString()).withStyle(Style.EMPTY
                         .withColor(ChatFormatting.YELLOW).withUnderlined(true)
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.toAbsolutePath().toString())))));
+                        .withClickEvent(new ClickEvent.OpenFile(file.toAbsolutePath().toString())))));
         return 1;
     }
 
@@ -344,12 +344,12 @@ public final class QuietPleaseCommands {
 
     private static MutableComponent button(Component text, String command, Component tooltip, ChatFormatting color) {
         return text.copy().withStyle(Style.EMPTY.withColor(color)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
+                .withClickEvent(new ClickEvent.RunCommand(command))
                 .withHoverEvent(hover(tooltip)));
     }
 
     private static HoverEvent hover(Component text) {
-        return new HoverEvent(HoverEvent.Action.SHOW_TEXT, text);
+        return new HoverEvent.ShowText(text);
     }
 
     private static ChatFormatting kindColor(MusicTrack.Kind kind) {
@@ -361,11 +361,11 @@ public final class QuietPleaseCommands {
     }
 
     private static void say(CommandContext<?> ctx, Component msg) {
-        Minecraft.getInstance().gui.getChat().addMessage(msg);
+        Minecraft.getInstance().gui.hud.getChat().addClientSystemMessage(msg);
     }
 
     private static void fail(Component msg) {
-        Minecraft.getInstance().gui.getChat().addMessage(msg.copy().withStyle(ChatFormatting.RED));
+        Minecraft.getInstance().gui.hud.getChat().addClientSystemMessage(msg.copy().withStyle(ChatFormatting.RED));
     }
 
     private static LiteralArgumentBuilder<Object> lit(String name) {

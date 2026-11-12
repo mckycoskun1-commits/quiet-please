@@ -15,7 +15,8 @@ import net.minecraft.client.Minecraft;
  */
 public final class QuietPleaseKeys {
 
-    private static final String CATEGORY = "key.categories.quietplease";
+    private static final KeyMapping.Category CATEGORY =
+            KeyMapping.Category.register(net.minecraft.resources.Identifier.fromNamespaceAndPath("quietplease", "main"));
 
     public static final KeyMapping OPEN_PANEL =
             new KeyMapping("key.quietplease.open", InputConstants.UNKNOWN.getValue(), CATEGORY);
@@ -31,12 +32,12 @@ public final class QuietPleaseKeys {
     /** Her istemci tick'inde: basilan tuslari isle. */
     public static void tick(Minecraft mc) {
         while (OPEN_PANEL.consumeClick()) {
-            if (mc.screen == null) mc.setScreen(new QuietPleaseScreen(null));
+            if (mc.gui.screen() == null) mc.gui.setScreen(new QuietPleaseScreen(null));
         }
         while (SKIP.consumeClick()) {
             String result = MusicControl.skipAndDescribe();
             // Sohbeti doldurmasin: kisa mesaj, hotbar'in ustunde birkac saniye
-            mc.gui.setOverlayMessage(Lang.tr(result).withStyle(
+            mc.gui.hud.setOverlayMessage(Lang.tr(result).withStyle(
                     result.equals("cmd.skip.nothing") ? ChatFormatting.GRAY : ChatFormatting.GREEN), false);
         }
     }

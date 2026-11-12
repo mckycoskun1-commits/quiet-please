@@ -28,6 +28,6 @@ public final class NeoForgePlatform implements Platform {
 
     @Override
     public boolean isDevelopment() {
-        return !FMLEnvironment.production;
+        return !FMLEnvironment.isProduction();
     }
 }

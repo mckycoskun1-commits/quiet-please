@@ -16,7 +16,7 @@ import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.client.sounds.Weighted;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.Musics;
 import net.minecraft.sounds.SoundEvents;
@@ -38,12 +38,12 @@ final class DevSelfTest {
         RandomSource random = RandomSource.create(42);
 
         // 1) Parca atlama: music.menu icinde sonuncu haric hepsini kapat, 300 kez sec.
-        WeighedSoundEvents menu = sm.getSoundEvent(ResourceLocation.withDefaultNamespace("music.menu"));
-        List<ResourceLocation> files = new ArrayList<>();
+        WeighedSoundEvents menu = sm.getSoundEvent(Identifier.withDefaultNamespace("music.menu"));
+        List<Identifier> files = new ArrayList<>();
         for (Weighted<Sound> w : ((com.quietplease.mixin.WeighedSoundEventsAccessor) menu).quietplease$getList()) if (w instanceof Sound s) files.add(s.getLocation());
-        ResourceLocation keep = files.get(files.size() - 1);
+        Identifier keep = files.get(files.size() - 1);
         files.stream().filter(f -> !f.equals(keep)).forEach(f -> MusicSettings.setEnabled(f, false));
-        Set<ResourceLocation> picked = new HashSet<>();
+        Set<Identifier> picked = new HashSet<>();
         for (int i = 0; i < 300; i++) picked.add(menu.getSound(random).getLocation());
         if (!picked.equals(Set.of(keep))) failures.add("atlama: beklenen sadece " + keep + ", gelen " + picked);
 
@@ -56,8 +56,8 @@ final class DevSelfTest {
         // 3) Ses seviyesi: ses motorunun hesabi %40 ile carpilmali.
         try {
             SimpleSoundInstance music = SimpleSoundInstance.forMusic(SoundEvents.MUSIC_MENU.value());
-            music.resolve(sm);
-            ResourceLocation file = music.getSound().getLocation();
+            music.getOrResolve(sm);
+            Identifier file = music.getSound().getLocation();
             Field engineField = SoundManager.class.getDeclaredField("soundEngine");
             engineField.setAccessible(true);
             SoundEngine engine = (SoundEngine) engineField.get(sm);
@@ -114,7 +114,7 @@ final class DevSelfTest {
         if (!ok) failures.add(what);
     }
 
-    private static void testPlaylist(List<ResourceLocation> menuFiles, List<String> failures) {
+    private static void testPlaylist(List<Identifier> menuFiles, List<String> failures) {
         if (menuFiles.size() < 4) {
             failures.add("calma listesi: en az 4 menu parcasi gerekiyordu, " + menuFiles.size() + " var");
             return;
@@ -122,8 +122,8 @@ final class DevSelfTest {
         com.google.gson.JsonObject backup = Playlist.snapshot();
         boolean modeBackup = ModOptions.playlistMode;
         ModOptions.Gap gapBackup = ModOptions.gap;
-        ResourceLocation a = menuFiles.get(0), b = menuFiles.get(1), c = menuFiles.get(2), d = menuFiles.get(3);
-        java.util.function.Predicate<ResourceLocation> all = id -> true;
+        Identifier a = menuFiles.get(0), b = menuFiles.get(1), c = menuFiles.get(2), d = menuFiles.get(3);
+        java.util.function.Predicate<Identifier> all = id -> true;
         try {
             // Sirayla, sonra basa sar
             Playlist.clear();
@@ -168,7 +168,7 @@ final class DevSelfTest {
 
             // Tasima ve karistirma: calan parca basta kalir
             Playlist.clear();
-            for (ResourceLocation id : List.of(a, b, c, d)) Playlist.add(id);
+            for (Identifier id : List.of(a, b, c, d)) Playlist.add(id);
             Playlist.setRepeat(Playlist.Repeat.REPEAT_LIST);
             Playlist.advanceForTest(all);
             Playlist.advanceForTest(all); // b caliyor (sira 1)
@@ -181,10 +181,10 @@ final class DevSelfTest {
             // Surekli karistir: tur bitince liste karisir, ayni parca arka arkaya gelmez
             Playlist.setRepeat(Playlist.Repeat.SHUFFLE);
             for (int round = 0; round < 20; round++) {
-                ResourceLocation last = null;
+                Identifier last = null;
                 for (int i = 0; i < 4; i++) {
                     int idx = Playlist.advanceForTest(all);
-                    ResourceLocation now = Playlist.tracks().get(idx);
+                    Identifier now = Playlist.tracks().get(idx);
                     if (now.equals(last)) failures.add("calma listesi: surekli karistirmada ayni parca arka arkaya");
                     last = now;
                 }
@@ -205,11 +205,11 @@ final class DevSelfTest {
             check(failures, ModOptions.adjustGap(Musics.GAME) == Musics.GAME, "sarki arasi: Vanilla'da ayni nesne donmeli");
             ModOptions.gap = ModOptions.Gap.NONE;
             Music none = ModOptions.adjustGap(Musics.GAME);
-            check(failures, none.getMinDelay() == 20 && none.getMaxDelay() == 20 && ModOptions.isBackground(none)
-                    && none.getEvent() == Musics.GAME.getEvent(), "sarki arasi: Yok -> 20 tick");
+            check(failures, none.minDelay() == 20 && none.maxDelay() == 20 && ModOptions.isBackground(none)
+                    && none.sound() == Musics.GAME.sound(), "sarki arasi: Yok -> 20 tick");
             ModOptions.gap = ModOptions.Gap.SHORT;
             Music shortGap = ModOptions.adjustGap(Musics.MENU);
-            check(failures, shortGap.getMinDelay() == 600 && shortGap.getMaxDelay() == 1200 && shortGap.replaceCurrentMusic(),
+            check(failures, shortGap.minDelay() == 600 && shortGap.maxDelay() == 1200 && shortGap.replaceCurrentMusic(),
                     "sarki arasi: Kisa -> 600-1200 tick");
             check(failures, ModOptions.adjustGap(Musics.END_BOSS) == Musics.END_BOSS, "sarki arasi: ejderha muzigi degismemeli");
 
@@ -222,7 +222,7 @@ final class DevSelfTest {
             ModOptions.playlistMode = true;
             check(failures, Playlist.startInstead(Musics.END_BOSS) == null, "devralma: ejderha muzigini devralmamali");
             var sound = Playlist.startInstead(Musics.MENU);
-            if (sound != null) sound.resolve(Minecraft.getInstance().getSoundManager()); // getSound() resolve ile dolar
+            if (sound != null) sound.getOrResolve(Minecraft.getInstance().getSoundManager()); // getSound() resolve ile dolar
             check(failures, sound instanceof Playlist.PlaylistSound ps && ps.trackId.equals(c)
                     && sound.getSound() != null && sound.getSound().getLocation().equals(c), "devralma: menu muziginde listedeki parca calmali");
             MusicSettings.setEnabled(c, false);

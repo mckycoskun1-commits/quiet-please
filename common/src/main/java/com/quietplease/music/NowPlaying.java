@@ -8,7 +8,7 @@ import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
 import net.minecraft.client.sounds.SoundEngine;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Oyunda su an calan (ya da oyun duraklatildigi icin bekleyen) muzik parcalarini bulur.
@@ -19,7 +19,7 @@ public final class NowPlaying {
     private NowPlaying() {}
 
     /** @param tracksById panelin bildigi parcalar (dosya kimligi -> parca) */
-    public static List<MusicTrack> find(Map<ResourceLocation, MusicTrack> tracksById) {
+    public static List<MusicTrack> find(Map<Identifier, MusicTrack> tracksById) {
         List<MusicTrack> playing = new ArrayList<>();
         SoundEngine engine = ((com.quietplease.mixin.SoundManagerAccessor) Minecraft.getInstance().getSoundManager()).quietplease$getSoundEngine();
         for (Map.Entry<SoundInstance, ChannelAccess.ChannelHandle> entry : ((com.quietplease.mixin.SoundEngineAccessor) engine).quietplease$getInstanceToChannel().entrySet()) {

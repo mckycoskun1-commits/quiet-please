@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundSource;
 
 /**
@@ -46,7 +46,7 @@ public final class MusicSettings {
     }
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Map<ResourceLocation, TrackSetting> SETTINGS = new ConcurrentHashMap<>();
+    private static final Map<Identifier, TrackSetting> SETTINGS = new ConcurrentHashMap<>();
     /** Kapali parca sayisi; sifirsa parca secimine hic karismayiz (hiz icin). */
     private static volatile int disabledCount = 0;
 
@@ -58,7 +58,7 @@ public final class MusicSettings {
 
     // ---------------------------------------------------------------- okuma (oyun icinden cagrilir)
 
-    public static TrackSetting get(ResourceLocation track) {
+    public static TrackSetting get(Identifier track) {
         return SETTINGS.getOrDefault(track, TrackSetting.DEFAULT);
     }
 
@@ -66,13 +66,13 @@ public final class MusicSettings {
         return disabledCount > 0;
     }
 
-    public static boolean isDisabled(ResourceLocation track) {
+    public static boolean isDisabled(Identifier track) {
         TrackSetting s = SETTINGS.get(track);
         return s != null && !s.enabled();
     }
 
     /** Ses seviyesi carpani: kapaliysa 0, degilse volume/100. */
-    public static float factor(ResourceLocation track) {
+    public static float factor(Identifier track) {
         TrackSetting s = SETTINGS.get(track);
         if (s == null) return 1.0F;
         return s.enabled() ? s.volume() / 100.0F : 0.0F;
@@ -96,15 +96,15 @@ public final class MusicSettings {
 
     // ---------------------------------------------------------------- degistirme
 
-    public static void setVolume(ResourceLocation track, int volume) {
+    public static void setVolume(Identifier track, int volume) {
         put(track, new TrackSetting(Math.max(0, Math.min(100, volume)), get(track).enabled()));
     }
 
-    public static void setEnabled(ResourceLocation track, boolean enabled) {
+    public static void setEnabled(Identifier track, boolean enabled) {
         put(track, new TrackSetting(get(track).volume(), enabled));
     }
 
-    public static void reset(ResourceLocation track) {
+    public static void reset(Identifier track) {
         SETTINGS.remove(track);
         recount();
     }
@@ -114,7 +114,7 @@ public final class MusicSettings {
         recount();
     }
 
-    private static void put(ResourceLocation track, TrackSetting setting) {
+    private static void put(Identifier track, TrackSetting setting) {
         if (setting.isDefault()) SETTINGS.remove(track);
         else SETTINGS.put(track, setting);
         recount();
@@ -130,7 +130,7 @@ public final class MusicSettings {
      */
     public static void applyToPlayingSounds() {
         Minecraft mc = Minecraft.getInstance();
-        mc.getSoundManager().updateSourceVolume(SoundSource.MUSIC, mc.options.getSoundSourceVolume(SoundSource.MUSIC));
+        mc.getSoundManager().updateCategoryVolume(SoundSource.MUSIC, mc.options.getSoundSourceVolume(SoundSource.MUSIC));
     }
 
     // ---------------------------------------------------------------- dosya
@@ -156,7 +156,7 @@ public final class MusicSettings {
         try {
             JsonObject tracks = root != null && root.has("tracks") ? root.getAsJsonObject("tracks") : new JsonObject();
             for (String key : tracks.keySet()) {
-                ResourceLocation id = ResourceLocation.tryParse(key);
+                Identifier id = Identifier.tryParse(key);
                 if (id == null) continue;
                 JsonObject o = tracks.getAsJsonObject(key);
                 int volume = o.has("volume") ? o.get("volume").getAsInt() : DEFAULT_VOLUME;

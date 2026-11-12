@@ -14,4 +14,4 @@ plugins {
 
 rootProject.name = "quietplease"
 
-include("common", "fabric", "forge", "neoforge")
+include("fabric", "forge", "neoforge")

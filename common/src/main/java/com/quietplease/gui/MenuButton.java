@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -19,7 +19,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.gui.screens.options.SoundOptionsScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * ESC menusu (Oyun Menusu), Ayarlar ve Muzik ve Sesler ekranlarinin sag ust kosesine paneli acan
@@ -35,7 +35,7 @@ public final class MenuButton {
     private static Button button;
     @Nullable
     private static Screen buttonScreen;
-    private static Map<ResourceLocation, MusicTrack> tracksById = Map.of();
+    private static Map<Identifier, MusicTrack> tracksById = Map.of();
 
     private MenuButton() {}
 
@@ -54,7 +54,7 @@ public final class MenuButton {
         }
         Component label = Lang.tr("options.button");
         int w = Math.max(90, Minecraft.getInstance().font.width(label) + 16);
-        button = Button.builder(label, b -> Minecraft.getInstance().setScreen(new QuietPleaseScreen(screen)))
+        button = Button.builder(label, b -> Minecraft.getInstance().gui.setScreen(new QuietPleaseScreen(screen)))
                 .bounds(screen.width - w - 6, 6, w, 20)
                 .tooltip(Tooltip.create(Lang.tr("options.button.tooltip")))
                 .build();
@@ -65,7 +65,7 @@ public final class MenuButton {
                 .collect(Collectors.toMap(MusicTrack::id, t -> t, (a, b) -> a));
     }
 
-    public static void onRender(Screen screen, GuiGraphics g) {
+    public static void onRender(Screen screen, GuiGraphicsExtractor g) {
         if (button == null || screen != buttonScreen || !ModOptions.nowPlayingText) return;
         // Sadece muzik ve plaklar; Nether ortam sesi gibi uzun dongu sesleri burada gosterilmez
         List<MusicTrack> playing = NowPlaying.find(tracksById).stream()
@@ -93,10 +93,10 @@ public final class MenuButton {
         float w = font.width(text) * TEXT_SCALE;
         float x = below ? button.getX() + button.getWidth() - w : button.getX() - 6 - w;
         float y = below ? button.getY() + button.getHeight() + 3 : button.getY() + (button.getHeight() - 8 * TEXT_SCALE) / 2;
-        g.pose().pushPose();
-        g.pose().translate(x, y, 0);
-        g.pose().scale(TEXT_SCALE, TEXT_SCALE, 1);
-        g.drawString(font, text, 0, 0, NOW_PLAYING_COLOR);
-        g.pose().popPose();
+        g.pose().pushMatrix();
+        g.pose().translate(x, y);
+        g.pose().scale(TEXT_SCALE, TEXT_SCALE);
+        g.text(font, text, 0, 0, NOW_PLAYING_COLOR);
+        g.pose().popMatrix();
     }
 }

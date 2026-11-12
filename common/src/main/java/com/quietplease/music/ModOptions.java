@@ -66,19 +66,9 @@ public final class ModOptions {
      * (cogu zaman boss muzikleri) haric. Menu ve End vanilla'da da "kes" isaretli ama sadece arka plan muzigi.
      */
     public static boolean isBackground(Music music) {
-        if (music instanceof AdjustedMusic) return true; // zaten arka plan diye kopyalanmisti
+        if (music != null && music == lastAdjusted) return true;
         if (music == Musics.END_BOSS || music == Musics.CREDITS) return false;
         return !music.replaceCurrentMusic() || music == Musics.MENU || music == Musics.END;
-    }
-
-    /** Ayara gore bekleme suresi degistirilmis kopya. Kopyalayinca da {@link #isBackground} dogru kalir. */
-    public static final class AdjustedMusic extends Music {
-        final Music original;
-
-        AdjustedMusic(Music original, int minTicks, int maxTicks) {
-            super(original.getEvent(), minTicks, maxTicks, original.replaceCurrentMusic());
-            this.original = original;
-        }
     }
 
     private static Music lastOriginal;
@@ -86,13 +76,13 @@ public final class ModOptions {
 
     /** MusicManager.tick() her tick'te cagirir. Arka plan muzigi degilse ya da ayar Vanilla ise ayni nesne doner. */
     public static Music adjustGap(Music music) {
-        if (music == null || gap == Gap.VANILLA || music instanceof AdjustedMusic || !isBackground(music)) return music;
+        if (music == null || gap == Gap.VANILLA || music == lastAdjusted || !isBackground(music)) return music;
         int min = gapMinTicks();
         int max = gapMaxTicks();
         // Her tick yeni nesne olusturmamak icin son sonucu sakla
-        if (lastOriginal == music && lastAdjusted.getMinDelay() == min && lastAdjusted.getMaxDelay() == max) return lastAdjusted;
+        if (lastOriginal == music && lastAdjusted.minDelay() == min && lastAdjusted.maxDelay() == max) return lastAdjusted;
         lastOriginal = music;
-        lastAdjusted = new AdjustedMusic(music, min, max);
+        lastAdjusted = new Music(music.sound(), min, max, music.replaceCurrentMusic());
         return lastAdjusted;
     }
 

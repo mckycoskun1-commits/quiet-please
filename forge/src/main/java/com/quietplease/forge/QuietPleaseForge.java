@@ -10,7 +10,6 @@ import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -22,16 +21,14 @@ public final class QuietPleaseForge {
     public QuietPleaseForge(FMLJavaModLoadingContext context) {
         if (FMLEnvironment.dist != Dist.CLIENT) return;
         QuietPlease.init();
-        context.getModEventBus().addListener((RegisterKeyMappingsEvent event) -> QuietPleaseKeys.all().forEach(event::register));
-        MinecraftForge.EVENT_BUS.addListener((RegisterClientCommandsEvent event) -> QuietPleaseCommands.register(event.getDispatcher()));
-        MinecraftForge.EVENT_BUS.addListener((TickEvent.ClientTickEvent event) -> {
-            if (event.phase == TickEvent.Phase.END) QuietPlease.clientTick();
-        });
-        MinecraftForge.EVENT_BUS.addListener((ScreenEvent.Init.Post event) -> {
+        RegisterKeyMappingsEvent.BUS.addListener(event -> QuietPleaseKeys.all().forEach(event::register));
+        RegisterClientCommandsEvent.BUS.addListener(event -> QuietPleaseCommands.register(event.getDispatcher()));
+        TickEvent.ClientTickEvent.Post.BUS.addListener(event -> QuietPlease.clientTick());
+        ScreenEvent.Init.Post.BUS.addListener(event -> {
             QuietPlease.onScreenInit(event.getScreen());
             MenuButton.onInit(event.getScreen(), event::addListener);
         });
-        MinecraftForge.EVENT_BUS.addListener((ScreenEvent.Render.Post event) -> MenuButton.onRender(event.getScreen(), event.getGuiGraphics()));
+        ScreenEvent.Render.Post.BUS.addListener(event -> MenuButton.onRender(event.getScreen(), event.getGuiGraphics()));
         context.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
                 () -> new ConfigScreenHandler.ConfigScreenFactory((mc, parent) -> new QuietPleaseScreen(parent)));
     }

@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
@@ -32,7 +32,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
@@ -74,7 +74,7 @@ public class QuietPleaseScreen extends Screen {
 
     private Map<String, List<MusicTrack>> library = Map.of();
     private List<MusicTrack> allTracks = List.of();
-    private Map<ResourceLocation, MusicTrack> tracksById = Map.of();
+    private Map<Identifier, MusicTrack> tracksById = Map.of();
     /** Oyunda su an calan parcalar (her tick'te guncellenir). */
     private List<MusicTrack> nowPlaying = List.of();
     private int nowPlayingIndex = 0;
@@ -114,14 +114,14 @@ public class QuietPleaseScreen extends Screen {
 
         // Baslikta: solda Ayarlar (ortadaki logoya carpmasin diye satirin kenarlarinda)
         Component settingsLabel = Lang.tr("settings.button");
-        addRenderableWidget(Button.builder(settingsLabel, b -> minecraft.setScreen(new QuietPleaseSettingsScreen(this)))
+        addRenderableWidget(Button.builder(settingsLabel, b -> minecraft.gui.setScreen(new QuietPleaseSettingsScreen(this)))
                 .bounds(x, 6, Math.max(60, font.width(settingsLabel) + 12), 20)
                 .tooltip(Tooltip.create(Lang.tr("settings.button.tooltip")))
                 .build());
         // ... sagda Calma listesi
         Component playlistLabel = Lang.tr("playlist.button");
         int playlistW = Math.max(60, font.width(playlistLabel) + 12);
-        addRenderableWidget(Button.builder(playlistLabel, b -> minecraft.setScreen(new QuietPlaylistScreen(this)))
+        addRenderableWidget(Button.builder(playlistLabel, b -> minecraft.gui.setScreen(new QuietPlaylistScreen(this)))
                 .bounds(x + rowW - playlistW, 6, playlistW, 20)
                 .tooltip(Tooltip.create(Lang.tr("playlist.open.tooltip")))
                 .build());
@@ -143,9 +143,8 @@ public class QuietPleaseScreen extends Screen {
         modValues = mods;
         modButton = addRenderableWidget(CycleButton.<String>builder(m -> m.isEmpty() ? Lang.tr("screen.mod.all")
                         : m.equals(PLAYLIST_FILTER) ? Lang.tr("screen.mod.playlist").withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
-                        : Component.literal(MusicLibrary.modName(m)))
+                        : Component.literal(MusicLibrary.modName(m)), modFilter)
                 .withValues(mods)
-                .withInitialValue(modFilter)
                 .withTooltip(v -> Tooltip.create(Lang.tr("screen.mod.tooltip")))
                 .create(x + searchW + 4, y, modW, 20, Lang.tr("screen.mod"), (b, value) -> {
                     modFilter = value;
@@ -154,8 +153,7 @@ public class QuietPleaseScreen extends Screen {
 
         addRenderableWidget(CycleButton.booleanBuilder(
                         Lang.tr("screen.ambient.show").withStyle(ChatFormatting.GREEN),
-                        Lang.tr("screen.ambient.hide").withStyle(ChatFormatting.GRAY))
-                .withInitialValue(showOther)
+                        Lang.tr("screen.ambient.hide").withStyle(ChatFormatting.GRAY), showOther)
                 .withTooltip(v -> Tooltip.create(Lang.tr("screen.ambient.tooltip")))
                 .create(x + searchW + 4 + modW + 4, y, otherW, 20, Lang.tr("screen.ambient"), (b, value) -> {
                     showOther = value;
@@ -214,17 +212,17 @@ public class QuietPleaseScreen extends Screen {
     // ------------------------------------------------------------------ cizim ve yasam dongusu
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        super.render(g, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(g, mouseX, mouseY, partialTick);
         renderHeader(g);
         renderNowPlaying(g, mouseX, mouseY);
         if (list.children().isEmpty()) {
-            g.drawCenteredString(font, Lang.tr("screen.no_results"), width / 2, TOP + 24, MUTED);
+            g.centeredText(font, Lang.tr("screen.no_results"), width / 2, TOP + 24, MUTED);
         }
     }
 
     /** Logo + baslik + ozet satiri. */
-    private void renderHeader(GuiGraphics g) {
+    private void renderHeader(GuiGraphicsExtractor g) {
         Component title = Component.literal("Quiet Please").withStyle(ChatFormatting.BOLD);
         long off = allTracks.stream().filter(t -> MusicSettings.isDisabled(t.id())).count();
         long custom = allTracks.stream().filter(t -> !MusicSettings.isDisabled(t.id())
@@ -239,8 +237,8 @@ public class QuietPleaseScreen extends Screen {
         int y = 5;
 
         drawLogo(g, x, y, logo);
-        g.drawString(font, title, x + logo + 6, y + 2, GOLD);
-        g.drawString(font, summary, x + logo + 6, y + 13, MUTED);
+        g.text(font, title, x + logo + 6, y + 2, GOLD);
+        g.text(font, summary, x + logo + 6, y + 13, MUTED);
     }
 
     // ------------------------------------------------------------------ "su an calan" cubugu
@@ -250,7 +248,7 @@ public class QuietPleaseScreen extends Screen {
     }
 
     private int barRight() {
-        return list.getScrollbarPosition() + 10;
+        return list.scrollBarX() + 10;
     }
 
     /** Cubugun sag kenari: Atla dugmesinin hemen solu. */
@@ -264,7 +262,7 @@ public class QuietPleaseScreen extends Screen {
     }
 
     /** Listenin ustunde: oyunda su an hangi parca caliyor (oyuncu muzigin adini bilmese de bulabilsin diye). */
-    private void renderNowPlaying(GuiGraphics g, int mouseX, int mouseY) {
+    private void renderNowPlaying(GuiGraphicsExtractor g, int mouseX, int mouseY) {
         int left = barLeft();
         int right = barTextRight();
         // Atla sadece oyunun arka plan muzigi calarken (ya da sirada beklerken) ise yarar
@@ -276,7 +274,7 @@ public class QuietPleaseScreen extends Screen {
         int textY = top + (NOW_PLAYING_H - 8) / 2;
 
         if (nowPlaying.isEmpty()) {
-            g.drawString(font, Lang.tr("screen.now_playing.none"), left + 8, textY, MUTED);
+            g.text(font, Lang.tr("screen.now_playing.none"), left + 8, textY, MUTED);
             return;
         }
         MusicTrack shown = nowPlaying.get(Math.floorMod(nowPlayingIndex, nowPlaying.size()));
@@ -288,15 +286,18 @@ public class QuietPleaseScreen extends Screen {
         // Uzun adlar cubugun (ve Atla dugmesinin) ustune tasmasin
         int maxW = right - 4 - (left + 20);
         if (font.width(line) > maxW) {
-            g.drawString(font, font.plainSubstrByWidth(line.getString(), maxW - font.width("…")) + "…", left + 20, textY, PLAYING);
+            g.text(font, font.plainSubstrByWidth(line.getString(), maxW - font.width("…")) + "…", left + 20, textY, PLAYING);
         } else {
-            g.drawString(font, line, left + 20, textY, TEXT);
+            g.text(font, line, left + 20, textY, TEXT);
         }
-        if (hover) setTooltipForNextRenderPass(Lang.tr("screen.now_playing.tooltip"));
+        if (hover) g.setTooltipForNextFrame(font, Lang.tr("screen.now_playing.tooltip"), mouseX, mouseY);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         // Mod filtresi: sol tik bir sonraki moda gecer (Minecraft'in kendi davranisi), sag tik bir oncekine doner.
         if (button == 1 && modButton != null && modButton.isMouseOver(mouseX, mouseY) && !modValues.isEmpty()) {
             int i = modValues.indexOf(modButton.getValue());
@@ -319,7 +320,7 @@ public class QuietPleaseScreen extends Screen {
             rebuildWidgets();
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
@@ -339,7 +340,7 @@ public class QuietPleaseScreen extends Screen {
 
     @Override
     public void onClose() {
-        minecraft.setScreen(parent);
+        minecraft.gui.setScreen(parent);
     }
 
     @Override
@@ -369,48 +370,50 @@ public class QuietPleaseScreen extends Screen {
         }
 
         @Override
-        protected int getScrollbarPosition() {
+        protected int scrollBarX() {
             return getRowLeft() + getRowWidth() + 8;
         }
 
         /** Oyunun dokulu liste zemini yerine koyu, turuncu cerceveli bir panel. */
         @Override
-        protected void renderListBackground(GuiGraphics g) {
+        protected void extractListBackground(GuiGraphicsExtractor g) {
             int left = getRowLeft() - 6;
-            int right = getScrollbarPosition() + 6 + 4;
+            int right = scrollBarX() + 6 + 4;
             int top = getY() - 2;
             int bottom = getBottom() + 2;
             g.fill(left, top, right, bottom, PANEL_BG);
-            g.renderOutline(left - 1, top - 1, right - left + 2, bottom - top + 2, ACCENT_SOFT);
+            g.outline(left - 1, top - 1, right - left + 2, bottom - top + 2, ACCENT_SOFT);
             // ust kenarda hafif bir isilti
             g.fillGradient(left, top, right, top + 6, 0x30E89A3C, 0x00E89A3C);
         }
 
         @Override
-        protected void renderListSeparators(GuiGraphics g) {
+        protected void extractListSeparators(GuiGraphicsExtractor g) {
             // cerceve zaten ayiriyor
         }
     }
 
-    private static final ItemStack LOGO_ITEM = new ItemStack(Items.JUKEBOX);
+    static ItemStack stack(net.minecraft.world.item.Item item) {
+        return item.builtInRegistryHolder().areComponentsBound() ? new ItemStack(item) : ItemStack.EMPTY;
+    }
 
     /**
      * Baslik logosu: ince turuncu cerceveli koyu kare icinde oyunun kendi Jukebox esyasi.
      * (Ayri bir resim dosyasi yok; boylece panelde sadece Minecraft'in kendi cizimleri gorunur.)
      */
-    static void drawLogo(GuiGraphics g, int x, int y, int size) {
+    static void drawLogo(GuiGraphicsExtractor g, int x, int y, int size) {
         g.fill(x - 1, y - 1, x + size + 1, y + size + 1, ACCENT_SOFT);
         g.fill(x, y, x + size, y + size, HEADER_BG);
         int inner = size - 4;
-        g.pose().pushPose();
-        g.pose().translate(x + 2, y + 2, 0);
-        g.pose().scale(inner / 16.0F, inner / 16.0F, 1.0F);
-        g.renderItem(LOGO_ITEM, 0, 0);
-        g.pose().popPose();
+        g.pose().pushMatrix();
+        g.pose().translate(x + 2, y + 2);
+        g.pose().scale(inner / 16.0F, inner / 16.0F);
+        g.item(stack(Items.JUKEBOX), 0, 0);
+        g.pose().popMatrix();
     }
 
     /** Calan parcanin yaninda ziplayan uc kucuk cubuk. */
-    static void drawEqualizer(GuiGraphics g, int x, int baseY, int color) {
+    static void drawEqualizer(GuiGraphicsExtractor g, int x, int baseY, int color) {
         double t = System.currentTimeMillis() / 140.0;
         for (int i = 0; i < 3; i++) {
             int h = 2 + (int) Math.round((Math.sin(t + i * 1.9) * 0.5 + 0.5) * 7);
@@ -427,7 +430,6 @@ public class QuietPleaseScreen extends Screen {
 
     /** Mod basligi: jukebox ikonu, ad, parca sayisi, hepsini ac/kapat. */
     private class HeaderEntry extends Row {
-        private static final ItemStack ICON = new ItemStack(Items.JUKEBOX);
 
         private final String modName;
         private final List<MusicTrack> tracks;
@@ -447,30 +449,33 @@ public class QuietPleaseScreen extends Screen {
         }
 
         @Override
-        public void render(GuiGraphics g, int index, int top, int left, int width, int height,
-                           int mouseX, int mouseY, boolean hovering, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor g, int mouseX, int mouseY, boolean hovering, float partialTick) {
+            int top = getContentY();
+            int left = getContentX();
+            int width = getContentWidth();
+            int height = getContentHeight();
             // zemin + soldaki vurgu cizgisi
             g.fill(left - 3, top - 1, left + width + 3, top + height + 1, HEADER_BG);
             g.fill(left - 3, top - 1, left - 1, top + height + 1, ACCENT);
             g.fillGradient(left - 1, top + height, left + width + 3, top + height + 1, ACCENT_SOFT, ACCENT_SOFT);
 
             int midY = top + (height - 8) / 2;
-            g.renderItem(ICON, left + 2, top + (height - 16) / 2);
+            g.item(stack(Items.JUKEBOX), left + 2, top + (height - 16) / 2);
 
             long off = tracks.stream().filter(t -> MusicSettings.isDisabled(t.id())).count();
             Component name = Component.literal(modName).withStyle(ChatFormatting.BOLD);
             int nameX = left + 22;
-            g.drawString(font, name, nameX, midY, GOLD);
+            g.text(font, name, nameX, midY, GOLD);
             MutableComponent info = Lang.count("tracks", tracks.size());
             if (off > 0) info.append(" · ").append(Lang.tr("count.off", off));
-            g.drawString(font, info, nameX + font.width(name) + 6, midY, off > 0 ? 0xFFE07060 : MUTED);
+            g.text(font, info, nameX + font.width(name) + 6, midY, off > 0 ? 0xFFE07060 : MUTED);
 
             allOff.setPosition(left + width - allOff.getWidth(), top + (height - 18) / 2);
             allOn.setPosition(allOff.getX() - 4 - allOn.getWidth(), allOff.getY());
             allOn.active = off > 0;
             allOff.active = off < tracks.size();
-            allOn.render(g, mouseX, mouseY, partialTick);
-            allOff.render(g, mouseX, mouseY, partialTick);
+            allOn.extractRenderState(g, mouseX, mouseY, partialTick);
+            allOff.extractRenderState(g, mouseX, mouseY, partialTick);
         }
 
         @Override
@@ -510,7 +515,7 @@ public class QuietPleaseScreen extends Screen {
                 MusicSettings.save();
                 // "★ Calma listesi" filtresindeyken listeden cikarilan parca ekrandan da kalksin
                 if (modFilter.equals(PLAYLIST_FILTER)) {
-                    double scroll = list.getScrollAmount();
+                    double scroll = list.scrollAmount();
                     rebuildList();
                     list.setScrollAmount(scroll);
                 }
@@ -523,8 +528,11 @@ public class QuietPleaseScreen extends Screen {
         }
 
         @Override
-        public void render(GuiGraphics g, int index, int top, int left, int width, int height,
-                           int mouseX, int mouseY, boolean hovering, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor g, int mouseX, int mouseY, boolean hovering, float partialTick) {
+            int top = getContentY();
+            int left = getContentX();
+            int width = getContentWidth();
+            int height = getContentHeight();
             boolean enabled = !MusicSettings.isDisabled(track.id());
             boolean playing = MusicPreview.isPlaying(track.id());       // panelde onizleniyor
             boolean inGame = !playing && nowPlaying.contains(track);    // oyunda su an caliyor
@@ -564,12 +572,12 @@ public class QuietPleaseScreen extends Screen {
             // ikon (kapaliysa karartilir)
             int iconX = left + 46;
             int iconY = top + (height - 16) / 2;
-            g.renderItem(icon, iconX, iconY);
+            g.item(icon, iconX, iconY);
             if (!enabled) {
-                g.pose().pushPose();
-                g.pose().translate(0, 0, 200);
+                g.pose().pushMatrix();
+                g.pose().translate(0, 0);
                 g.fill(iconX, iconY, iconX + 16, iconY + 16, 0xA0100C08);
-                g.pose().popPose();
+                g.pose().popMatrix();
             }
 
             // ad
@@ -581,26 +589,26 @@ public class QuietPleaseScreen extends Screen {
             String name = track.shortName();
             if (font.width(name) > nameMaxW) name = font.plainSubstrByWidth(name, nameMaxW - font.width("…")) + "…";
             if (enabled) {
-                g.drawString(font, name, nameX, textY, playing ? GOLD : inGame ? PLAYING : TEXT);
+                g.text(font, name, nameX, textY, playing ? GOLD : inGame ? PLAYING : TEXT);
             } else {
-                g.drawString(font, Component.literal(name).withStyle(ChatFormatting.STRIKETHROUGH), nameX, textY, 0xFF6A6058);
+                g.text(font, Component.literal(name).withStyle(ChatFormatting.STRIKETHROUGH), nameX, textY, 0xFF6A6058);
             }
             int afterName = nameX + font.width(name) + 5;
             if (playing) {
                 drawEqualizer(g, afterName, top + height - 5, ACCENT);
             } else if (inGame) {
                 drawEqualizer(g, afterName, top + height - 5, PLAYING);
-                g.drawString(font, playingTag, afterName + 12, textY, PLAYING);
+                g.text(font, playingTag, afterName + 12, textY, PLAYING);
             }
 
-            play.render(g, mouseX, mouseY, partialTick);
-            star.render(g, mouseX, mouseY, partialTick);
-            slider.render(g, mouseX, mouseY, partialTick);
-            toggle.render(g, mouseX, mouseY, partialTick);
+            play.extractRenderState(g, mouseX, mouseY, partialTick);
+            star.extractRenderState(g, mouseX, mouseY, partialTick);
+            slider.extractRenderState(g, mouseX, mouseY, partialTick);
+            toggle.extractRenderState(g, mouseX, mouseY, partialTick);
 
             // ad/ikon uzerine gelince ayrintilar
             if (hovering && mouseX >= iconX && mouseX < slider.getX() - 4) {
-                setTooltipForNextRenderPass(details());
+                g.setTooltipForNextFrame(font, details(), mouseX, mouseY);
             }
         }
 
@@ -639,13 +647,13 @@ public class QuietPleaseScreen extends Screen {
                 candidates.add("music_disc_" + track.shortName());
                 track.events().forEach(e -> candidates.add(e.getPath().replace('.', '_')));
                 for (String path : candidates) {
-                    ResourceLocation item = ResourceLocation.tryBuild(track.namespace(), path);
-                    if (item != null && BuiltInRegistries.ITEM.containsKey(item)) yield new ItemStack(BuiltInRegistries.ITEM.get(item));
+                    Identifier item = Identifier.tryBuild(track.namespace(), path);
+                    if (item != null && BuiltInRegistries.ITEM.containsKey(item)) yield stack(BuiltInRegistries.ITEM.getValue(item));
                 }
-                yield new ItemStack(Items.MUSIC_DISC_13);
+                yield stack(Items.MUSIC_DISC_13);
             }
-            case MUSIC -> new ItemStack(Items.NOTE_BLOCK);
-            case OTHER -> new ItemStack(Items.ECHO_SHARD);
+            case MUSIC -> stack(Items.NOTE_BLOCK);
+            case OTHER -> stack(Items.ECHO_SHARD);
         };
     }
 

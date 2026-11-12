@@ -50,7 +50,7 @@ public abstract class MusicManagerMixin {
      * yoksa ornegin ana menude her liste sarkisi hemen kesilirdi. Ejderha/jenerik yine keser.
      */
     @ModifyExpressionValue(method = "tick",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/sounds/Music;replaceCurrentMusic()Z"))
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/sounds/MusicManager;canReplace(Lnet/minecraft/sounds/Music;Lnet/minecraft/client/resources/sounds/SoundInstance;)Z"))
     private boolean quietplease$keepPlaylistSong(boolean replace, @Local(ordinal = 0) Music music) {
         return replace && !(currentMusic instanceof Playlist.PlaylistSound && ModOptions.isBackground(music));
     }
