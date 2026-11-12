@@ -132,5 +132,9 @@
   "quietplease.playlist.add": "+ Ekle",
   "quietplease.playlist.add.tooltip": "Sıranın sonuna ekle",
   "quietplease.playlist.added": "✓ Listede",
-  "quietplease.playlist.added.tooltip": "Sıradan çıkarmak için tıkla"
+  "quietplease.playlist.added.tooltip": "Sıradan çıkarmak için tıkla",
+
+  "quietplease.cmd.skip.next": "Atlandı – çalma listesindeki sıradaki şarkı şimdi başlıyor.",
+  "quietplease.cmd.skip.gap": "Atlandı – sıradaki şarkı şarkı arasından sonra gelecek (Ayarlar → Şarkı arası).",
+  "quietplease.cmd.skip.nothing": "Şu an çalan bir arka plan müziği yok (plaklar ve boss müzikleri atlanamaz)."
 }

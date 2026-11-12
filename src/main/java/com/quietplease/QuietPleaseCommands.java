@@ -46,6 +46,7 @@ import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
  *   /quietplease gui                    ayar panelini acar
  *   /quietplease settings               Ayarlar ekranini acar
  *   /quietplease playlist               calma listesi panelini acar
+ *   /quietplease skip                   calan arka plan sarkisini atlar
  */
 public final class QuietPleaseCommands {
 
@@ -87,7 +88,17 @@ public final class QuietPleaseCommands {
                 .then(Commands.literal("dump").executes(QuietPleaseCommands::dump))
                 .then(Commands.literal("gui").executes(QuietPleaseCommands::openGui))
                 .then(Commands.literal("settings").executes(ctx -> open(new QuietPleaseSettingsScreen(null))))
-                .then(Commands.literal("playlist").executes(ctx -> open(new QuietPlaylistScreen(null)))));
+                .then(Commands.literal("playlist").executes(ctx -> open(new QuietPlaylistScreen(null))))
+                .then(Commands.literal("skip").executes(QuietPleaseCommands::skip)));
+    }
+
+    private static int skip(CommandContext<CommandSourceStack> ctx) {
+        boolean playing = ((com.quietplease.mixin.MusicManagerAccessor) Minecraft.getInstance().getMusicManager())
+                .quietplease$getCurrentMusic() != null;
+        com.quietplease.music.MusicControl.skip();
+        say(ctx, Lang.tr(playing ? (com.quietplease.music.Playlist.isActive() ? "cmd.skip.next" : "cmd.skip.gap") : "cmd.skip.nothing")
+                .withStyle(playing ? ChatFormatting.GREEN : ChatFormatting.GRAY));
+        return playing ? 1 : 0;
     }
 
     private static int openGui(CommandContext<CommandSourceStack> ctx) {

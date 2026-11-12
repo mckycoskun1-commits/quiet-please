@@ -132,5 +132,9 @@
   "quietplease.playlist.add": "+ Add",
   "quietplease.playlist.add.tooltip": "Add to the end of the queue",
   "quietplease.playlist.added": "✓ Added",
-  "quietplease.playlist.added.tooltip": "Click to remove it from the queue"
+  "quietplease.playlist.added.tooltip": "Click to remove it from the queue",
+
+  "quietplease.cmd.skip.next": "Skipped – the next playlist song starts now.",
+  "quietplease.cmd.skip.gap": "Skipped – the next song comes after the music gap (Settings → Music gap).",
+  "quietplease.cmd.skip.nothing": "No background music is playing right now (discs and boss music can't be skipped)."
 }

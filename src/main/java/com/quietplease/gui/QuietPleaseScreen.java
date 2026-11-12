@@ -3,7 +3,9 @@ package com.quietplease.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.quietplease.QuietPlease;
 import com.quietplease.Lang;
+import com.quietplease.mixin.MusicManagerAccessor;
 import com.quietplease.music.ModOptions;
+import com.quietplease.music.MusicControl;
 import com.quietplease.music.MusicLibrary;
 import com.quietplease.music.MusicPreview;
 import com.quietplease.music.MusicSettings;
@@ -84,6 +86,8 @@ public class QuietPleaseScreen extends Screen {
     @Nullable
     private CycleButton<String> modButton;
     private List<String> modValues = List.of();
+    @Nullable
+    private Button skip;
 
     // Filtreler (ekran yeniden boyutlaninca korunsun diye alanlarda tutuluyor)
     private String query = "";
@@ -166,6 +170,14 @@ public class QuietPleaseScreen extends Screen {
         list = new TrackList(minecraft, width, height - TOP - BOTTOM_MARGIN, TOP);
         addRenderableWidget(list);
         rebuildList();
+
+        // "Su an calan" cubugunun sagi: Atla
+        Component skipLabel = Lang.tr("screen.skip");
+        int skipW = Math.max(46, font.width(skipLabel) + 10);
+        skip = addRenderableWidget(Button.builder(skipLabel, b -> MusicControl.skip())
+                .bounds(barRight() - skipW, NOW_PLAYING_Y, skipW, NOW_PLAYING_H)
+                .tooltip(Tooltip.create(Lang.tr("screen.skip.tooltip")))
+                .build());
 
         // Alt satir
         int by = height - 28;
@@ -250,15 +262,22 @@ public class QuietPleaseScreen extends Screen {
         return list.getScrollbarPosition() + 10;
     }
 
+    /** Cubugun sag kenari: Atla dugmesinin hemen solu. */
+    private int barTextRight() {
+        return skip != null ? skip.getX() - 2 : barRight();
+    }
+
     private boolean overNowPlaying(double mouseX, double mouseY) {
-        return mouseX >= barLeft() && mouseX < barRight()
+        return mouseX >= barLeft() && mouseX < barTextRight()
                 && mouseY >= NOW_PLAYING_Y && mouseY < NOW_PLAYING_Y + NOW_PLAYING_H;
     }
 
     /** Listenin ustunde: oyunda su an hangi parca caliyor (oyuncu muzigin adini bilmese de bulabilsin diye). */
     private void renderNowPlaying(GuiGraphics g, int mouseX, int mouseY) {
         int left = barLeft();
-        int right = barRight();
+        int right = barTextRight();
+        // Atla sadece oyunun arka plan muzigi calarken (ya da sirada beklerken) ise yarar
+        skip.active = ((MusicManagerAccessor) minecraft.getMusicManager()).quietplease$getCurrentMusic() != null;
         int top = NOW_PLAYING_Y;
         boolean hover = !nowPlaying.isEmpty() && overNowPlaying(mouseX, mouseY);
         g.fill(left, top, right, top + NOW_PLAYING_H, hover ? 0x5070D080 : PLAYING_BG);
@@ -275,7 +294,13 @@ public class QuietPleaseScreen extends Screen {
                 .append(Component.literal(shown.shortName()).withStyle(s -> s.withColor(PLAYING & 0xFFFFFF)))
                 .append(Component.literal("  " + MusicLibrary.modName(shown.namespace())).withStyle(ChatFormatting.GRAY));
         if (nowPlaying.size() > 1) line.append(Component.literal("  ")).append(Lang.tr("screen.now_playing.more", nowPlaying.size() - 1).withStyle(ChatFormatting.DARK_GRAY));
-        g.drawString(font, line, left + 20, textY, TEXT);
+        // Uzun adlar cubugun (ve Atla dugmesinin) ustune tasmasin
+        int maxW = right - 4 - (left + 20);
+        if (font.width(line) > maxW) {
+            g.drawString(font, font.plainSubstrByWidth(line.getString(), maxW - font.width("…")) + "…", left + 20, textY, PLAYING);
+        } else {
+            g.drawString(font, line, left + 20, textY, TEXT);
+        }
         if (hover) setTooltipForNextRenderPass(Lang.tr("screen.now_playing.tooltip"));
     }
 
