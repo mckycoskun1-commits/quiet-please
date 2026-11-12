@@ -3,6 +3,35 @@
 > Bu belge sadece bir plan. Modrinth'e hiçbir şey gönderilmedi; **"quiet-please" taslağına dokunulmadı**
 > (hâlâ gönderilmemiş taslak). Yapay zekâ (YZ) beyanı hiçbir aşamada gizlenmeyecek.
 
+## Kısa özet: yapay zekâ sorununa çözüm (12.11.2026 güncellemesi)
+
+Gizlemek bir seçenek değil: CurseForge sayfasında "AI disclosure" bölümü zaten herkese açık ve git geçmişinde
+"Co-Authored-By: Claude" satırları var. Fark edilirse sadece proje değil hesap da kapanabilir. Dürüst yollar:
+
+| Yol | Emek | Ne kazandırır | Öneri |
+|---|---|---|---|
+| **A. Şimdilik sadece CurseForge (+ istersen GitHub Releases)** | Yok | CurseForge YZ'yi beyanla kabul ediyor; oyuncuların çoğu zaten oradan indiriyor | **Hemen** – zaten yapıldı |
+| **B. Görselleri kendin yap, sonra Modrinth'e dürüstçe sor** | 1 akşam + mesaj | Kesin cevap. "Evet" derlerse Modrinth'e de çıkarsın | **Sıradaki adım** |
+| **C. Java/NeoForge öğrenip çekirdeği yeniden yaz** | Birkaç hafta | Mod gerçekten "senin" olur; Modrinth'in "ağırlıklı YZ" şartı ortadan kalkar | B'de "hayır" derlerse |
+
+### Bu güncellemede yapılanlar (B yolunun yarısı)
+* Paneldeki YZ logosu **kaldırıldı**: `textures/gui/logo.png` silindi; panel ve çalma listesi başlığında artık
+  oyunun kendi **Jukebox** eşyası çiziliyor.
+* `docs/screenshots/*.png` oyun içinden **yeniden çekildi** (otomatik GUI testi). Artık hiçbirinde YZ görseli yok.
+  Yeni olarak `playlist.png` ve `settings.png` da eklendi.
+
+### Senin yapman gereken (YZ ile yapılamaz, çünkü kural tam olarak bunu istiyor)
+1. **İkon (iki dosya):** `art/quietplease-icon.png` (512 ya da 1024 px) ve `src/main/resources/quietplease.png` (256 px).
+   En kolay yol: oyunda bir Jukebox'ın ekran görüntüsünü al (`F1` ile arayüzü gizle, `F2` ile çek), Paint ile kare kırp.
+   Aşağıdaki 1. bölümde ayrıntısı var. Dosyaları aynı adla değiştirmen yeterli; gerisini ben hallederim
+   (derleme, CurseForge ikonunu güncelleme önerisi).
+2. **Modrinth'e mesaj:** 3. bölümdeki taslağı kendi Modrinth kullanıcı adınla gönder. Mesajı senin göndermen gerekiyor;
+   ben senin adına hiçbir yere mesaj göndermem.
+3. Cevap **evet** ise: Modrinth taslağını "Contains AI-generated content" işareti açık olarak gönderiyoruz.
+   Cevap **hayır** ise: 2. bölümdeki öğrenme yolu (C), bu arada CurseForge'da yayında kalırsın.
+
+---
+
 ## Kurallar (12.11.2026'da yeniden okundu)
 
 Kaynak: <https://modrinth.com/legal/rules>, **§6 "Usage of Generative AI"**, sayfanın son değişikliği: 13 Ağustos 2026.
@@ -15,37 +44,36 @@ Kaynak: <https://modrinth.com/legal/rules>, **§6 "Usage of Generative AI"**, sa
 * **§6.2 Bütün proje:** İçeriği **ağırlıklı olarak ya da tamamen YZ çıktısı** olan bir proje herkese açık yayınlanamaz.
 
 Bugünkü durum: kodun neredeyse tamamı YZ (Claude) ile yazıldı; ikon (`art/quietplease-icon.png`), mod listesi ikonu
-(`src/main/resources/quietplease.png`) ve panel logosu (`src/main/resources/assets/quietplease/textures/gui/logo.png`)
-YZ görsel aracıyla yapıldı. Yani **şu haliyle Modrinth'te herkese açık yayınlanamaz.** İki şey değişmeli: görseller ve
+(`src/main/resources/quietplease.png`) YZ görsel aracıyla yapıldı (panel logosu da öyleydi; 12.11.2026'da kaldırıldı).
+Yani **şu haliyle Modrinth'te herkese açık yayınlanamaz.** İki şey değişmeli: görseller ve
 kodun "ağırlıklı olarak YZ" olması.
 
 ---
 
 ## 1. İkon ve görseller: YZ'siz hale getir
 
-Değişmesi gereken üç dosya var (üçü de aynı YZ görselinden):
+Değişmesi gereken iki dosya kaldı (ikisi de aynı YZ görselinden; panel logosu artık oyunun Jukebox eşyası):
 
 | Dosya | Nerede görünüyor | Boyut |
 |---|---|---|
 | `art/quietplease-icon.png` | Modrinth/CurseForge proje ikonu | 1024 px (512 px de yeter) |
 | `src/main/resources/quietplease.png` | Oyundaki Mods listesi | 256 px |
-| `src/main/resources/assets/quietplease/textures/gui/logo.png` | Panelin başlığı (ekran görüntülerinde görünüyor!) | küçük, kare |
 
 İki seçenek (ikisi de tamamen senin elinden çıkar):
 
 **A) Oyun içi ekran görüntüsü (en kolay).**
 1. Creative dünyada bir Jukebox koy, yanına bir plak bırak (ya da eşya çerçevesine as), güzel bir ışık/arka plan seç.
 2. `F1` ile arayüzü gizle, `F2` ile ekran görüntüsü al (`.minecraft/screenshots`).
-3. Paint / Paint.NET / GIMP ile kare kırp, 512×512 ve 256×256 kaydet; küçük logo için 64×64.
+3. Paint / Paint.NET / GIMP ile kare kırp, 512×512 ve 256×256 kaydet.
    Minecraft'ın kendi dokuları oyun içi ekran görüntüsünde sorun değil; YZ yok.
 
 **B) Kendi piksel sanatın.** <https://www.piskelapp.com> (ücretsiz, tarayıcıda): 32×32 tuvalde bir jukebox + nota ya da
-"sus" işareti (🤫) çiz, PNG olarak 16× büyütüp dışa aktar (512 px). Aynı çizimin küçüğü logo olur.
+"sus" işareti (🤫) çiz, PNG olarak 16× büyütüp dışa aktar (512 px). 256 px'lik küçüğü mod listesi ikonu olur.
 
 Sonra:
-* Üç dosyayı yenileriyle değiştir (aynı adlar).
-* **Ekran görüntülerini yeniden al** (`docs/screenshots/*.png`): eskilerinde paneldeki YZ logosu görünüyor, bu da §6.2'ye
-  takılır. `QUIETPLEASE_AUTODUMP=gui` ile `runClient` yeni görüntüleri `run/screenshots/` içine kendiliğinden çeker.
+* İki dosyayı yenileriyle değiştir (aynı adlar).
+* ~~Ekran görüntülerini yeniden al~~ **yapıldı (12.11.2026)**: `docs/screenshots/*.png` logosuz panelle yeniden çekildi.
+  Tekrar gerekirse: `QUIETPLEASE_AUTODUMP=gui` ile `runClient` yeni görüntüleri `run/screenshots/` içine kendiliğinden çeker.
 * `art/quietplease-folder.ico` sadece senin bilgisayarındaki klasör ikonu; yayına girmiyor ama istersen onu da değiştir.
 * CurseForge'daki ikonu ve galeriyi de yenileriyle değiştirmek iyi olur (orada yasak değil ama tutarlılık için).
 
@@ -108,8 +136,8 @@ Thank you!
 
 ## 4. Bu arada: CurseForge + GitHub sürümü
 
-* **CurseForge:** proje oluşturuldu (id 1799446), galeri yüklendi, jar formu dolduruldu; sadece **Add File** düğmesine
-  basman gerekiyor (bu proje moderasyona gider). CurseForge'un kuralı YZ görselleri için görünür bir not istiyor; açıklamada
+* **CurseForge:** proje oluşturuldu (id 1799446), galeri yüklendi, 1.0.0 jar'ı 12.11.2026'da yüklendi ve proje
+  moderasyonda (onay e-postası bekleniyor). CurseForge'un kuralı YZ görselleri için görünür bir not istiyor; açıklamada
   "AI disclosure" bölümü var. İkonu sonradan YZ'siz olanla değiştirirsen bu notu da güncelle.
 * **GitHub sürümü** (henüz uzak depo yok; komutlar sadece öneri, çalıştırılmadı):
 

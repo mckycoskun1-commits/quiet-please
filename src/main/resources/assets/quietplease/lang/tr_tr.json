@@ -142,5 +142,8 @@
   "quietplease.cmd.preset.exported": "\"%s\" hazır ayarı kaydedildi:",
   "quietplease.cmd.preset.missing": "config/quietplease-presets içinde \"%s\" adlı bir hazır ayar yok.",
   "quietplease.cmd.preset.failed": "\"%1$s\" hazır ayarı yüklenemedi: %2$s",
-  "quietplease.cmd.preset.imported": "\"%s\" hazır ayarı yüklendi: parça ayarları, ayarlar ve çalma listesi."
+  "quietplease.cmd.preset.imported": "\"%s\" hazır ayarı yüklendi: parça ayarları, ayarlar ve çalma listesi.",
+  "key.categories.quietplease": "Quiet Please",
+  "key.quietplease.open": "Müzik panelini aç",
+  "key.quietplease.skip": "Çalan şarkıyı atla"
 }

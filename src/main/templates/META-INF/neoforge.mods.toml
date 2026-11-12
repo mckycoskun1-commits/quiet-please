@@ -56,7 +56,11 @@ Quiet Please lists every music track the game knows about, grouped by the mod it
 - Per-track volume (0-100%) and on/off switch
 - Disable all music of a mod with one click
 - Search, mod filter and in-panel preview
-- Open it from Options or Music & Sounds (top-right "♪ Quiet Please" button)
+- Background playlist with its own queue, skip button and repeat/shuffle
+- Music gap setting: shorten or remove the long silence between songs
+- Presets: /quietplease export <name> and import <name>
+- Optional key bindings to open the panel and skip a song (Controls → Key Binds)
+- Open it from the pause menu, Options or Music & Sounds (top-right "♪ Quiet Please" button)
 - Client-side only: works on any server, no server install needed
 '''
 

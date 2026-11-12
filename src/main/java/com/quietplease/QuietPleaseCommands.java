@@ -104,12 +104,10 @@ public final class QuietPleaseCommands {
     }
 
     private static int skip(CommandContext<CommandSourceStack> ctx) {
-        boolean playing = ((com.quietplease.mixin.MusicManagerAccessor) Minecraft.getInstance().getMusicManager())
-                .quietplease$getCurrentMusic() != null;
-        com.quietplease.music.MusicControl.skip();
-        say(ctx, Lang.tr(playing ? (com.quietplease.music.Playlist.isActive() ? "cmd.skip.next" : "cmd.skip.gap") : "cmd.skip.nothing")
-                .withStyle(playing ? ChatFormatting.GREEN : ChatFormatting.GRAY));
-        return playing ? 1 : 0;
+        String result = com.quietplease.music.MusicControl.skipAndDescribe();
+        boolean skipped = !result.equals("cmd.skip.nothing");
+        say(ctx, Lang.tr(result).withStyle(skipped ? ChatFormatting.GREEN : ChatFormatting.GRAY));
+        return skipped ? 1 : 0;
     }
 
     private static int openGui(CommandContext<CommandSourceStack> ctx) {

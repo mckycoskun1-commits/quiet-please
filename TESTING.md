@@ -89,3 +89,11 @@ Bu dalın jar'ı `dist/quietplease-1.1.0.jar` olur (1.0.0 jar'ına dokunmaz).
 19. [ ] `/quietplease export test1` → `run/config/quietplease-presets/test1.json` oluşuyor (sohbetteki ada tıklayınca klasör açılıyor).
         Bir şeyleri değiştir, `/quietplease import test1` → eski hal geliyor (çalma listesi dahil). `import` yazarken ad öneriliyor.
 20. [ ] `/quietplease export ../x` reddediliyor.
+
+### Kısayol tuşları ve ayar dosyası
+21. [ ] **Options → Controls → Key Binds** listesinde **Quiet Please** başlığı ve iki tuş var (ikisi de boş). Birine tuş ata:
+        dünyadayken basınca panel açılıyor / şarkı atlanıyor ve hotbarın üstünde kısa bir yazı çıkıyor. Sohbet açıkken tuş bir şey yapmıyor.
+22. [ ] Panel ve çalma listesi başlığında logo yerine **Jukebox** eşyası görünüyor.
+23. [ ] Oyunu kapat, `run/config/quietplease.json` dosyasını bozup (ör. ilk satırı sil) oyunu aç: oyun açılıyor, varsayılanlar geliyor
+        ve yanında `quietplease.json.broken` kopyası duruyor.
+24. [ ] Ana panelde Mod filtresi **★ Çalma listesi** iken bir şarkının ★ düğmesine bas: şarkı listeden hemen kalkıyor.

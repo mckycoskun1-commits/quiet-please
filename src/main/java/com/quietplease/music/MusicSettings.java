@@ -6,8 +6,10 @@ import com.google.gson.JsonObject;
 import com.quietplease.QuietPlease;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -142,6 +144,7 @@ public final class MusicSettings {
                 root = GSON.fromJson(Files.readString(path, StandardCharsets.UTF_8), JsonObject.class);
             } catch (Exception e) {
                 QuietPlease.LOGGER.error("{} okunamadi, varsayilan ayarlar kullaniliyor", path, e);
+                backupBroken(path);
             }
         }
         readRoot(root);
@@ -213,8 +216,7 @@ public final class MusicSettings {
     /** Tum ayarlari (parcalar, ayarlar, calma listesi) config/quietplease-presets/&lt;ad&gt;.json dosyasina yazar. */
     public static Path exportPreset(String name) throws IOException {
         Path path = presetFile(name);
-        Files.createDirectories(path.getParent());
-        Files.writeString(path, GSON.toJson(writeRoot()), StandardCharsets.UTF_8);
+        writeAtomically(path, GSON.toJson(writeRoot()));
         return path;
     }
 
@@ -241,10 +243,38 @@ public final class MusicSettings {
 
     public static void save() {
         try {
-            Files.createDirectories(file().getParent());
-            Files.writeString(file(), GSON.toJson(writeRoot()), StandardCharsets.UTF_8);
+            writeAtomically(file(), GSON.toJson(writeRoot()));
         } catch (IOException e) {
             QuietPlease.LOGGER.error("{} yazilamadi", file(), e);
+        }
+    }
+
+    /**
+     * Once yanindaki gecici dosyaya yazar, sonra tek adimda yerine tasir. Oyun yazarken cokerse ya da
+     * bilgisayar kapanirsa eski dosya bozulmadan kalir.
+     */
+    private static void writeAtomically(Path target, String content) throws IOException {
+        Files.createDirectories(target.getParent());
+        Path tmp = target.resolveSibling(target.getFileName() + ".tmp");
+        Files.writeString(tmp, content, StandardCharsets.UTF_8);
+        try {
+            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    /**
+     * Okunamayan ayar dosyasini quietplease.json.broken olarak saklar; yoksa bir sonraki kayit onu
+     * varsayilanlarla ezer ve oyuncunun ayarlari tamamen kaybolur.
+     */
+    private static void backupBroken(Path path) {
+        Path backup = path.resolveSibling(path.getFileName() + ".broken");
+        try {
+            Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING);
+            QuietPlease.LOGGER.warn("Bozuk ayar dosyasinin kopyasi: {}", backup);
+        } catch (IOException e) {
+            QuietPlease.LOGGER.error("Bozuk ayar dosyasi yedeklenemedi", e);
         }
     }
 }

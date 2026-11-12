@@ -40,6 +40,7 @@ public class QuietPlease {
     public QuietPlease(IEventBus modEventBus, ModContainer container) {
         MusicSettings.load();
         modEventBus.addListener(this::onClientSetup);
+        modEventBus.addListener(QuietPleaseKeys::register);
         NeoForge.EVENT_BUS.addListener(QuietPleaseCommands::register);
         NeoForge.EVENT_BUS.addListener(QuietPlease::onClientTick);
         NeoForge.EVENT_BUS.addListener(QuietPlease::onScreenInit);
@@ -57,6 +58,7 @@ public class QuietPlease {
     private static void onClientTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         com.quietplease.music.Playlist.clientTick(mc);
+        QuietPleaseKeys.tick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
     }
 

@@ -12,7 +12,6 @@ import static com.quietplease.gui.QuietPleaseScreen.ROW_ALT;
 import static com.quietplease.gui.QuietPleaseScreen.ROW_HOVER;
 import static com.quietplease.gui.QuietPleaseScreen.TEXT;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.quietplease.Lang;
 import com.quietplease.music.ModOptions;
 import com.quietplease.music.MusicLibrary;
@@ -246,10 +245,7 @@ public class QuietPlaylistScreen extends Screen {
         int textW = Math.max(font.width(title), font.width(summary));
         int x = (width - (logo + 6 + textW)) / 2;
         int y = 4;
-        g.fill(x - 1, y - 1, x + logo + 1, y + logo + 1, ACCENT_SOFT);
-        RenderSystem.enableBlend();
-        g.blit(QuietPleaseScreen.LOGO, x, y, 0, 0, logo, logo, logo, logo);
-        RenderSystem.disableBlend();
+        QuietPleaseScreen.drawLogo(g, x, y, logo);
         g.drawString(font, title, x + logo + 6, y + 2, GOLD);
         g.drawString(font, summary, x + logo + 6, y + 13, ModOptions.playlistMode ? PLAYING : MUTED);
     }

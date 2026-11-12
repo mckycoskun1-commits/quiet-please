@@ -142,5 +142,8 @@
   "quietplease.cmd.preset.exported": "Preset \"%s\" saved:",
   "quietplease.cmd.preset.missing": "No preset called \"%s\" in config/quietplease-presets.",
   "quietplease.cmd.preset.failed": "Could not load preset \"%1$s\": %2$s",
-  "quietplease.cmd.preset.imported": "Preset \"%s\" loaded: track settings, options and playlist."
+  "quietplease.cmd.preset.imported": "Preset \"%s\" loaded: track settings, options and playlist.",
+  "key.categories.quietplease": "Quiet Please",
+  "key.quietplease.open": "Open the music panel",
+  "key.quietplease.skip": "Skip the current song"
 }

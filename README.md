@@ -31,7 +31,7 @@ Yine de oraya konursa `build.gradle` bunu fark edip derleme çıktılarını ve 
 
 - `src/main/java/com/quietplease/` modun Java kodu
 - `src/main/resources/quietplease.png` mod listesinde görünen ikon (256 px)
-- `src/main/resources/assets/quietplease/textures/gui/logo.png` panel başlığındaki küçük logo
+- Panel başlığındaki logo ayrı bir resim değil: oyunun kendi Jukebox eşyası çiziliyor
 - `src/main/resources/assets/quietplease/lang/` çeviriler (İngilizce ve Türkçe)
 - `src/main/templates/META-INF/neoforge.mods.toml` mod bilgileri (ad, yazar, açıklama)
 - `gradle.properties` Minecraft/NeoForge sürümleri, mod kimliği (`quietplease`), sürüm ve lisans
@@ -100,6 +100,8 @@ metinleri çevirmek yeterli.
 - `/quietplease gui` paneli açar
 - `/quietplease settings` / `/quietplease playlist` Ayarlar ekranını / çalma listesi panelini açar
 - `/quietplease skip` çalan arka plan şarkısını atlar
+- Kısayol tuşları: **Options → Controls → Key Binds → Quiet Please** altında "Müzik panelini aç" ve "Çalan şarkıyı atla"
+  (varsayılan olarak boş; istediğin tuşu ata)
 - `/quietplease export <ad>` / `/quietplease import <ad>` tüm ayarları (çalma listesi dahil)
   `config/quietplease-presets/<ad>.json` olarak kaydeder / yükler
 

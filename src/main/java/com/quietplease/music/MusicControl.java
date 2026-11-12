@@ -31,6 +31,19 @@ public final class MusicControl {
         Playlist.restartMusic(delayAfterSkip(music));
     }
 
+    /**
+     * Atlar ve ne oldugunu anlatan ceviri anahtarini dondurur (komut ve kisayol tusu bunu gosterir):
+     * "cmd.skip.next" (listeden siradaki basladi), "cmd.skip.gap" (sarki arasindan sonra) ya da
+     * "cmd.skip.nothing" (calan arka plan muzigi yoktu).
+     */
+    public static String skipAndDescribe() {
+        boolean playing = ((com.quietplease.mixin.MusicManagerAccessor) Minecraft.getInstance().getMusicManager())
+                .quietplease$getCurrentMusic() != null;
+        skip();
+        if (!playing) return "cmd.skip.nothing";
+        return Playlist.isActive() ? "cmd.skip.next" : "cmd.skip.gap";
+    }
+
     /** Atladiktan sonra siradaki sarkiya kadar bekleme (tick). */
     static int delayAfterSkip(@Nullable Music music) {
         if (music == null) return 100;

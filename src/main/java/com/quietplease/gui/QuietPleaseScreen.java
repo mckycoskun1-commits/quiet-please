@@ -1,7 +1,5 @@
 package com.quietplease.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.quietplease.QuietPlease;
 import com.quietplease.Lang;
 import com.quietplease.mixin.MusicManagerAccessor;
 import com.quietplease.music.ModOptions;
@@ -47,8 +45,6 @@ import net.minecraft.world.item.Items;
 public class QuietPleaseScreen extends Screen {
 
     // ------------------------------------------------------------------ gorunum ayarlari
-
-    static final ResourceLocation LOGO = ResourceLocation.fromNamespaceAndPath(QuietPlease.MODID, "textures/gui/logo.png");
 
     /** Ikondaki sicak turuncu isiltiyla uyumlu vurgu rengi. */
     static final int ACCENT = 0xFFE89A3C;
@@ -242,12 +238,7 @@ public class QuietPleaseScreen extends Screen {
         int x = (width - (logo + 6 + textW)) / 2;
         int y = 5;
 
-        // Logo: ince turuncu cerceveli kare
-        g.fill(x - 1, y - 1, x + logo + 1, y + logo + 1, ACCENT_SOFT);
-        RenderSystem.enableBlend();
-        g.blit(LOGO, x, y, 0, 0, logo, logo, logo, logo);
-        RenderSystem.disableBlend();
-
+        drawLogo(g, x, y, logo);
         g.drawString(font, title, x + logo + 6, y + 2, GOLD);
         g.drawString(font, summary, x + logo + 6, y + 13, MUTED);
     }
@@ -401,6 +392,23 @@ public class QuietPleaseScreen extends Screen {
         }
     }
 
+    private static final ItemStack LOGO_ITEM = new ItemStack(Items.JUKEBOX);
+
+    /**
+     * Baslik logosu: ince turuncu cerceveli koyu kare icinde oyunun kendi Jukebox esyasi.
+     * (Ayri bir resim dosyasi yok; boylece panelde sadece Minecraft'in kendi cizimleri gorunur.)
+     */
+    static void drawLogo(GuiGraphics g, int x, int y, int size) {
+        g.fill(x - 1, y - 1, x + size + 1, y + size + 1, ACCENT_SOFT);
+        g.fill(x, y, x + size, y + size, HEADER_BG);
+        int inner = size - 4;
+        g.pose().pushPose();
+        g.pose().translate(x + 2, y + 2, 0);
+        g.pose().scale(inner / 16.0F, inner / 16.0F, 1.0F);
+        g.renderItem(LOGO_ITEM, 0, 0);
+        g.pose().popPose();
+    }
+
     /** Calan parcanin yaninda ziplayan uc kucuk cubuk. */
     static void drawEqualizer(GuiGraphics g, int x, int baseY, int color) {
         double t = System.currentTimeMillis() / 140.0;
@@ -500,6 +508,12 @@ public class QuietPleaseScreen extends Screen {
             this.star = Button.builder(Component.empty(), b -> {
                 Playlist.toggle(track.id());
                 MusicSettings.save();
+                // "★ Calma listesi" filtresindeyken listeden cikarilan parca ekrandan da kalksin
+                if (modFilter.equals(PLAYLIST_FILTER)) {
+                    double scroll = list.getScrollAmount();
+                    rebuildList();
+                    list.setScrollAmount(scroll);
+                }
             }).size(20, 20).build();
             this.slider = new VolumeSlider(track);
             this.toggle = Button.builder(Component.empty(), b -> {
