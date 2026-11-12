@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "${mod_name}",
+  "description": "Mute or turn down any single music track in your modpack. Per-track volume, per-mod toggle, preview, background playlist and skip.",
+  "authors": ["${mod_author}"],
+  "contact": {
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/quiet-please"
+  },
+  "license": "${mod_license}",
+  "icon": "quietplease.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.quietplease.fabric.QuietPleaseFabric"],
+    "modmenu": ["com.quietplease.fabric.ModMenuIntegration"]
+  },
+  "mixins": ["quietplease.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}",
+    "java": ">=${java_version}"
+  }
+}

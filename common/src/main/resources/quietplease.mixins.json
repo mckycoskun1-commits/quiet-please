@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.quietplease.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "MusicManagerAccessor",
+    "SoundEngineAccessor",
+    "SoundManagerAccessor",
+    "WeighedSoundEventsAccessor",
+    "MusicManagerMixin",
+    "SoundEngineMixin",
+    "WeighedSoundEventsMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
