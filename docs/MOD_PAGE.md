@@ -7,8 +7,8 @@
 | Alan | Değer |
 |---|---|
 | Proje türü | Mod |
-| Yükleyici | NeoForge |
-| Minecraft sürümü | 1.21.1 |
+| Yükleyici | Fabric, Forge, NeoForge |
+| Minecraft sürümü | 1.20.1 (Fabric, Forge); 1.21.1, 26.2 ve 26.3 (Fabric, Forge, NeoForge) |
 | Ortam (environment) | Client: **required** · Server: **unsupported** (sadece istemci) |
 | Kategoriler | **Utility**, **Management** |
 | Etiket önerileri | music, sound, volume, audio, modpack, client-side |
@@ -36,17 +36,22 @@ Big modpacks bring a lot of music – and not all of it fits together.
 - **Disable all music of a mod** with one click
 - **Preview** any track inside the panel (background music pauses while you listen)
 - **See what is playing right now** – in the panel and right under the button in the ESC menu, so you can find a song even if you don't know its name
-- Search, mod filter, and an optional "ambient" view for long ambience loops
-- Works for vanilla music, music discs and modded boss/biome music
-- English and Turkish
-
-## Coming in 1.1.0
 - **Background playlist** – pick the songs and their order, like a music player: queue with progress bar, move up/down, shuffle, repeat. Boss, dragon and credits music still interrupt it
 - **Skip** the current background song (button, `/quietplease skip` or a key you choose)
 - **Key bindings** (unbound by default) to open the panel and skip a song
 - **Music gap** – shorten (or remove) the long silence between background songs
 - **Settings screen** – hide the menu buttons or the now-playing text
 - **Presets** – `/quietplease export <name>` / `import <name>` to share a setup
+- Search, mod filter, and an optional "ambient" view for long ambience loops
+- Works for vanilla music, music discs and modded boss/biome music
+- English and Turkish
+
+## Supported versions
+- **Minecraft 1.20.1** – Fabric, Forge
+- **Minecraft 1.21.1** – Fabric, Forge, NeoForge
+- **Minecraft 26.2** – Fabric, Forge, NeoForge
+- **Minecraft 26.3** – Fabric, Forge, NeoForge
+- The Fabric versions need **Fabric API**
 
 ## How to open it
 **Esc → ♪ Quiet Please** (top-right corner), **Options → ♪ Quiet Please**, or **Options → Music & Sounds → ♪ Quiet Please**,
@@ -56,6 +61,9 @@ or **Mods → Quiet Please → Config**. Power users can also use `/quietplease`
 - **Client-side only.** Install it on your own game; servers don't need it, and you can join any server.
 - Settings are stored in `config/quietplease.json`, so modpack makers can ship a pre-tuned file.
 - Picks up modded music too – for example the boss themes of L_Ender's Cataclysm and Mowzie's Mobs.
+
+## AI disclosure
+The code of this mod was written with the help of an AI assistant (Claude), and the project icon was created with an AI image tool. The gallery screenshots are real in-game screenshots.
 ```
 
 ## Uzun açıklama (Türkçe – istersen ikinci dil olarak)
@@ -72,17 +80,22 @@ Büyük mod paketleri bir sürü müzik getirir ve hepsi birbirine uymaz.
 - Her parça için **%0–100 ses ayarı**
 - Bir modun **tüm müziklerini tek tıkla kapat**
 - Panelde **dinleyerek önizle** (dinlerken arka plan müziği susar)
-- Arama, mod filtresi ve uzun ortam sesleri için ayrı görünüm
-- Vanilla müzikler, plaklar ve modların boss/biyom müzikleriyle çalışır
-- İngilizce ve Türkçe
-
-## 1.1.0 ile gelecekler
 - **Arka plan çalma listesi** – şarkıları ve sırasını sen seç, bir müzik çalar gibi: ilerleme çubuklu sıra, yukarı/aşağı taşıma, karıştırma, tekrar. Boss, ejderha ve jenerik müzikleri yine araya girer
 - Çalan arka plan şarkısını **atla** (düğme, `/quietplease skip` ya da seçtiğin bir tuş)
 - Paneli açmak ve şarkı atlamak için **kısayol tuşları** (varsayılan olarak boş)
 - **Şarkı arası** – arka plan şarkıları arasındaki uzun sessizliği kısalt ya da kaldır
 - **Ayarlar ekranı** – menü düğmelerini ya da çalan şarkı yazısını gizle
 - **Hazır ayarlar** – `/quietplease export <ad>` / `import <ad>` ile ayarları paylaş
+- Arama, mod filtresi ve uzun ortam sesleri için ayrı görünüm
+- Vanilla müzikler, plaklar ve modların boss/biyom müzikleriyle çalışır
+- İngilizce ve Türkçe
+
+## Desteklenen sürümler
+- **Minecraft 1.20.1** – Fabric, Forge
+- **Minecraft 1.21.1** – Fabric, Forge, NeoForge
+- **Minecraft 26.2** – Fabric, Forge, NeoForge
+- **Minecraft 26.3** – Fabric, Forge, NeoForge
+- Fabric sürümleri **Fabric API** ister
 
 ## Nasıl açılır
 **Ayarlar → ♪ Quiet Please** (sağ üst köşe), **Ayarlar → Müzik ve Sesler → ♪ Quiet Please**
