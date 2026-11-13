@@ -32,12 +32,12 @@ public final class QuietPleaseKeys {
     /** Her istemci tick'inde: basilan tuslari isle. */
     public static void tick(Minecraft mc) {
         while (OPEN_PANEL.consumeClick()) {
-            if (mc.gui.screen() == null) mc.gui.setScreen(new QuietPleaseScreen(null));
+            if (mc.screen == null) mc.setScreen(new QuietPleaseScreen(null));
         }
         while (SKIP.consumeClick()) {
             String result = MusicControl.skipAndDescribe();
             // Sohbeti doldurmasin: kisa mesaj, hotbar'in ustunde birkac saniye
-            mc.gui.hud.setOverlayMessage(Lang.tr(result).withStyle(
+            mc.gui.setOverlayMessage(Lang.tr(result).withStyle(
                     result.equals("cmd.skip.nothing") ? ChatFormatting.GRAY : ChatFormatting.GREEN), false);
         }
     }

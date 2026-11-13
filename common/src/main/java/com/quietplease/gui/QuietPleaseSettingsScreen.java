@@ -56,7 +56,7 @@ public class QuietPleaseSettingsScreen extends Screen {
         // Calma listesi
         addRenderableWidget(toggle("settings.playlist_mode", ModOptions.playlistMode)
                 .create(left, y, BUTTON_W, 20, Lang.tr("settings.playlist_mode"), (b, v) -> ModOptions.playlistMode = v));
-        addRenderableWidget(Button.builder(Lang.tr("playlist.button"), b -> minecraft.gui.setScreen(new QuietPlaylistScreen(this)))
+        addRenderableWidget(Button.builder(Lang.tr("playlist.button"), b -> minecraft.setScreen(new QuietPlaylistScreen(this)))
                 .bounds(right, y, BUTTON_W, 20)
                 .tooltip(Tooltip.create(Lang.tr("playlist.open.tooltip")))
                 .build());
@@ -107,7 +107,7 @@ public class QuietPleaseSettingsScreen extends Screen {
 
     @Override
     public void onClose() {
-        minecraft.gui.setScreen(parent);
+        minecraft.setScreen(parent);
     }
 
     @Override

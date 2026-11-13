@@ -114,14 +114,14 @@ public class QuietPleaseScreen extends Screen {
 
         // Baslikta: solda Ayarlar (ortadaki logoya carpmasin diye satirin kenarlarinda)
         Component settingsLabel = Lang.tr("settings.button");
-        addRenderableWidget(Button.builder(settingsLabel, b -> minecraft.gui.setScreen(new QuietPleaseSettingsScreen(this)))
+        addRenderableWidget(Button.builder(settingsLabel, b -> minecraft.setScreen(new QuietPleaseSettingsScreen(this)))
                 .bounds(x, 6, Math.max(60, font.width(settingsLabel) + 12), 20)
                 .tooltip(Tooltip.create(Lang.tr("settings.button.tooltip")))
                 .build());
         // ... sagda Calma listesi
         Component playlistLabel = Lang.tr("playlist.button");
         int playlistW = Math.max(60, font.width(playlistLabel) + 12);
-        addRenderableWidget(Button.builder(playlistLabel, b -> minecraft.gui.setScreen(new QuietPlaylistScreen(this)))
+        addRenderableWidget(Button.builder(playlistLabel, b -> minecraft.setScreen(new QuietPlaylistScreen(this)))
                 .bounds(x + rowW - playlistW, 6, playlistW, 20)
                 .tooltip(Tooltip.create(Lang.tr("playlist.open.tooltip")))
                 .build());
@@ -340,7 +340,7 @@ public class QuietPleaseScreen extends Screen {
 
     @Override
     public void onClose() {
-        minecraft.gui.setScreen(parent);
+        minecraft.setScreen(parent);
     }
 
     @Override

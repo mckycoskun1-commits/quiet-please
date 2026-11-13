@@ -116,7 +116,7 @@ public final class QuietPleaseCommands {
 
     private static int open(net.minecraft.client.gui.screens.Screen screen) {
         // Sohbet ekrani, komut baska bir ekran actiysa kendini kapatmaz (NeoForge duzeltmesi)
-        Minecraft.getInstance().gui.setScreen(screen);
+        Minecraft.getInstance().setScreen(screen);
         return 1;
     }
 
@@ -361,11 +361,11 @@ public final class QuietPleaseCommands {
     }
 
     private static void say(CommandContext<?> ctx, Component msg) {
-        Minecraft.getInstance().gui.hud.getChat().addClientSystemMessage(msg);
+        Minecraft.getInstance().gui.getChat().addClientSystemMessage(msg);
     }
 
     private static void fail(Component msg) {
-        Minecraft.getInstance().gui.hud.getChat().addClientSystemMessage(msg.copy().withStyle(ChatFormatting.RED));
+        Minecraft.getInstance().gui.getChat().addClientSystemMessage(msg.copy().withStyle(ChatFormatting.RED));
     }
 
     private static LiteralArgumentBuilder<Object> lit(String name) {

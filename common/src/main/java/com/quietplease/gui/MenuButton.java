@@ -54,7 +54,7 @@ public final class MenuButton {
         }
         Component label = Lang.tr("options.button");
         int w = Math.max(90, Minecraft.getInstance().font.width(label) + 16);
-        button = Button.builder(label, b -> Minecraft.getInstance().gui.setScreen(new QuietPleaseScreen(screen)))
+        button = Button.builder(label, b -> Minecraft.getInstance().setScreen(new QuietPleaseScreen(screen)))
                 .bounds(screen.width - w - 6, 6, w, 20)
                 .tooltip(Tooltip.create(Lang.tr("options.button.tooltip")))
                 .build();

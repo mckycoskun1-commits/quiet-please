@@ -179,9 +179,9 @@ public class QuietPlaylistScreen extends Screen {
                         Playlist.setRepeat(v);
                         rebuildList();
                     }));
-            addRenderableWidget(Button.builder(Lang.tr("playlist.clear"), b -> minecraft.gui.setScreen(new ConfirmScreen(ok -> {
+            addRenderableWidget(Button.builder(Lang.tr("playlist.clear"), b -> minecraft.setScreen(new ConfirmScreen(ok -> {
                         if (ok) Playlist.clear();
-                        minecraft.gui.setScreen(this);
+                        minecraft.setScreen(this);
                     }, Lang.tr("playlist.clear.confirm"), Lang.tr("playlist.clear.confirm.message", Playlist.size()))))
                     .bounds(x + 2 * (bw + 4), by, bw, 20)
                     .build()).active = !Playlist.isEmpty();
@@ -342,7 +342,7 @@ public class QuietPlaylistScreen extends Screen {
 
     @Override
     public void onClose() {
-        minecraft.gui.setScreen(parent);
+        minecraft.setScreen(parent);
     }
 
     @Override
