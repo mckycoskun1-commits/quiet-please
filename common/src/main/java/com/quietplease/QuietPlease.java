@@ -82,6 +82,15 @@ public class QuietPlease {
                 for (int i : new int[] {4, 9, 1, 12, 6}) {
                     if (i < tracks.size()) com.quietplease.music.Playlist.add(tracks.get(i).id());
                 }
+                // Dongu dugmesi ve Favoriler grubu gorunsun
+                if (tracks.size() > 12) {
+                    com.quietplease.music.Playlist.toggleLoop(tracks.get(9).id());
+                    for (int i : new int[] {4, 12}) {
+                        if (!com.quietplease.music.Playlist.isFavorite(tracks.get(i).id())) {
+                            com.quietplease.music.Playlist.toggleFavorite(tracks.get(i).id());
+                        }
+                    }
+                }
                 com.quietplease.music.ModOptions.playlistMode = true;
                 com.quietplease.music.Playlist.playNow(0);
                 mc.gui.setScreen(new com.quietplease.gui.QuietPlaylistScreen(new TitleScreen()));
@@ -92,6 +101,8 @@ public class QuietPlease {
                 LOGGER.info("GUITEST calma listesi menude: {} ({})", ok ? "BASARILI" : "HATA", playing == null ? "calmiyor" : playing.trackId);
                 shot(mc, "quietplease-playlist.png");
             }
+            case 151 -> mc.gui.setScreen(new QuietPleaseScreen(new TitleScreen()));
+            case 154 -> shot(mc, "quietplease-favorites.png");
             // (ESC menusu test edilemiyor: PauseScreen bir dunya/oyuncu ister, ana menude acilinca coker)
             // Onizleme (arka plan muzigini susturur, o yuzden en sona)
             case 155 -> {
@@ -127,18 +138,19 @@ public class QuietPlease {
                 int t = guiTestTicks - worldJoinTick;
                 if (t == 60) {
                     // Calma listesi modu acik: oyunun "oyun muzigi" yerine listedeki siradaki parca calmali
-                    expectedNext = (com.quietplease.music.Playlist.position() + 1) % com.quietplease.music.Playlist.size();
+                    expectedTrack = nextUpcoming();
                     mc.getMusicManager().stopPlaying();
                     mc.getMusicManager().startPlaying(net.minecraft.sounds.Musics.GAME);
                 } else if (t == 70 || t == 85) {
                     var playing = com.quietplease.music.Playlist.playing();
-                    var expected = com.quietplease.music.Playlist.tracks().get(expectedNext);
-                    boolean ok = playing != null && playing.trackId.equals(expected)
-                            && com.quietplease.music.Playlist.position() == expectedNext;
+                    boolean ok = playing != null && playing.trackId.equals(expectedTrack)
+                            && expectedTrack.equals(com.quietplease.music.Playlist.currentTrack())
+                            && (t == 70 || !com.quietplease.music.Playlist.contains(skippedTrack));
                     LOGGER.info("GUITEST calma listesi {}: {} (beklenen {}, calan {})", t == 70 ? "oyun muzigi yerine" : "Atla sonrasi",
-                            ok ? "BASARILI" : "HATA", expected, playing == null ? "yok" : playing.trackId);
+                            ok ? "BASARILI" : "HATA", expectedTrack, playing == null ? "yok" : playing.trackId);
                     if (t == 70) {
-                        expectedNext = (expectedNext + 1) % com.quietplease.music.Playlist.size();
+                        skippedTrack = expectedTrack;
+                        expectedTrack = nextUpcoming();
                         com.quietplease.music.MusicControl.skip();
                     }
                 } else if (t == 100) mc.pauseGame(false);             // ESC
@@ -160,7 +172,13 @@ public class QuietPlease {
     }
 
     private static int worldJoinTick = -1;
-    private static int expectedNext = 0;
+    private static net.minecraft.resources.Identifier expectedTrack;
+    private static net.minecraft.resources.Identifier skippedTrack;
+
+    private static net.minecraft.resources.Identifier nextUpcoming() {
+        var order = com.quietplease.music.Playlist.upcoming();
+        return order.isEmpty() ? null : com.quietplease.music.Playlist.tracks().get(order.get(0));
+    }
     private static com.google.gson.JsonObject playlistBackup;
     private static boolean playlistModeBackup;
 
