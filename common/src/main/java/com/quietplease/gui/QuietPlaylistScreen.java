@@ -20,9 +20,12 @@ import com.quietplease.music.MusicSettings;
 import com.quietplease.music.MusicTrack;
 import com.quietplease.music.Playlist;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
@@ -54,9 +57,25 @@ public class QuietPlaylistScreen extends Screen {
     private static final int TOP = 80;
     private static final int BOTTOM_MARGIN = 46;
     private static final int MAX_ROW_WIDTH = 420;
+    /** Sagdaki "Onerilenler" paneli ve yanindaki siranin en dar hali. */
+    private static final int SIDE_GAP = 22;
+    private static final int MIN_QUEUE_W = 240;
+    /** Onerilerde kullanilan bilinen vanilla parcalar (dosya adlari). */
+    private static final Set<String> POPULAR = Set.of(
+            "sweden", "wet_hands", "subwoofer_lullaby", "haggstrom", "mice_on_venus", "danny", "clark", "dry_hands",
+            "minecraft", "living_mice", "key", "oxygene", "equinoxe", "aria_math", "biome_fest", "moog_city_2",
+            "beginning_2", "floating_trees", "mutation", "comforting_memories", "stand_tall", "wending",
+            "left_to_bloom", "infinite_amethyst", "one_more_day", "floating_dream", "an_ordinary_day", "featherfall",
+            "taswell", "dreiton", "haunt_muskie", "blind_spots", "pigstep", "otherside", "rubedo", "chrysopoeia");
 
     @Nullable
     private final Screen parent;
+    /** Oneri adaylari: favoriler, daha once eklenenler ve bilinen vanilla parcalar, karisik (panel acilinca bir kez). */
+    @Nullable
+    private List<ResourceLocation> suggestionPool;
+    private final List<Btn> suggestionButtons = new ArrayList<>();
+    @Nullable
+    private Btn queueTab;
 
     private Map<String, List<MusicTrack>> library = Map.of();
     private Map<ResourceLocation, MusicTrack> tracksById = Map.of();
@@ -79,12 +98,32 @@ public class QuietPlaylistScreen extends Screen {
 
     // ------------------------------------------------------------------ kurulum
 
+    /** Oneriler paneli sigiyor mu (yalnizca sira sekmesinde)? */
+    private boolean sideShown() {
+        return !addMode && width - 20 - sideW() - SIDE_GAP >= MIN_QUEUE_W;
+    }
+
+    private int sideW() {
+        return Math.max(100, Math.min(140, (width - 20) / 3));
+    }
+
+    /** Siranin (listenin) genisligi. */
     private int rowW() {
-        return Math.min(width - 20, MAX_ROW_WIDTH);
+        int available = width - 20;
+        return sideShown() ? Math.min(MAX_ROW_WIDTH, available - SIDE_GAP - sideW()) : Math.min(available, MAX_ROW_WIDTH);
+    }
+
+    /** Sira + oneriler paneli: ust ve alt satirdaki dugmeler bu genislige yayilir. */
+    private int blockW() {
+        return rowW() + (sideShown() ? SIDE_GAP + sideW() : 0);
     }
 
     private int rowX() {
-        return (width - rowW()) / 2;
+        return (width - blockW()) / 2;
+    }
+
+    private int sideX() {
+        return rowX() + rowW() + SIDE_GAP;
     }
 
     @Override
@@ -93,11 +132,11 @@ public class QuietPlaylistScreen extends Screen {
         tracksById = library.values().stream().flatMap(List::stream)
                 .collect(Collectors.toMap(MusicTrack::id, t -> t, (a, b) -> a));
         int x = rowX();
-        int rowW = rowW();
+        int rowW = blockW();
 
         // Sekmeler + calma listesi modu
         int y = 30;
-        Btn queueTab = addRenderableWidget(Btn.builder(Lang.tr("playlist.tab.queue", Playlist.size()), b -> {
+        queueTab = addRenderableWidget(Btn.builder(Lang.tr("playlist.tab.queue", Playlist.size()), b -> {
             addMode = false;
             rebuildWidgets();
         }).bounds(x, y, 90, 20).build());
@@ -151,8 +190,10 @@ public class QuietPlaylistScreen extends Screen {
                     .build());
         }
 
-        list = new RowList(minecraft, width, height - TOP - BOTTOM_MARGIN, TOP);
+        list = new RowList(minecraft, rowW() + 40, height - TOP - BOTTOM_MARGIN, TOP);
+        list.setLeftPos(x - 20);
         addRenderableWidget(list);
+        if (sideShown()) addRenderableOnly((pose, mx, my, pt) -> renderSuggestionPanel(new GuiGraphics(pose), mx, my, pt));
         rebuildList();
 
         // Alt satir
@@ -164,30 +205,21 @@ public class QuietPlaylistScreen extends Screen {
             }).bounds(width / 2 - 154, by, 150, 20).build());
             addRenderableWidget(Btn.builder(CommonComponents.GUI_DONE, b -> onClose()).bounds(width / 2 + 4, by, 150, 20).build());
         } else {
-            int bw = (rowW - 12) / 4;
+            int bw = (rowW - 8) / 3;
             addRenderableWidget(Btn.builder(Lang.tr("playlist.shuffle"), b -> {
                         Playlist.shuffle();
                         rebuildList();
                     }).bounds(x, by, bw, 20)
                     .tooltip(Tooltip.create(Lang.tr("playlist.shuffle.tooltip")))
                     .build());
-            addRenderableWidget(CycleButton.<Playlist.Repeat>builder(Playlist.Repeat::displayName)
-                    .withValues(Playlist.Repeat.values())
-                    .withInitialValue(Playlist.repeat())
-                    .withTooltip(v -> Tooltip.lines(Lang.tr("playlist.repeat." + v.id + ".tooltip")))
-                    .displayOnlyValue()
-                    .create(x + bw + 4, by, bw, 20, Lang.tr("playlist.repeat"), (b, v) -> {
-                        Playlist.setRepeat(v);
-                        rebuildList();
-                    }));
             addRenderableWidget(Btn.builder(Lang.tr("playlist.clear"), b -> minecraft.setScreen(new ConfirmScreen(ok -> {
                         if (ok) Playlist.clear();
                         minecraft.setScreen(this);
                     }, Lang.tr("playlist.clear.confirm"), Lang.tr("playlist.clear.confirm.message", Playlist.size()))))
-                    .bounds(x + 2 * (bw + 4), by, bw, 20)
+                    .bounds(x + bw + 4, by, bw, 20)
                     .build()).active = !Playlist.isEmpty();
             addRenderableWidget(Btn.builder(CommonComponents.GUI_DONE, b -> onClose())
-                    .bounds(x + 3 * (bw + 4), by, bw, 20).build());
+                    .bounds(x + 2 * (bw + 4), by, bw, 20).build());
         }
     }
 
@@ -217,6 +249,70 @@ public class QuietPlaylistScreen extends Screen {
         }
         shownVersion = Playlist.version();
         list.setScrollAmount(sameView ? scroll : 0);
+        if (queueTab != null) queueTab.setMessage(Lang.tr("playlist.tab.queue", Playlist.size()));
+        refreshSuggestions();
+    }
+
+    // ------------------------------------------------------------------ oneriler
+
+    private List<ResourceLocation> suggestionPool() {
+        if (suggestionPool == null) {
+            Set<ResourceLocation> pool = new LinkedHashSet<>(Playlist.favorites());
+            pool.addAll(Playlist.history());
+            tracksById.values().stream()
+                    .filter(t -> t.namespace().equals("minecraft") && POPULAR.contains(t.shortName()))
+                    .map(MusicTrack::id)
+                    .forEach(pool::add);
+            List<ResourceLocation> mixed = new ArrayList<>(pool);
+            Collections.shuffle(mixed);
+            suggestionPool = mixed;
+        }
+        return suggestionPool;
+    }
+
+    /** Sagdaki paneldeki dugmeler: siradakiler, kapalilar ve yuklu olmayanlar haric, sigdigi kadar. */
+    private void refreshSuggestions() {
+        suggestionButtons.forEach(this::removeWidget);
+        suggestionButtons.clear();
+        if (!sideShown() || list == null) return;
+        int x = sideX();
+        int y = TOP + 24;
+        int bottom = list.bottom() - 2;
+        for (ResourceLocation id : suggestionPool()) {
+            if (y + 18 > bottom) break;
+            MusicTrack track = tracksById.get(id);
+            if (track == null || Playlist.contains(id) || MusicSettings.isDisabled(id)) continue;
+            boolean favorite = Playlist.isFavorite(id);
+            String reason = favorite ? "playlist.suggest.favorite"
+                    : Playlist.history().contains(id) ? "playlist.suggest.history" : "playlist.suggest.popular";
+            Component label = fit(Component.literal("+ " + track.shortName())
+                    .withStyle(s -> s.withColor((favorite ? GOLD : TEXT) & 0xFFFFFF)), sideW() - 10);
+            Component tooltip = Component.literal(track.shortName()).withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
+                    .append(Component.literal("\n" + MusicLibrary.modName(track.namespace()) + " · ").withStyle(ChatFormatting.GRAY))
+                    .append(Lang.tr(reason).withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal("\n").append(Lang.tr("playlist.add.tooltip")).withStyle(ChatFormatting.DARK_GRAY));
+            Btn b = Btn.builder(label, btn -> {
+                Playlist.add(id);
+                MusicSettings.save();
+                rebuildList();
+            }).bounds(x, y, sideW(), 18).tooltip(Tooltip.create(tooltip)).build();
+            addRenderableWidget(b);
+            suggestionButtons.add(b);
+            y += 20;
+        }
+    }
+
+    private void renderSuggestionPanel(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        int left = sideX() - 6;
+        int right = sideX() + sideW() + 6;
+        int top = TOP - 2;
+        int bottom = list.bottom() + 2;
+        g.fill(left, top, right, bottom, PANEL_BG);
+        g.renderOutline(left - 1, top - 1, right - left + 2, bottom - top + 2, ACCENT_SOFT);
+        g.fillGradient(left, top, right, top + 6, 0x30E89A3C, 0x00E89A3C);
+        g.drawString(font, Lang.tr("playlist.suggest.title").withStyle(ChatFormatting.BOLD), sideX(), TOP + 2, GOLD);
+        g.drawString(font, fit(Lang.tr("playlist.suggest.hint"), sideW()), sideX(), TOP + 12, MUTED);
+        if (suggestionButtons.isEmpty()) g.drawString(font, fit(Lang.tr("playlist.suggest.empty"), sideW()), sideX(), TOP + 28, MUTED);
     }
 
     // ------------------------------------------------------------------ cizim
@@ -267,7 +363,6 @@ public class QuietPlaylistScreen extends Screen {
             Component line;
             if (Playlist.isEmpty()) line = Lang.tr("playlist.bar.empty");
             else if (!ModOptions.playlistMode) line = Lang.tr("playlist.bar.off");
-            else if (Playlist.hasEnded()) line = Lang.tr("playlist.bar.ended");
             else {
                 List<Integer> order = Playlist.upcoming();
                 ResourceLocation next = order.isEmpty() ? Playlist.tracks().get(0) : Playlist.tracks().get(order.get(0));
@@ -368,6 +463,10 @@ public class QuietPlaylistScreen extends Screen {
             setRenderTopAndBottom(false);
         }
 
+        int bottom() {
+            return y1;
+        }
+
         void clear() {
             clearEntries();
         }
@@ -405,22 +504,28 @@ public class QuietPlaylistScreen extends Screen {
         return Btn.builder(Component.literal(symbol), b -> action.run()).size(18, 18).tooltip(Tooltip.create(tooltip)).build();
     }
 
-    /** Siradaki bir sarki: numara, ad, mod, [▶] [▲] [▼] [✕]. */
+    /** Siradaki bir sarki: numara, ad, mod, [▶] [▲] [▼] [∞] [✕]. */
     private class QueueRow extends Row {
         private final int number;
         private final int index;
-        private final boolean nextRound;
         private final Btn play;
         private final Btn up;
         private final Btn down;
+        private final Btn loop;
         private final Btn remove;
         private final List<Btn> buttons;
 
         QueueRow(int k, List<Integer> order) {
             this.number = k + 1;
             this.index = order.get(k);
-            // "Listeyi tekrarla" modunda bir sonraki tur da normal gorunur; digerlerinde soluk
-            this.nextRound = Playlist.isNextRound(index) && Playlist.repeat() != Playlist.Repeat.REPEAT_LIST;
+            ResourceLocation id = Playlist.tracks().get(index);
+            boolean looping = Playlist.isLooping(id);
+            this.loop = iconButton("∞", Lang.tr(looping ? "playlist.loop.on.tooltip" : "playlist.loop.off.tooltip"), () -> {
+                Playlist.toggleLoop(id);
+                MusicSettings.save();
+                rebuildList();
+            });
+            loop.setMessage(Component.literal("∞").withStyle(looping ? ChatFormatting.GREEN : ChatFormatting.GRAY));
             this.play = iconButton("▶", Lang.tr("playlist.play_now.tooltip"), () -> {
                 Playlist.playNow(index);
                 rebuildList();
@@ -439,7 +544,7 @@ public class QuietPlaylistScreen extends Screen {
             });
             up.active = k > 0;
             down.active = k < order.size() - 1;
-            this.buttons = List.of(play, up, down, remove);
+            this.buttons = List.of(play, up, down, loop, remove);
         }
 
         @Override
@@ -455,20 +560,20 @@ public class QuietPlaylistScreen extends Screen {
 
             if (hovering) g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_HOVER);
             else if (number % 2 == 0) g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_ALT);
-            if (number == 1 && !nextRound) g.fill(left - 3, top - 1, left - 1, top + height + 1, ACCENT); // siradaki
+            if (number == 1) g.fill(left - 3, top - 1, left - 1, top + height + 1, ACCENT); // siradaki
 
             int textY = top + (height - 8) / 2;
             String num = number + ".";
             g.drawString(font, num, left + 18 - font.width(num), textY, MUTED);
             int nameX = left + 24;
-            int buttonsX = left + width - 4 * 20 + 2;
+            int buttonsX = left + width - buttons.size() * 20 + 2;
             int x = buttonsX;
             for (Btn b : buttons) {
                 b.setPosition(x, top + (height - 18) / 2);
                 x += 20;
             }
 
-            int color = nextRound ? MUTED : TEXT;
+            int color = TEXT;
             MutableComponent name = Component.literal(shortName(id));
             if (disabled) name.withStyle(ChatFormatting.STRIKETHROUGH);
             MutableComponent info = Component.literal("  " + MusicLibrary.modName(id.getNamespace()));
@@ -479,7 +584,6 @@ public class QuietPlaylistScreen extends Screen {
             g.drawString(font, fit(line, buttonsX - 6 - nameX), nameX, textY, color);
 
             for (Btn b : buttons) b.render(g.pose(), mouseX, mouseY, partialTick);
-            if (hovering && nextRound && mouseX < buttonsX) Tooltip.next(Lang.tr("playlist.next_round.tooltip"));
         }
 
         @Override
