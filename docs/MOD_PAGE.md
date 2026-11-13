@@ -36,7 +36,9 @@ Big modpacks bring a lot of music – and not all of it fits together.
 - **Disable all music of a mod** with one click
 - **Preview** any track inside the panel (background music pauses while you listen)
 - **See what is playing right now** – in the panel and right under the button in the ESC menu, so you can find a song even if you don't know its name
-- **Background playlist** – pick the songs and their order, like a music player: queue with progress bar, move up/down, shuffle, repeat. Boss, dragon and credits music still interrupt it
+- **Background playlist** – pick the songs and their order, like a music player: queue with progress bar, move up/down, shuffle. A song leaves the queue once it has played; turn on its loop button to send it to the end instead. Boss, dragon and credits music still interrupt it
+- **Favorites** – star a song to keep it in a Favorites group at the top of the panel
+- **Suggestions** – next to the queue, a short mixed list of your favorites, songs you added before and well-known Minecraft songs, one click to add
 - **Skip** the current background song (button, `/quietplease skip` or a key you choose)
 - **Key bindings** (unbound by default) to open the panel and skip a song
 - **Music gap** – shorten (or remove) the long silence between background songs
@@ -110,6 +112,16 @@ ya da **Modlar → Quiet Please → Yapılandırma**. Sohbette `/quietplease` ko
 ## Bilmen gerekenler
 - **Sadece istemci tarafı.** Sunucuya kurulması gerekmez, her sunucuya girebilirsin.
 - Ayarlar `config/quietplease.json` dosyasında; mod paketi yapanlar hazır ayarlı bir dosya ekleyebilir.
+```
+
+## Sonraki sürüm notu (taslak, henüz yayınlanmadı)
+
+```markdown
+## Playlist update
+- A song leaves the queue after it plays; the new loop button sends it to the end of the queue instead (replaces the repeat modes)
+- Favorites: the star keeps a song in a Favorites group at the top of the panel (the group appears once you have a favorite)
+- Suggested panel next to the queue: favorites, songs you added before and popular Minecraft songs, mixed
+- Track tooltips are short; hold Ctrl for the full details
 ```
 
 ## 1.1.0 sürüm notu (taslak, `improvements` dalı – henüz yayınlanmadı)
