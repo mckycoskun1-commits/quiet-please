@@ -44,7 +44,7 @@ public final class MusicLibrary {
                 if (sound.getType() != Sound.Type.FILE) continue;
                 ResourceLocation file = sound.getLocation();
                 if (file.equals(SoundManager.EMPTY_SOUND.getLocation())
-                        || file.equals(SoundManager.INTENTIONALLY_EMPTY_SOUND_LOCATION)) continue;
+                        || file.equals(SoundManager.EMPTY_SOUND.getLocation())) continue;
                 eventsByFile.computeIfAbsent(file, k -> new LinkedHashSet<>()).add(eventId);
                 streamByFile.merge(file, sound.shouldStream(), Boolean::logicalOr);
             }

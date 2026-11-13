@@ -22,7 +22,7 @@ public final class QuietPleaseFabric implements ClientModInitializer {
         ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
             QuietPlease.onScreenInit(screen);
             MenuButton.onInit(screen, button -> Screens.getButtons(screen).add(button));
-            ScreenEvents.afterRender(screen).register((s, graphics, mouseX, mouseY, delta) -> MenuButton.onRender(s, graphics));
+            ScreenEvents.afterRender(screen).register((s, graphics, mouseX, mouseY, delta) -> MenuButton.onRender(s, graphics, mouseX, mouseY));
         });
     }
 }

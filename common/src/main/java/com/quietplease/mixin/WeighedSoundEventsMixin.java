@@ -47,7 +47,7 @@ public abstract class WeighedSoundEventsMixin {
 
         if (allowed.isEmpty() || totalWeight <= 0) {
             // Olaydaki tum parcalar kapali: "bilerek sessiz" sesi dondur, oyun hicbir sey calmaz.
-            cir.setReturnValue(SoundManager.INTENTIONALLY_EMPTY_SOUND);
+            cir.setReturnValue(SoundManager.EMPTY_SOUND);
             return;
         }
 

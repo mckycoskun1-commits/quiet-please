@@ -1,5 +1,6 @@
 package com.quietplease.gui;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.quietplease.Lang;
 import com.quietplease.music.ModOptions;
 import com.quietplease.music.MusicLibrary;
@@ -11,9 +12,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.OptionsScreen;
@@ -32,7 +31,7 @@ public final class MenuButton {
 
     /** Su an ekranda olan dugme ve ait oldugu ekran (yazi bu dugmenin altina cizilir). */
     @Nullable
-    private static Button button;
+    private static Btn button;
     @Nullable
     private static Screen buttonScreen;
     private static Map<ResourceLocation, MusicTrack> tracksById = Map.of();
@@ -54,7 +53,7 @@ public final class MenuButton {
         }
         Component label = Lang.tr("options.button");
         int w = Math.max(90, Minecraft.getInstance().font.width(label) + 16);
-        button = Button.builder(label, b -> Minecraft.getInstance().setScreen(new QuietPleaseScreen(screen)))
+        button = Btn.builder(label, b -> Minecraft.getInstance().setScreen(new QuietPleaseScreen(screen)))
                 .bounds(screen.width - w - 6, 6, w, 20)
                 .tooltip(Tooltip.create(Lang.tr("options.button.tooltip")))
                 .build();
@@ -65,7 +64,12 @@ public final class MenuButton {
                 .collect(Collectors.toMap(MusicTrack::id, t -> t, (a, b) -> a));
     }
 
-    public static void onRender(Screen screen, GuiGraphics g) {
+    public static void onRender(Screen screen, PoseStack pose, int mouseX, int mouseY) {
+        drawNowPlaying(screen, new GuiGraphics(pose));
+        if (screen == buttonScreen) Tooltip.renderPending(screen, pose, mouseX, mouseY, false);
+    }
+
+    private static void drawNowPlaying(Screen screen, GuiGraphics g) {
         if (button == null || screen != buttonScreen || !ModOptions.nowPlayingText) return;
         // Sadece muzik ve plaklar; Nether ortam sesi gibi uzun dongu sesleri burada gosterilmez
         List<MusicTrack> playing = NowPlaying.find(tracksById).stream()

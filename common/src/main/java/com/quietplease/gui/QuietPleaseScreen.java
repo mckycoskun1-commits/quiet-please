@@ -1,5 +1,6 @@
 package com.quietplease.gui;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.quietplease.Lang;
 import com.quietplease.mixin.MusicManagerAccessor;
 import com.quietplease.music.ModOptions;
@@ -18,17 +19,14 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -83,7 +81,7 @@ public class QuietPleaseScreen extends Screen {
     private CycleButton<String> modButton;
     private List<String> modValues = List.of();
     @Nullable
-    private Button skip;
+    private Btn skip;
 
     // Filtreler (ekran yeniden boyutlaninca korunsun diye alanlarda tutuluyor)
     private String query = "";
@@ -114,19 +112,19 @@ public class QuietPleaseScreen extends Screen {
 
         // Baslikta: solda Ayarlar (ortadaki logoya carpmasin diye satirin kenarlarinda)
         Component settingsLabel = Lang.tr("settings.button");
-        addRenderableWidget(Button.builder(settingsLabel, b -> minecraft.setScreen(new QuietPleaseSettingsScreen(this)))
+        addRenderableWidget(Btn.builder(settingsLabel, b -> minecraft.setScreen(new QuietPleaseSettingsScreen(this)))
                 .bounds(x, 6, Math.max(60, font.width(settingsLabel) + 12), 20)
                 .tooltip(Tooltip.create(Lang.tr("settings.button.tooltip")))
                 .build());
         // ... sagda Calma listesi
         Component playlistLabel = Lang.tr("playlist.button");
         int playlistW = Math.max(60, font.width(playlistLabel) + 12);
-        addRenderableWidget(Button.builder(playlistLabel, b -> minecraft.setScreen(new QuietPlaylistScreen(this)))
+        addRenderableWidget(Btn.builder(playlistLabel, b -> minecraft.setScreen(new QuietPlaylistScreen(this)))
                 .bounds(x + rowW - playlistW, 6, playlistW, 20)
                 .tooltip(Tooltip.create(Lang.tr("playlist.open.tooltip")))
                 .build());
 
-        EditBox search = new EditBox(font, x + 1, y + 1, searchW - 2, 18, Lang.tr("screen.search"));
+        HintBox search = new HintBox(font, x + 1, y + 1, searchW - 2, 18, Lang.tr("screen.search"));
         search.setHint(Lang.tr("screen.search").withStyle(ChatFormatting.DARK_GRAY));
         search.setValue(query);
         search.setResponder(text -> {
@@ -146,7 +144,7 @@ public class QuietPleaseScreen extends Screen {
                         : Component.literal(MusicLibrary.modName(m)))
                 .withValues(mods)
                 .withInitialValue(modFilter)
-                .withTooltip(v -> Tooltip.create(Lang.tr("screen.mod.tooltip")))
+                .withTooltip(v -> Tooltip.lines(Lang.tr("screen.mod.tooltip")))
                 .create(x + searchW + 4, y, modW, 20, Lang.tr("screen.mod"), (b, value) -> {
                     modFilter = value;
                     rebuildList();
@@ -156,7 +154,7 @@ public class QuietPleaseScreen extends Screen {
                         Lang.tr("screen.ambient.show").withStyle(ChatFormatting.GREEN),
                         Lang.tr("screen.ambient.hide").withStyle(ChatFormatting.GRAY))
                 .withInitialValue(showOther)
-                .withTooltip(v -> Tooltip.create(Lang.tr("screen.ambient.tooltip")))
+                .withTooltip(v -> Tooltip.lines(Lang.tr("screen.ambient.tooltip")))
                 .create(x + searchW + 4 + modW + 4, y, otherW, 20, Lang.tr("screen.ambient"), (b, value) -> {
                     showOther = value;
                     rebuildList();
@@ -170,14 +168,14 @@ public class QuietPleaseScreen extends Screen {
         // "Su an calan" cubugunun sagi: Atla
         Component skipLabel = Lang.tr("screen.skip");
         int skipW = Math.max(46, font.width(skipLabel) + 10);
-        skip = addRenderableWidget(Button.builder(skipLabel, b -> MusicControl.skip())
+        skip = addRenderableWidget(Btn.builder(skipLabel, b -> MusicControl.skip())
                 .bounds(barRight() - skipW, NOW_PLAYING_Y, skipW, NOW_PLAYING_H)
                 .tooltip(Tooltip.create(Lang.tr("screen.skip.tooltip")))
                 .build());
 
         // Alt satir
         int by = height - 28;
-        addRenderableWidget(Button.builder(Lang.tr("screen.reset_all"), b -> {
+        addRenderableWidget(Btn.builder(Lang.tr("screen.reset_all"), b -> {
                     MusicPreview.stop();
                     MusicSettings.resetAll();
                     MusicSettings.applyToPlayingSounds();
@@ -185,7 +183,7 @@ public class QuietPleaseScreen extends Screen {
                 }).bounds(width / 2 - 154, by, 150, 20)
                 .tooltip(Tooltip.create(Lang.tr("screen.reset_all.tooltip")))
                 .build());
-        addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> onClose())
+        addRenderableWidget(Btn.builder(CommonComponents.GUI_DONE, b -> onClose())
                 .bounds(width / 2 + 4, by, 150, 20).build());
     }
 
@@ -214,14 +212,16 @@ public class QuietPleaseScreen extends Screen {
     // ------------------------------------------------------------------ cizim ve yasam dongusu
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        renderBackground(g);
-        super.render(g, mouseX, mouseY, partialTick);
+    public void render(PoseStack pose, int mouseX, int mouseY, float partialTick) {
+        GuiGraphics g = new GuiGraphics(pose);
+        renderBackground(pose);
+        super.render(pose, mouseX, mouseY, partialTick);
         renderHeader(g);
         renderNowPlaying(g, mouseX, mouseY);
         if (list.children().isEmpty()) {
             g.drawCenteredString(font, Lang.tr("screen.no_results"), width / 2, TOP + 24, MUTED);
         }
+        Tooltip.renderPending(this, pose, mouseX, mouseY);
     }
 
     /** Logo + baslik + ozet satiri. */
@@ -293,7 +293,7 @@ public class QuietPleaseScreen extends Screen {
         } else {
             g.drawString(font, line, left + 20, textY, TEXT);
         }
-        if (hover) setTooltipForNextRenderPass(Lang.tr("screen.now_playing.tooltip"));
+        if (hover) Tooltip.next(Lang.tr("screen.now_playing.tooltip"));
     }
 
     @Override
@@ -352,6 +352,14 @@ public class QuietPleaseScreen extends Screen {
     // ------------------------------------------------------------------ liste
 
     private class TrackList extends ContainerObjectSelectionList<Row> {
+        /** 1.19.2 listeleri kendi alanina kirpmaz; tasan satirlar alttaki dugmelerin ustune cizilmesin. */
+        @Override
+        protected void renderList(PoseStack pose, int mouseX, int mouseY, float partialTick) {
+            net.minecraft.client.gui.GuiComponent.enableScissor(x0, y0, x1, y1);
+            super.renderList(pose, mouseX, mouseY, partialTick);
+            net.minecraft.client.gui.GuiComponent.disableScissor();
+        }
+
         TrackList(Minecraft mc, int width, int height, int y) {
             super(mc, width, y + height, y, y + height, ROW_HEIGHT);
             setRenderBackground(false);
@@ -378,7 +386,8 @@ public class QuietPleaseScreen extends Screen {
 
         /** Oyunun dokulu liste zemini yerine koyu, turuncu cerceveli bir panel. */
         @Override
-        protected void renderBackground(GuiGraphics g) {
+        protected void renderBackground(PoseStack pose) {
+            GuiGraphics g = new GuiGraphics(pose);
             int left = getRowLeft() - 6;
             int right = getScrollbarPosition() + 6 + 4;
             int top = y0 - 2;
@@ -417,8 +426,8 @@ public class QuietPleaseScreen extends Screen {
     }
 
     /** Yazisi kadar genis, kucuk bir dugme (cevirilerde metin uzunlugu degisebilir). */
-    private Button smallButton(Component message, Runnable action) {
-        return Button.builder(message, b -> action.run()).size(Math.max(60, font.width(message) + 12), 18).build();
+    private Btn smallButton(Component message, Runnable action) {
+        return Btn.builder(message, b -> action.run()).size(Math.max(60, font.width(message) + 12), 18).build();
     }
 
     private abstract static class Row extends ContainerObjectSelectionList.Entry<Row> {}
@@ -429,8 +438,8 @@ public class QuietPleaseScreen extends Screen {
 
         private final String modName;
         private final List<MusicTrack> tracks;
-        private final Button allOn;
-        private final Button allOff;
+        private final Btn allOn;
+        private final Btn allOff;
 
         HeaderEntry(String modName, List<MusicTrack> tracks) {
             this.modName = modName;
@@ -445,8 +454,9 @@ public class QuietPleaseScreen extends Screen {
         }
 
         @Override
-        public void render(GuiGraphics g, int index, int top, int left, int width, int height,
+        public void render(PoseStack pose, int index, int top, int left, int width, int height,
                            int mouseX, int mouseY, boolean hovering, float partialTick) {
+            GuiGraphics g = new GuiGraphics(pose);
             // zemin + soldaki vurgu cizgisi
             g.fill(left - 3, top - 1, left + width + 3, top + height + 1, HEADER_BG);
             g.fill(left - 3, top - 1, left - 1, top + height + 1, ACCENT);
@@ -467,8 +477,8 @@ public class QuietPleaseScreen extends Screen {
             allOn.setPosition(allOff.getX() - 4 - allOn.getWidth(), allOff.getY());
             allOn.active = off > 0;
             allOff.active = off < tracks.size();
-            allOn.render(g, mouseX, mouseY, partialTick);
-            allOff.render(g, mouseX, mouseY, partialTick);
+            allOn.render(g.pose(), mouseX, mouseY, partialTick);
+            allOff.render(g.pose(), mouseX, mouseY, partialTick);
         }
 
         @Override
@@ -490,20 +500,20 @@ public class QuietPleaseScreen extends Screen {
         private final MusicTrack track;
         private final boolean alternate;
         private final ItemStack icon;
-        private final Button play;
-        private final Button star;
+        private final Btn play;
+        private final Btn star;
         private final VolumeSlider slider;
-        private final Button toggle;
+        private final Btn toggle;
 
         TrackEntry(MusicTrack track, boolean alternate) {
             this.track = track;
             this.alternate = alternate;
             this.icon = iconFor(track);
-            this.play = Button.builder(Component.literal("▶"), b -> {
+            this.play = Btn.builder(Component.literal("▶"), b -> {
                 if (MusicPreview.isPlaying(track.id())) MusicPreview.stop();
                 else MusicPreview.play(track);
             }).size(20, 20).tooltip(Tooltip.create(Lang.tr("screen.play.tooltip"))).build();
-            this.star = Button.builder(Component.empty(), b -> {
+            this.star = Btn.builder(Component.empty(), b -> {
                 Playlist.toggle(track.id());
                 MusicSettings.save();
                 // "★ Calma listesi" filtresindeyken listeden cikarilan parca ekrandan da kalksin
@@ -514,15 +524,16 @@ public class QuietPleaseScreen extends Screen {
                 }
             }).size(20, 20).build();
             this.slider = new VolumeSlider(track);
-            this.toggle = Button.builder(Component.empty(), b -> {
+            this.toggle = Btn.builder(Component.empty(), b -> {
                 MusicSettings.setEnabled(track.id(), MusicSettings.isDisabled(track.id()));
                 MusicSettings.applyToPlayingSounds();
             }).size(TOGGLE_W, 20).build();
         }
 
         @Override
-        public void render(GuiGraphics g, int index, int top, int left, int width, int height,
+        public void render(PoseStack pose, int index, int top, int left, int width, int height,
                            int mouseX, int mouseY, boolean hovering, float partialTick) {
+            GuiGraphics g = new GuiGraphics(pose);
             boolean enabled = !MusicSettings.isDisabled(track.id());
             boolean playing = MusicPreview.isPlaying(track.id());       // panelde onizleniyor
             boolean inGame = !playing && nowPlaying.contains(track);    // oyunda su an caliyor
@@ -591,14 +602,14 @@ public class QuietPleaseScreen extends Screen {
                 g.drawString(font, playingTag, afterName + 12, textY, PLAYING);
             }
 
-            play.render(g, mouseX, mouseY, partialTick);
-            star.render(g, mouseX, mouseY, partialTick);
-            slider.render(g, mouseX, mouseY, partialTick);
-            toggle.render(g, mouseX, mouseY, partialTick);
+            play.render(g.pose(), mouseX, mouseY, partialTick);
+            star.render(g.pose(), mouseX, mouseY, partialTick);
+            slider.render(g.pose(), mouseX, mouseY, partialTick);
+            toggle.render(g.pose(), mouseX, mouseY, partialTick);
 
             // ad/ikon uzerine gelince ayrintilar
             if (hovering && mouseX >= iconX && mouseX < slider.getX() - 4) {
-                setTooltipForNextRenderPass(details());
+                Tooltip.next(details());
             }
         }
 
@@ -638,7 +649,7 @@ public class QuietPleaseScreen extends Screen {
                 track.events().forEach(e -> candidates.add(e.getPath().replace('.', '_')));
                 for (String path : candidates) {
                     ResourceLocation item = ResourceLocation.tryBuild(track.namespace(), path);
-                    if (item != null && BuiltInRegistries.ITEM.containsKey(item)) yield new ItemStack(BuiltInRegistries.ITEM.get(item));
+                    if (item != null && net.minecraft.core.Registry.ITEM.containsKey(item)) yield new ItemStack(net.minecraft.core.Registry.ITEM.get(item));
                 }
                 yield new ItemStack(Items.MUSIC_DISC_13);
             }
@@ -648,7 +659,7 @@ public class QuietPleaseScreen extends Screen {
     }
 
     /** %0-100 ses kaydiricisi. Degisiklik calan seslere aninda uygulanir. */
-    private static class VolumeSlider extends AbstractSliderButton {
+    private static class VolumeSlider extends Slider {
         private final MusicTrack track;
 
         VolumeSlider(MusicTrack track) {

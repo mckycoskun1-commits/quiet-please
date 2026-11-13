@@ -50,12 +50,12 @@ final class DevSelfTest {
         // 2) Hepsi kapaliysa "bilerek sessiz" ses donmeli.
         MusicSettings.setEnabled(keep, false);
         Sound none = menu.getSound(random);
-        if (none != SoundManager.INTENTIONALLY_EMPTY_SOUND) failures.add("hepsi kapali: sessiz ses beklenirdi, gelen " + none.getLocation());
+        if (none != SoundManager.EMPTY_SOUND) failures.add("hepsi kapali: sessiz ses beklenirdi, gelen " + none.getLocation());
         files.forEach(MusicSettings::reset);
 
         // 3) Ses seviyesi: ses motorunun hesabi %40 ile carpilmali.
         try {
-            SimpleSoundInstance music = SimpleSoundInstance.forMusic(SoundEvents.MUSIC_MENU.value());
+            SimpleSoundInstance music = SimpleSoundInstance.forMusic(SoundEvents.MUSIC_MENU);
             music.resolve(sm);
             ResourceLocation file = music.getSound().getLocation();
             Field engineField = SoundManager.class.getDeclaredField("soundEngine");

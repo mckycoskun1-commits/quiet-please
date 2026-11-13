@@ -1,16 +1,15 @@
 package com.quietplease.gui;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.quietplease.Lang;
 import com.quietplease.music.ModOptions;
 import com.quietplease.music.MusicSettings;
 import java.util.function.IntConsumer;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -56,7 +55,7 @@ public class QuietPleaseSettingsScreen extends Screen {
         // Calma listesi
         addRenderableWidget(toggle("settings.playlist_mode", ModOptions.playlistMode)
                 .create(left, y, BUTTON_W, 20, Lang.tr("settings.playlist_mode"), (b, v) -> ModOptions.playlistMode = v));
-        addRenderableWidget(Button.builder(Lang.tr("playlist.button"), b -> minecraft.setScreen(new QuietPlaylistScreen(this)))
+        addRenderableWidget(Btn.builder(Lang.tr("playlist.button"), b -> minecraft.setScreen(new QuietPlaylistScreen(this)))
                 .bounds(right, y, BUTTON_W, 20)
                 .tooltip(Tooltip.create(Lang.tr("playlist.open.tooltip")))
                 .build());
@@ -66,7 +65,7 @@ public class QuietPleaseSettingsScreen extends Screen {
         addRenderableWidget(CycleButton.<ModOptions.Gap>builder(ModOptions.Gap::displayName)
                 .withValues(ModOptions.Gap.values())
                 .withInitialValue(ModOptions.gap)
-                .withTooltip(v -> Tooltip.create(Lang.tr("settings.gap." + v.id + ".tooltip")))
+                .withTooltip(v -> Tooltip.lines(Lang.tr("settings.gap." + v.id + ".tooltip")))
                 .create(left, y, BUTTON_W * 2 + 8, 20, Lang.tr("settings.gap"), (b, v) -> {
                     ModOptions.gap = v;
                     updateSliders();
@@ -82,13 +81,13 @@ public class QuietPleaseSettingsScreen extends Screen {
         }));
         updateSliders();
 
-        addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> onClose())
+        addRenderableWidget(Btn.builder(CommonComponents.GUI_DONE, b -> onClose())
                 .bounds(width / 2 - 100, height - 28, 200, 20).build());
     }
 
     /** Acik/Kapali dugmesi, ipucu metni ceviriden ("...tooltip"). */
     private static CycleButton.Builder<Boolean> toggle(String key, boolean value) {
-        return CycleButton.onOffBuilder(value).withTooltip(v -> Tooltip.create(Lang.tr(key + ".tooltip")));
+        return CycleButton.onOffBuilder(value).withTooltip(v -> Tooltip.lines(Lang.tr(key + ".tooltip")));
     }
 
     private void updateSliders() {
@@ -98,13 +97,15 @@ public class QuietPleaseSettingsScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        renderBackground(g);
-        super.render(g, mouseX, mouseY, partialTick);
+    public void render(PoseStack pose, int mouseX, int mouseY, float partialTick) {
+        GuiGraphics g = new GuiGraphics(pose);
+        renderBackground(pose);
+        super.render(pose, mouseX, mouseY, partialTick);
         g.drawCenteredString(font, title, width / 2, 14, 0xFFFFC966);
         // Sarki arasinin kisa aciklamasi, kaydiricilarin altinda
         Component hint = Lang.tr("settings.gap.hint").withStyle(ChatFormatting.GRAY);
         g.drawWordWrap(font, hint, width / 2 - BUTTON_W - 4, maxSlider.getY() + 28, BUTTON_W * 2 + 8, 0xFF9A8C78);
+        Tooltip.renderPending(this, pose, mouseX, mouseY);
     }
 
     @Override
@@ -118,7 +119,7 @@ public class QuietPleaseSettingsScreen extends Screen {
     }
 
     /** 0-1200 sn, 5 sn adimli kaydirici. */
-    private static class GapSlider extends AbstractSliderButton {
+    private static class GapSlider extends Slider {
         private final String key;
         private final IntConsumer onChange;
 

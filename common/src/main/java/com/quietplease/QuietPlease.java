@@ -6,7 +6,6 @@ import com.quietplease.gui.QuietPleaseScreen;
 import com.quietplease.music.MusicSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.OptionsScreen;
@@ -31,13 +30,6 @@ public class QuietPlease {
         QuietPleaseKeys.tick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
         if (!autoDumpDone && mc.screen instanceof TitleScreen && mc.getOverlay() == null) onScreenInit(mc.screen);
-        if (mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen
-                && System.getenv("QUIETPLEASE_AUTODUMP") != null
-                && com.quietplease.platform.Services.PLATFORM.isDevelopment()) {
-            mc.options.onboardAccessibility = false;
-            mc.options.save();
-            mc.setScreen(new TitleScreen(true));
-        }
     }
 
     /**
@@ -110,10 +102,10 @@ public class QuietPlease {
                 // Ikinci asama: bir deneme dunyasi olusturup ESC menusunu ve oyun ici paneli dene
                 var settings = new net.minecraft.world.level.LevelSettings("qptest-" + System.currentTimeMillis(),
                         net.minecraft.world.level.GameType.CREATIVE, false, net.minecraft.world.Difficulty.PEACEFUL, true,
-                        new net.minecraft.world.level.GameRules(), net.minecraft.world.level.WorldDataConfiguration.DEFAULT);
-                mc.createWorldOpenFlows().createFreshLevel(settings.levelName(), settings,
-                        new net.minecraft.world.level.levelgen.WorldOptions(0L, false, false),
-                        net.minecraft.world.level.levelgen.presets.WorldPresets::createNormalWorldDimensions);
+                        new net.minecraft.world.level.GameRules(), net.minecraft.world.level.DataPackConfig.DEFAULT);
+                var registries = net.minecraft.core.RegistryAccess.builtinCopy().freeze();
+                mc.createWorldOpenFlows().createFreshLevel(settings.levelName(), settings, registries,
+                        net.minecraft.world.level.levelgen.presets.WorldPresets.createNormalWorldFromPreset(registries, 0L));
                 worldJoinTick = -1;
             }
             default -> {
