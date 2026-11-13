@@ -3,14 +3,16 @@ package com.quietplease.music;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.quietplease.Lang;
 import com.quietplease.QuietPlease;
 import com.quietplease.mixin.MusicManagerAccessor;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -24,7 +26,6 @@ import net.minecraft.client.sounds.MusicManager;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.client.sounds.Weighted;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundSource;
@@ -33,40 +34,16 @@ import net.minecraft.sounds.SoundSource;
  * Arka plan calma listesi: oyuncunun sectigi parcalar, sirasiyla.
  *
  * Calma listesi modu aciksa, oyun bir ARKA PLAN muzigi baslatacagi zaman (bkz. {@link ModOptions#isBackground})
- * rastgele parca yerine listedeki siradaki parca calar. Ejderha/jenerik muzigi ve modlarin dogrudan caldigi
- * sesler (cogu boss muzigi) hic etkilenmez. Liste bossa ya da mod kapaliysa oyun eskisi gibi davranir.
+ * rastgele parca yerine listedeki ilk calinabilir parca calar. Calan parca bitince listeden cikar; "dongu" isaretli
+ * parca ise silinmez, listenin sonuna gecer. Ejderha/jenerik muzigi ve modlarin dogrudan caldigi sesler
+ * (cogu boss muzigi) hic etkilenmez. Liste bossa ya da mod kapaliysa oyun eskisi gibi davranir.
  *
  * config/quietplease.json icindeki "playlist" bolumunde saklanir:
  * <pre>
- * "playlist": { "tracks": ["minecraft:music/game/calm1", ...], "position": 0, "repeat": "repeat_list" }
+ * "playlist": { "tracks": [...], "loop": [...], "history": [...] }
  * </pre>
  */
 public final class Playlist {
-
-    /** Liste bitince ne olsun. */
-    public enum Repeat {
-        /** Bastan, ayni sirayla. */
-        REPEAT_LIST("repeat_list"),
-        /** Liste karistirilir ve bastan (sonsuza kadar). */
-        SHUFFLE("shuffle"),
-        /** Durur, oyunun kendi muzigine donulur. */
-        STOP("stop");
-
-        public final String id;
-
-        Repeat(String id) {
-            this.id = id;
-        }
-
-        public Component displayName() {
-            return Lang.tr("playlist.repeat." + id);
-        }
-
-        static Repeat byId(String id) {
-            for (Repeat r : values()) if (r.id.equals(id)) return r;
-            return REPEAT_LIST;
-        }
-    }
 
     /** Listedeki bir parcayi caldiran ses: rastgele secim yapmadan dogrudan o dosya (onizlemedeki yontem). */
     public static final class PlaylistSound extends AbstractSoundInstance {
@@ -90,11 +67,16 @@ public final class Playlist {
     }
 
     private static final List<ResourceLocation> QUEUE = new ArrayList<>();
-    /** Calan (ya da en son calan) parcanin sirasi; -1 = henuz baslamadi. */
-    private static int position = -1;
-    private static Repeat repeat = Repeat.REPEAT_LIST;
-    /** "Sonda dur" modunda liste bitti: oyunun kendi muzigine donuldu (liste degisene kadar). */
-    private static boolean ended = false;
+    /** Dongu isaretli parcalar: calinca silinmez, sona gecer. */
+    private static final Set<ResourceLocation> LOOP = new HashSet<>();
+    /** Oyuncunun daha once listeye ekledigi parcalar, en yenisi basta (oneriler icin). */
+    private static final List<ResourceLocation> HISTORY = new ArrayList<>();
+    private static final int HISTORY_MAX = 64;
+    /** Yildizli parcalar, eklenme sirasiyla. Calinca silinmez; ana panelde en ustte "Favoriler" grubu. */
+    private static final Set<ResourceLocation> FAVORITES = new LinkedHashSet<>();
+    /** Baslatilan ve henuz bitmemis parca; bitince listeden cikar (ya da donguyse sona gecer). */
+    @Nullable
+    private static ResourceLocation currentId;
     /** Bir sonraki baslatmada calma listesi modu kapali olsa bile listeden cal (▶ dugmesi). */
     private static boolean oneShot = false;
     /** Her degisiklikte artar; panel listesini ne zaman yenileyecegini buradan anlar. */
@@ -127,16 +109,40 @@ public final class Playlist {
         return QUEUE.contains(id);
     }
 
-    public static int position() {
-        return position;
+    public static boolean isLooping(ResourceLocation id) {
+        return LOOP.contains(id);
     }
 
-    public static Repeat repeat() {
-        return repeat;
+    public static boolean isFavorite(ResourceLocation id) {
+        return FAVORITES.contains(id);
     }
 
-    public static boolean hasEnded() {
-        return ended;
+    public static List<ResourceLocation> favorites() {
+        return List.copyOf(FAVORITES);
+    }
+
+    /** Ana paneldeki ☆/★ dugmesi: favorilere ve siraya ekler ya da ikisinden de cikarir. @return artik favori mi */
+    public static boolean toggleFavorite(ResourceLocation id) {
+        if (FAVORITES.remove(id)) {
+            remove(id);
+            changed();
+            return false;
+        }
+        FAVORITES.add(id);
+        add(id);
+        changed();
+        return true;
+    }
+
+    /** Daha once listeye eklenmis parcalar, en yenisi basta. */
+    public static List<ResourceLocation> history() {
+        return Collections.unmodifiableList(HISTORY);
+    }
+
+    /** Calan (bitince listeden cikacak) parca; yoksa null. */
+    @Nullable
+    public static ResourceLocation currentTrack() {
+        return currentId;
     }
 
     public static int version() {
@@ -145,25 +151,16 @@ public final class Playlist {
 
     /** Calma listesi su an oyunun arka plan muzigini yonetiyor mu? */
     public static boolean isActive() {
-        return ModOptions.playlistMode && !QUEUE.isEmpty() && !ended;
+        return ModOptions.playlistMode && !QUEUE.isEmpty();
     }
 
-    /**
-     * Sirada calinacak parcalar, calinma sirasiyla (calan parca haric) - listedeki gercek sira numaralari.
-     * Liste sonuna gelince basa sarar; {@link #isNextRound} sarmadan sonrakileri gosterir.
-     */
+    /** Sirada calinacak parcalar, calinma sirasiyla (calan parca haric) - listedeki gercek sira numaralari. */
     public static List<Integer> upcoming() {
-        int n = QUEUE.size();
-        List<Integer> order = new ArrayList<>(n);
-        int start = position < 0 || position >= n ? -1 : position;
-        int count = start < 0 ? n : n - 1;
-        for (int k = 1; k <= count; k++) order.add(Math.floorMod(start + k, n));
+        List<Integer> order = new ArrayList<>(QUEUE.size());
+        for (int i = 0; i < QUEUE.size(); i++) {
+            if (!QUEUE.get(i).equals(currentId)) order.add(i);
+        }
         return order;
-    }
-
-    /** Bu sira, listenin bir sonraki turunda mi calacak (basa sarmadan sonra)? */
-    public static boolean isNextRound(int index) {
-        return position >= 0 && index < position;
     }
 
     // ---------------------------------------------------------------- degistirme
@@ -171,6 +168,9 @@ public final class Playlist {
     public static void add(ResourceLocation id) {
         if (QUEUE.contains(id)) return;
         QUEUE.add(id);
+        HISTORY.remove(id);
+        HISTORY.add(0, id);
+        while (HISTORY.size() > HISTORY_MAX) HISTORY.remove(HISTORY.size() - 1);
         changed();
     }
 
@@ -179,7 +179,7 @@ public final class Playlist {
         if (i >= 0) removeAt(i);
     }
 
-    /** Ana paneldeki ☆/★ dugmesi. @return artik listede mi */
+    /** "Sarki ekle" sekmesindeki dugme. @return artik listede mi */
     public static boolean toggle(ResourceLocation id) {
         if (QUEUE.contains(id)) {
             remove(id);
@@ -191,93 +191,80 @@ public final class Playlist {
 
     public static void removeAt(int index) {
         if (index < 0 || index >= QUEUE.size()) return;
-        QUEUE.remove(index);
-        // Calandan oncekiler kayarsa ya da calan silinirse imleci geri al: siradaki yine dogru parca olsun
-        if (index <= position) position--;
-        if (QUEUE.isEmpty()) position = -1;
+        ResourceLocation id = QUEUE.remove(index);
+        LOOP.remove(id);
+        if (id.equals(currentId)) currentId = null;
         changed();
+    }
+
+    /** Dongu dugmesi. @return artik dongude mi */
+    public static boolean toggleLoop(ResourceLocation id) {
+        if (!QUEUE.contains(id)) return false;
+        boolean on = !LOOP.remove(id);
+        if (on) LOOP.add(id);
+        changed();
+        return on;
     }
 
     /** Iki sirayi yer degistirir (▲/▼). */
     public static void swap(int a, int b) {
         if (a < 0 || b < 0 || a >= QUEUE.size() || b >= QUEUE.size() || a == b) return;
         Collections.swap(QUEUE, a, b);
-        if (position == a) position = b;
-        else if (position == b) position = a;
         changed();
     }
 
-    /** Karistir: calan parca basta kalir, gerisi karisir. */
     public static void shuffle() {
-        if (position >= 0 && position < QUEUE.size()) {
-            ResourceLocation playing = QUEUE.remove(position);
-            Collections.shuffle(QUEUE, new java.util.Random(RANDOM.nextLong()));
-            QUEUE.add(0, playing);
-            position = 0;
-        } else {
-            Collections.shuffle(QUEUE, new java.util.Random(RANDOM.nextLong()));
-            position = -1;
-        }
+        Collections.shuffle(QUEUE, new java.util.Random(RANDOM.nextLong()));
         changed();
     }
 
     public static void clear() {
         QUEUE.clear();
-        position = -1;
+        LOOP.clear();
+        currentId = null;
         changed();
     }
 
-    public static void setRepeat(Repeat value) {
-        repeat = value;
-        changed();
-    }
-
-    /** Siradaki parca bu olsun. */
+    /** Siradaki parca bu olsun: listenin basina alinir. Calan parcaysa bastan tekrar calar. */
     public static void setNext(int index) {
         if (index < 0 || index >= QUEUE.size()) return;
-        position = index - 1;
+        ResourceLocation id = QUEUE.remove(index);
+        QUEUE.add(0, id);
+        if (id.equals(currentId)) currentId = null;
         changed();
     }
 
     private static void changed() {
-        ended = false;
         version++;
     }
 
     // ---------------------------------------------------------------- secim
 
+    /** Calan parca bitti: listeden cikar, donguyse sona gecer. @return bir parca bitirildi mi */
+    static boolean finishCurrent() {
+        ResourceLocation done = currentId;
+        if (done == null) return false;
+        currentId = null;
+        if (QUEUE.remove(done) && LOOP.contains(done)) QUEUE.add(done);
+        else LOOP.remove(done);
+        version++;
+        return true;
+    }
+
     /**
-     * Siradaki calinabilir parcanin sirasini secer ve imleci ilerletir. Calinamayanlari (kapali, yuklu degil) atlar.
-     * Liste bitince tekrar moduna gore basa sarar, karistirir ya da durur.
+     * Calan parcayi bitirir, sonra listedeki ilk calinabilir parcayi secer. Calinamayanlari (kapali, yuklu degil)
+     * atlar ama listede birakir.
      *
      * @return sira numarasi; -1 = calinacak parca yok (oyunun kendi muzigi calsin)
      */
     static int advance(Predicate<ResourceLocation> playable) {
-        int n = QUEUE.size();
-        if (n == 0 || ended) return -1;
-        ResourceLocation last = position >= 0 && position < n ? QUEUE.get(position) : null;
-        for (int step = 0; step < n; step++) {
-            int next = position + 1;
-            if (next >= n) {
-                switch (repeat) {
-                    case STOP -> {
-                        ended = true;
-                        position = n - 1;
-                        version++;
-                        return -1;
-                    }
-                    case SHUFFLE -> {
-                        Collections.shuffle(QUEUE, new java.util.Random(RANDOM.nextLong()));
-                        // ayni parca arka arkaya gelmesin
-                        if (n > 1 && QUEUE.get(0).equals(last)) Collections.swap(QUEUE, 0, n - 1);
-                    }
-                    case REPEAT_LIST -> {}
-                }
-                next = 0;
+        finishCurrent();
+        for (int i = 0; i < QUEUE.size(); i++) {
+            if (playable.test(QUEUE.get(i))) {
+                currentId = QUEUE.get(i);
+                version++;
+                return i;
             }
-            position = next;
-            version++;
-            if (playable.test(QUEUE.get(next))) return next;
         }
         return -1;
     }
@@ -327,7 +314,7 @@ public final class Playlist {
 
     /** Onizleme calarken liste ilerlemesin diye mixin bunu sorar. */
     public static boolean wouldTakeOver(Music music) {
-        return (ModOptions.playlistMode || oneShot) && !QUEUE.isEmpty() && !ended && ModOptions.isBackground(music);
+        return (ModOptions.playlistMode || oneShot) && !QUEUE.isEmpty() && ModOptions.isBackground(music);
     }
 
     /** ▶: bu parcayi hemen cal (calma listesi modu kapali olsa bile, bir kerelik). */
@@ -366,9 +353,12 @@ public final class Playlist {
         return Minecraft.getInstance().getSoundManager().isActive(current) ? current : null;
     }
 
-    /** Her istemci tick'inde: oyun duraklatilmamissa gecen sureyi say. */
+    /** Her istemci tick'inde: oyun duraklatilmamissa gecen sureyi say; parca bittiyse listeden cikar. */
     public static void clientTick(Minecraft mc) {
-        if (current != null && !mc.isPaused() && mc.getSoundManager().isActive(current)) elapsedTicks++;
+        if (current == null) return;
+        boolean active = mc.getSoundManager().isActive(current);
+        if (active && !mc.isPaused()) elapsedTicks++;
+        if (!active && current.trackId.equals(currentId) && finishCurrent()) MusicSettings.save();
     }
 
     public static int elapsedSeconds() {
@@ -431,6 +421,7 @@ public final class Playlist {
     public static void restore(JsonObject o) {
         read(o);
         current = null;
+        currentId = null;
         oneShot = false;
         elapsedTicks = 0;
     }
@@ -444,29 +435,46 @@ public final class Playlist {
 
     static void read(@Nullable JsonObject o) {
         QUEUE.clear();
-        position = -1;
-        repeat = Repeat.REPEAT_LIST;
-        ended = false;
+        LOOP.clear();
+        HISTORY.clear();
+        FAVORITES.clear();
+        currentId = null;
         if (o != null) {
-            if (o.has("tracks")) {
-                for (JsonElement e : o.getAsJsonArray("tracks")) {
-                    ResourceLocation id = ResourceLocation.tryParse(e.getAsString());
-                    if (id != null && !QUEUE.contains(id)) QUEUE.add(id);
-                }
-            }
-            if (o.has("repeat")) repeat = Repeat.byId(o.get("repeat").getAsString());
-            if (o.has("position")) position = Math.max(-1, Math.min(QUEUE.size() - 1, o.get("position").getAsInt()));
+            List<ResourceLocation> favorites = new ArrayList<>();
+            // eski dosyalarda favori yok: yildiz o zamanlar siraya ekliyordu, siradakiler favori sayilir
+            readIds(o, o.has("favorites") ? "favorites" : "tracks", favorites);
+            FAVORITES.addAll(favorites);
+            readIds(o, "tracks", QUEUE);
+            List<ResourceLocation> loop = new ArrayList<>();
+            readIds(o, "loop", loop);
+            loop.stream().filter(QUEUE::contains).forEach(LOOP::add);
+            readIds(o, "history", HISTORY);
+            for (ResourceLocation id : QUEUE) if (!HISTORY.contains(id)) HISTORY.add(id);
+            while (HISTORY.size() > HISTORY_MAX) HISTORY.remove(HISTORY.size() - 1);
         }
         version++;
     }
 
+    private static void readIds(JsonObject o, String key, List<ResourceLocation> into) {
+        if (!o.has(key) || !o.get(key).isJsonArray()) return;
+        for (JsonElement e : o.getAsJsonArray(key)) {
+            ResourceLocation id = ResourceLocation.tryParse(e.getAsString());
+            if (id != null && !into.contains(id)) into.add(id);
+        }
+    }
+
+    private static JsonArray ids(List<ResourceLocation> list) {
+        JsonArray a = new JsonArray();
+        list.forEach(id -> a.add(id.toString()));
+        return a;
+    }
+
     static JsonObject write() {
         JsonObject o = new JsonObject();
-        JsonArray tracks = new JsonArray();
-        QUEUE.forEach(id -> tracks.add(id.toString()));
-        o.add("tracks", tracks);
-        o.addProperty("position", position);
-        o.addProperty("repeat", repeat.id);
+        o.add("tracks", ids(QUEUE));
+        o.add("loop", ids(QUEUE.stream().filter(LOOP::contains).toList()));
+        o.add("history", ids(HISTORY));
+        o.add("favorites", ids(List.copyOf(FAVORITES)));
         return o;
     }
 }
