@@ -28,7 +28,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.Music;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.RandomSource;
 
 /**
  * Arka plan calma listesi: oyuncunun sectigi parcalar, sirasiyla.
@@ -76,7 +75,7 @@ public final class Playlist {
 
         PlaylistSound(ResourceLocation eventId, Sound target, ResourceLocation trackId) {
             // SimpleSoundInstance.forMusic ile ayni ozellikler
-            super(eventId, SoundSource.MUSIC, SoundInstance.createUnseededRandom());
+            super(eventId, SoundSource.MUSIC);
             this.target = target;
             this.trackId = trackId;
             this.attenuation = SoundInstance.Attenuation.NONE;
@@ -100,7 +99,7 @@ public final class Playlist {
     private static boolean oneShot = false;
     /** Her degisiklikte artar; panel listesini ne zaman yenileyecegini buradan anlar. */
     private static int version = 0;
-    private static final RandomSource RANDOM = RandomSource.create();
+    private static final java.util.Random RANDOM = new java.util.Random();
 
     @Nullable
     private static PlaylistSound current;
@@ -393,7 +392,7 @@ public final class Playlist {
      * Ornekleme hizi ilk sayfadaki Vorbis tanitim basligindadir.
      */
     static int readOggSeconds(ResourceLocation path) {
-        try (InputStream in = Minecraft.getInstance().getResourceManager().open(path)) {
+        try (InputStream in = Minecraft.getInstance().getResourceManager().getResource(path).getInputStream()) {
             byte[] b = in.readAllBytes();
             long rate = 0;
             for (int i = 0; i + 16 < b.length && i < 8192; i++) {

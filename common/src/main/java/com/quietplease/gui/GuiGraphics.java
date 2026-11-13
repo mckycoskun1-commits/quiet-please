@@ -77,6 +77,18 @@ public final class GuiGraphics extends GuiComponent {
         }
     }
 
+    /** 1.18.2'de GuiComponent.enableScissor yok: GUI koordinatlarini pencere piksellerine cevirip kirpar. */
+    public static void enableScissor(int x0, int y0, int x1, int y1) {
+        com.mojang.blaze3d.platform.Window window = Minecraft.getInstance().getWindow();
+        double scale = window.getGuiScale();
+        RenderSystem.enableScissor((int) (x0 * scale), (int) (window.getHeight() - y1 * scale),
+                Math.max(0, (int) ((x1 - x0) * scale)), Math.max(0, (int) ((y1 - y0) * scale)));
+    }
+
+    public static void disableScissor() {
+        RenderSystem.disableScissor();
+    }
+
     /** Esya cizimi PoseStack degil model-gorunum yiginini kullanir; o yuzden donusumu oraya aktariyoruz. */
     public void renderItem(ItemStack stack, int x, int y) {
         PoseStack view = RenderSystem.getModelViewStack();

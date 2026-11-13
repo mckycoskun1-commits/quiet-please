@@ -103,9 +103,9 @@ public class QuietPlease {
                 var settings = new net.minecraft.world.level.LevelSettings("qptest-" + System.currentTimeMillis(),
                         net.minecraft.world.level.GameType.CREATIVE, false, net.minecraft.world.Difficulty.PEACEFUL, true,
                         new net.minecraft.world.level.GameRules(), net.minecraft.world.level.DataPackConfig.DEFAULT);
-                var registries = net.minecraft.core.RegistryAccess.builtinCopy().freeze();
-                mc.createWorldOpenFlows().createFreshLevel(settings.levelName(), settings, registries,
-                        net.minecraft.world.level.levelgen.presets.WorldPresets.createNormalWorldFromPreset(registries, 0L));
+                var registries = net.minecraft.core.RegistryAccess.BUILTIN.get();
+                mc.createLevel(settings.levelName(), settings, registries,
+                        net.minecraft.world.level.levelgen.WorldGenSettings.makeDefault(registries));
                 worldJoinTick = -1;
             }
             default -> {

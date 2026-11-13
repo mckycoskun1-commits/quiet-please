@@ -124,7 +124,7 @@ public class QuietPleaseSettingsScreen extends Screen {
         private final IntConsumer onChange;
 
         GapSlider(int x, int y, String key, int seconds, IntConsumer onChange) {
-            super(x, y, BUTTON_W, 20, Component.empty(), seconds / (double) ModOptions.GAP_SLIDER_MAX_SECONDS);
+            super(x, y, BUTTON_W, 20, com.quietplease.Txt.empty(), seconds / (double) ModOptions.GAP_SLIDER_MAX_SECONDS);
             this.key = key;
             this.onChange = onChange;
             updateMessage();

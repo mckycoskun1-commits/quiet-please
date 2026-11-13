@@ -89,7 +89,7 @@ public class QuietPleaseScreen extends Screen {
     private boolean showOther = ModOptions.showAmbient;
 
     public QuietPleaseScreen(@Nullable Screen parent) {
-        super(Component.literal("Quiet Please"));
+        super(com.quietplease.Txt.literal("Quiet Please"));
         this.parent = parent;
     }
 
@@ -141,7 +141,7 @@ public class QuietPleaseScreen extends Screen {
         modValues = mods;
         modButton = addRenderableWidget(CycleButton.<String>builder(m -> m.isEmpty() ? Lang.tr("screen.mod.all")
                         : m.equals(PLAYLIST_FILTER) ? Lang.tr("screen.mod.playlist").withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
-                        : Component.literal(MusicLibrary.modName(m)))
+                        : com.quietplease.Txt.literal(MusicLibrary.modName(m)))
                 .withValues(mods)
                 .withInitialValue(modFilter)
                 .withTooltip(v -> Tooltip.lines(Lang.tr("screen.mod.tooltip")))
@@ -179,7 +179,7 @@ public class QuietPleaseScreen extends Screen {
                     MusicPreview.stop();
                     MusicSettings.resetAll();
                     MusicSettings.applyToPlayingSounds();
-                    rebuildWidgets();
+                    init(minecraft, width, height);
                 }).bounds(width / 2 - 154, by, 150, 20)
                 .tooltip(Tooltip.create(Lang.tr("screen.reset_all.tooltip")))
                 .build());
@@ -226,7 +226,7 @@ public class QuietPleaseScreen extends Screen {
 
     /** Logo + baslik + ozet satiri. */
     private void renderHeader(GuiGraphics g) {
-        Component title = Component.literal("Quiet Please").withStyle(ChatFormatting.BOLD);
+        Component title = com.quietplease.Txt.literal("Quiet Please").withStyle(ChatFormatting.BOLD);
         long off = allTracks.stream().filter(t -> MusicSettings.isDisabled(t.id())).count();
         long custom = allTracks.stream().filter(t -> !MusicSettings.isDisabled(t.id())
                 && MusicSettings.get(t.id()).volume() != MusicSettings.DEFAULT_VOLUME).count();
@@ -283,9 +283,9 @@ public class QuietPleaseScreen extends Screen {
         MusicTrack shown = nowPlaying.get(Math.floorMod(nowPlayingIndex, nowPlaying.size()));
         drawEqualizer(g, left + 7, top + NOW_PLAYING_H - 4, PLAYING);
         MutableComponent line = Lang.tr("screen.now_playing").append(" ")
-                .append(Component.literal(shown.shortName()).withStyle(s -> s.withColor(PLAYING & 0xFFFFFF)))
-                .append(Component.literal("  " + MusicLibrary.modName(shown.namespace())).withStyle(ChatFormatting.GRAY));
-        if (nowPlaying.size() > 1) line.append(Component.literal("  ")).append(Lang.tr("screen.now_playing.more", nowPlaying.size() - 1).withStyle(ChatFormatting.DARK_GRAY));
+                .append(com.quietplease.Txt.literal(shown.shortName()).withStyle(s -> s.withColor(PLAYING & 0xFFFFFF)))
+                .append(com.quietplease.Txt.literal("  " + MusicLibrary.modName(shown.namespace())).withStyle(ChatFormatting.GRAY));
+        if (nowPlaying.size() > 1) line.append(com.quietplease.Txt.literal("  ")).append(Lang.tr("screen.now_playing.more", nowPlaying.size() - 1).withStyle(ChatFormatting.DARK_GRAY));
         // Uzun adlar cubugun (ve Atla dugmesinin) ustune tasmasin
         int maxW = right - 4 - (left + 20);
         if (font.width(line) > maxW) {
@@ -317,7 +317,7 @@ public class QuietPleaseScreen extends Screen {
             if (shown.kind() == MusicTrack.Kind.OTHER) showOther = true;
             minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
                     net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
-            rebuildWidgets();
+            init(minecraft, width, height);
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
@@ -354,10 +354,10 @@ public class QuietPleaseScreen extends Screen {
     private class TrackList extends ContainerObjectSelectionList<Row> {
         /** 1.19.2 listeleri kendi alanina kirpmaz; tasan satirlar alttaki dugmelerin ustune cizilmesin. */
         @Override
-        protected void renderList(PoseStack pose, int mouseX, int mouseY, float partialTick) {
-            net.minecraft.client.gui.GuiComponent.enableScissor(x0, y0, x1, y1);
-            super.renderList(pose, mouseX, mouseY, partialTick);
-            net.minecraft.client.gui.GuiComponent.disableScissor();
+        protected void renderList(PoseStack pose, int x, int y, int mouseX, int mouseY, float partialTick) {
+            GuiGraphics.enableScissor(x0, y0, x1, y1);
+            super.renderList(pose, x, y, mouseX, mouseY, partialTick);
+            GuiGraphics.disableScissor();
         }
 
         TrackList(Minecraft mc, int width, int height, int y) {
@@ -466,7 +466,7 @@ public class QuietPleaseScreen extends Screen {
             g.renderItem(ICON, left + 2, top + (height - 16) / 2);
 
             long off = tracks.stream().filter(t -> MusicSettings.isDisabled(t.id())).count();
-            Component name = Component.literal(modName).withStyle(ChatFormatting.BOLD);
+            Component name = com.quietplease.Txt.literal(modName).withStyle(ChatFormatting.BOLD);
             int nameX = left + 22;
             g.drawString(font, name, nameX, midY, GOLD);
             MutableComponent info = Lang.count("tracks", tracks.size());
@@ -509,11 +509,11 @@ public class QuietPleaseScreen extends Screen {
             this.track = track;
             this.alternate = alternate;
             this.icon = iconFor(track);
-            this.play = Btn.builder(Component.literal("▶"), b -> {
+            this.play = Btn.builder(com.quietplease.Txt.literal("▶"), b -> {
                 if (MusicPreview.isPlaying(track.id())) MusicPreview.stop();
                 else MusicPreview.play(track);
             }).size(20, 20).tooltip(Tooltip.create(Lang.tr("screen.play.tooltip"))).build();
-            this.star = Btn.builder(Component.empty(), b -> {
+            this.star = Btn.builder(com.quietplease.Txt.empty(), b -> {
                 Playlist.toggle(track.id());
                 MusicSettings.save();
                 // "★ Calma listesi" filtresindeyken listeden cikarilan parca ekrandan da kalksin
@@ -524,7 +524,7 @@ public class QuietPleaseScreen extends Screen {
                 }
             }).size(20, 20).build();
             this.slider = new VolumeSlider(track);
-            this.toggle = Btn.builder(Component.empty(), b -> {
+            this.toggle = Btn.builder(com.quietplease.Txt.empty(), b -> {
                 MusicSettings.setEnabled(track.id(), MusicSettings.isDisabled(track.id()));
                 MusicSettings.applyToPlayingSounds();
             }).size(TOGGLE_W, 20).build();
@@ -555,13 +555,13 @@ public class QuietPleaseScreen extends Screen {
             int by = top + (height - 20) / 2;
             play.setPosition(left, by);
             play.setMessage(playing
-                    ? Component.literal("■").withStyle(s -> s.withColor(ACCENT & 0xFFFFFF))
-                    : Component.literal("▶"));
+                    ? com.quietplease.Txt.literal("■").withStyle(s -> s.withColor(ACCENT & 0xFFFFFF))
+                    : com.quietplease.Txt.literal("▶"));
             boolean starred = Playlist.contains(track.id());
             star.setPosition(left + 22, by);
             star.setMessage(starred
-                    ? Component.literal("★").withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
-                    : Component.literal("☆").withStyle(ChatFormatting.GRAY));
+                    ? com.quietplease.Txt.literal("★").withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
+                    : com.quietplease.Txt.literal("☆").withStyle(ChatFormatting.GRAY));
             star.setTooltip(Tooltip.create(Lang.tr(starred ? "screen.star.remove" : "screen.star.add")));
             toggle.setPosition(left + width - TOGGLE_W, by);
             toggle.setMessage(enabled
@@ -592,7 +592,7 @@ public class QuietPleaseScreen extends Screen {
             if (enabled) {
                 g.drawString(font, name, nameX, textY, playing ? GOLD : inGame ? PLAYING : TEXT);
             } else {
-                g.drawString(font, Component.literal(name).withStyle(ChatFormatting.STRIKETHROUGH), nameX, textY, 0xFF6A6058);
+                g.drawString(font, com.quietplease.Txt.literal(name).withStyle(ChatFormatting.STRIKETHROUGH), nameX, textY, 0xFF6A6058);
             }
             int afterName = nameX + font.width(name) + 5;
             if (playing) {
@@ -615,14 +615,14 @@ public class QuietPleaseScreen extends Screen {
 
         private List<FormattedCharSequence> details() {
             List<FormattedCharSequence> lines = new ArrayList<>();
-            lines.add(Component.literal(track.shortName()).withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
-                    .append(Component.literal("  ").append(track.kind().displayName()).withStyle(ChatFormatting.GRAY)).getVisualOrderText());
-            lines.add(Component.literal(track.id().toString()).withStyle(ChatFormatting.DARK_GRAY).getVisualOrderText());
+            lines.add(com.quietplease.Txt.literal(track.shortName()).withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
+                    .append(com.quietplease.Txt.literal("  ").append(track.kind().displayName()).withStyle(ChatFormatting.GRAY)).getVisualOrderText());
+            lines.add(com.quietplease.Txt.literal(track.id().toString()).withStyle(ChatFormatting.DARK_GRAY).getVisualOrderText());
             lines.add(Lang.tr("screen.events").withStyle(ChatFormatting.GRAY).getVisualOrderText());
             track.events().stream().map(Object::toString).sorted().limit(12)
-                    .forEach(e -> lines.add(Component.literal("  " + e).getVisualOrderText()));
+                    .forEach(e -> lines.add(com.quietplease.Txt.literal("  " + e).getVisualOrderText()));
             if (track.events().size() > 12) {
-                lines.add(Component.literal("  ... +" + (track.events().size() - 12)).withStyle(ChatFormatting.GRAY).getVisualOrderText());
+                lines.add(com.quietplease.Txt.literal("  ... +" + (track.events().size() - 12)).withStyle(ChatFormatting.GRAY).getVisualOrderText());
             }
             return lines;
         }
@@ -648,13 +648,13 @@ public class QuietPleaseScreen extends Screen {
                 candidates.add("music_disc_" + track.shortName());
                 track.events().forEach(e -> candidates.add(e.getPath().replace('.', '_')));
                 for (String path : candidates) {
-                    ResourceLocation item = ResourceLocation.tryBuild(track.namespace(), path);
+                    ResourceLocation item = net.minecraft.resources.ResourceLocation.isValidResourceLocation(track.namespace() + ":" + path) ? new ResourceLocation(track.namespace(), path) : null;
                     if (item != null && net.minecraft.core.Registry.ITEM.containsKey(item)) yield new ItemStack(net.minecraft.core.Registry.ITEM.get(item));
                 }
                 yield new ItemStack(Items.MUSIC_DISC_13);
             }
             case MUSIC -> new ItemStack(Items.NOTE_BLOCK);
-            case OTHER -> new ItemStack(Items.ECHO_SHARD);
+            case OTHER -> new ItemStack(Items.AMETHYST_SHARD);
         };
     }
 
@@ -663,7 +663,7 @@ public class QuietPleaseScreen extends Screen {
         private final MusicTrack track;
 
         VolumeSlider(MusicTrack track) {
-            super(0, 0, TrackEntry.SLIDER_W, 20, Component.empty(), MusicSettings.get(track.id()).volume() / 100.0);
+            super(0, 0, TrackEntry.SLIDER_W, 20, com.quietplease.Txt.empty(), MusicSettings.get(track.id()).volume() / 100.0);
             this.track = track;
             updateMessage();
         }

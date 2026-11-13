@@ -22,7 +22,6 @@ import net.minecraft.sounds.Musics;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 
 /**
  * Sadece gelistirme sirasinda (QUIETPLEASE_AUTODUMP ayarliyken) calisan kucuk bir oz-test.
@@ -35,7 +34,7 @@ final class DevSelfTest {
     static void run() {
         List<String> failures = new ArrayList<>();
         SoundManager sm = Minecraft.getInstance().getSoundManager();
-        RandomSource random = RandomSource.create(42);
+        java.util.Random random = new java.util.Random(42);
 
         // 1) Parca atlama: music.menu icinde sonuncu haric hepsini kapat, 300 kez sec.
         WeighedSoundEvents menu = sm.getSoundEvent(new ResourceLocation("music.menu"));
@@ -44,12 +43,12 @@ final class DevSelfTest {
         ResourceLocation keep = files.get(files.size() - 1);
         files.stream().filter(f -> !f.equals(keep)).forEach(f -> MusicSettings.setEnabled(f, false));
         Set<ResourceLocation> picked = new HashSet<>();
-        for (int i = 0; i < 300; i++) picked.add(menu.getSound(random).getLocation());
+        for (int i = 0; i < 300; i++) picked.add(menu.getSound().getLocation());
         if (!picked.equals(Set.of(keep))) failures.add("atlama: beklenen sadece " + keep + ", gelen " + picked);
 
         // 2) Hepsi kapaliysa "bilerek sessiz" ses donmeli.
         MusicSettings.setEnabled(keep, false);
-        Sound none = menu.getSound(random);
+        Sound none = menu.getSound();
         if (none != SoundManager.EMPTY_SOUND) failures.add("hepsi kapali: sessiz ses beklenirdi, gelen " + none.getLocation());
         files.forEach(MusicSettings::reset);
 

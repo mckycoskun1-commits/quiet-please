@@ -4,7 +4,6 @@ import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.Music;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 
 /**
  * Arka plan muzigini atlama (panel, calma listesi paneli ve /quietplease skip).
@@ -13,7 +12,7 @@ import net.minecraft.util.RandomSource;
  */
 public final class MusicControl {
 
-    private static final RandomSource RANDOM = RandomSource.create();
+    private static final java.util.Random RANDOM = new java.util.Random();
 
     private MusicControl() {}
 

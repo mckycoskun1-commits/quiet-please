@@ -7,7 +7,6 @@ import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.client.sounds.Weighted;
-import net.minecraft.util.RandomSource;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,9 +25,12 @@ public abstract class WeighedSoundEventsMixin {
     @Final
     private List<Weighted<Sound>> list;
 
-    @Inject(method = "getSound(Lnet/minecraft/util/RandomSource;)Lnet/minecraft/client/resources/sounds/Sound;",
+    @org.spongepowered.asm.mixin.Unique
+    private static final java.util.Random quietplease$random = new java.util.Random();
+
+    @Inject(method = "getSound()Lnet/minecraft/client/resources/sounds/Sound;",
             at = @At("HEAD"), cancellable = true)
-    private void quietplease$skipDisabledTracks(RandomSource random, CallbackInfoReturnable<Sound> cir) {
+    private void quietplease$skipDisabledTracks(CallbackInfoReturnable<Sound> cir) {
         if (!MusicSettings.hasDisabled()) return;
 
         List<Weighted<Sound>> all = list;
@@ -52,11 +54,11 @@ public abstract class WeighedSoundEventsMixin {
         }
 
         // Oyunun kendi agirlikli secimiyle ayni mantik, sadece izin verilen parcalar arasinda.
-        int r = random.nextInt(totalWeight);
+        int r = quietplease$random.nextInt(totalWeight);
         for (Weighted<Sound> entry : allowed) {
             r -= entry.getWeight();
             if (r < 0) {
-                cir.setReturnValue(entry.getSound(random));
+                cir.setReturnValue(entry.getSound());
                 return;
             }
         }

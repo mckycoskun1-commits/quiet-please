@@ -28,7 +28,7 @@ public final class MusicPreview {
         PreviewSound(ResourceLocation eventId, Sound target, ResourceLocation trackId) {
             // MASTER kanalindan calar: oyuncunun "Muzik" kaydiricisi %0 olsa bile onizleme duyulur
             // (MUSIC kanalindan calinca oyun sesi hic baslatmiyordu).
-            super(eventId, SoundSource.MASTER, SoundInstance.createUnseededRandom());
+            super(eventId, SoundSource.MASTER);
             this.target = target;
             this.trackId = trackId;
             this.attenuation = SoundInstance.Attenuation.NONE;

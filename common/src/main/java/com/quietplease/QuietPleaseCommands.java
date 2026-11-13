@@ -133,7 +133,7 @@ public final class QuietPleaseCommands {
                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
 
         lib.forEach((mod, tracks) -> {
-            MutableComponent counts = Component.literal("  ");
+            MutableComponent counts = com.quietplease.Txt.literal("  ");
             tracks.stream()
                     .collect(Collectors.groupingBy(MusicTrack::kind, Collectors.counting()))
                     .entrySet().stream()
@@ -143,19 +143,19 @@ public final class QuietPleaseCommands {
                         counts.append(e.getValue() + " ").append(e.getKey().displayName());
                     });
             long off = tracks.stream().filter(t -> MusicSettings.isDisabled(t.id())).count();
-            MutableComponent line = Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
-                    .append(Component.literal(MusicLibrary.modName(mod)).withStyle(Style.EMPTY
+            MutableComponent line = com.quietplease.Txt.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
+                    .append(com.quietplease.Txt.literal(MusicLibrary.modName(mod)).withStyle(Style.EMPTY
                             .withColor(ChatFormatting.AQUA).withUnderlined(true)
                             .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/quietplease list " + mod))
                             .withHoverEvent(hover(Lang.tr("cmd.show_tracks")))))
                     .append(counts.withStyle(ChatFormatting.GRAY));
-            if (off > 0) line.append(Component.literal(" (").append(Lang.tr("count.off", off)).append(")").withStyle(ChatFormatting.RED));
+            if (off > 0) line.append(com.quietplease.Txt.literal(" (").append(Lang.tr("count.off", off)).append(")").withStyle(ChatFormatting.RED));
             say(ctx, line);
         });
 
         say(ctx, button(Lang.tr("cmd.open_panel"), "/quietplease gui", Lang.tr("cmd.open_panel.tooltip"), ChatFormatting.GREEN));
         say(ctx, Lang.tr("cmd.full_list").withStyle(ChatFormatting.GRAY)
-                .append(button(Component.literal("/quietplease dump"), "/quietplease dump", Lang.tr("cmd.dump.tooltip"), ChatFormatting.YELLOW)));
+                .append(button(com.quietplease.Txt.literal("/quietplease dump"), "/quietplease dump", Lang.tr("cmd.dump.tooltip"), ChatFormatting.YELLOW)));
         return total;
     }
 
@@ -165,7 +165,7 @@ public final class QuietPleaseCommands {
             fail(Lang.tr("cmd.no_music", mod));
             return 0;
         }
-        say(ctx, Component.literal("♪ " + MusicLibrary.modName(mod) + " (").append(Lang.count("tracks", tracks.size())).append(")  ")
+        say(ctx, com.quietplease.Txt.literal("♪ " + MusicLibrary.modName(mod) + " (").append(Lang.count("tracks", tracks.size())).append(")  ")
                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
                 .append(button(Lang.tr("cmd.disable_all"), "/quietplease mod " + mod + " off", Lang.tr("cmd.disable_all.tooltip"), ChatFormatting.RED))
                 .append(" ")
@@ -179,28 +179,28 @@ public final class QuietPleaseCommands {
         MusicSettings.TrackSetting s = MusicSettings.get(t.id());
         String id = t.id().toString();
 
-        Component details = Component.literal(id).withStyle(ChatFormatting.YELLOW)
-                .append(Component.literal("\n").append(Lang.tr("screen.events")).withStyle(ChatFormatting.GRAY))
-                .append(Component.literal(t.events().stream().map(e -> "\n  " + e).sorted()
+        Component details = com.quietplease.Txt.literal(id).withStyle(ChatFormatting.YELLOW)
+                .append(com.quietplease.Txt.literal("\n").append(Lang.tr("screen.events")).withStyle(ChatFormatting.GRAY))
+                .append(com.quietplease.Txt.literal(t.events().stream().map(e -> "\n  " + e).sorted()
                         .collect(Collectors.joining())).withStyle(ChatFormatting.WHITE));
 
-        MutableComponent line = Component.literal(" [").append(t.kind().displayName()).append("] ").withStyle(kindColor(t.kind()))
-                .append(Component.literal(t.shortName()).withStyle(Style.EMPTY
+        MutableComponent line = com.quietplease.Txt.literal(" [").append(t.kind().displayName()).append("] ").withStyle(kindColor(t.kind()))
+                .append(com.quietplease.Txt.literal(t.shortName()).withStyle(Style.EMPTY
                         .withColor(s.enabled() ? ChatFormatting.WHITE : ChatFormatting.DARK_GRAY)
                         .withStrikethrough(!s.enabled())
                         .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, details))));
 
         if (s.enabled()) {
-            line.append(Component.literal("  ").append(Lang.tr("cmd.volume", s.volume())).append(" ").withStyle(
+            line.append(com.quietplease.Txt.literal("  ").append(Lang.tr("cmd.volume", s.volume())).append(" ").withStyle(
                             s.volume() == MusicSettings.DEFAULT_VOLUME ? ChatFormatting.GRAY : ChatFormatting.YELLOW))
-                    .append(button(Component.literal("[−]"), "/quietplease volume " + id + " " + Math.max(0, s.volume() - VOLUME_STEP),
+                    .append(button(com.quietplease.Txt.literal("[−]"), "/quietplease volume " + id + " " + Math.max(0, s.volume() - VOLUME_STEP),
                             Lang.tr("cmd.volume_down.tooltip", VOLUME_STEP), ChatFormatting.AQUA))
-                    .append(button(Component.literal("[+]"), "/quietplease volume " + id + " " + Math.min(100, s.volume() + VOLUME_STEP),
+                    .append(button(com.quietplease.Txt.literal("[+]"), "/quietplease volume " + id + " " + Math.min(100, s.volume() + VOLUME_STEP),
                             Lang.tr("cmd.volume_up.tooltip", VOLUME_STEP), ChatFormatting.AQUA))
                     .append(" ")
                     .append(button(Lang.tr("cmd.turn_off"), "/quietplease off " + id, Lang.tr("cmd.turn_off.tooltip"), ChatFormatting.RED));
         } else {
-            line.append(Component.literal("  ").append(Lang.tr("cmd.is_off")).append(" ").withStyle(ChatFormatting.RED))
+            line.append(com.quietplease.Txt.literal("  ").append(Lang.tr("cmd.is_off")).append(" ").withStyle(ChatFormatting.RED))
                     .append(button(Lang.tr("cmd.turn_on"), "/quietplease on " + id, Lang.tr("cmd.turn_on.tooltip"), ChatFormatting.GREEN));
         }
         return line;
@@ -273,7 +273,7 @@ public final class QuietPleaseCommands {
             Path file = MusicSettings.exportPreset(name);
             say(ctx, Lang.tr("cmd.preset.exported", name).withStyle(ChatFormatting.GREEN)
                     .append(" ")
-                    .append(Component.literal(file.getFileName().toString()).withStyle(Style.EMPTY
+                    .append(com.quietplease.Txt.literal(file.getFileName().toString()).withStyle(Style.EMPTY
                             .withColor(ChatFormatting.YELLOW).withUnderlined(true)
                             .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.getParent().toAbsolutePath().toString())))));
             return 1;
@@ -313,7 +313,7 @@ public final class QuietPleaseCommands {
             return 0;
         }
         say(ctx, Lang.tr("cmd.dump_saved").withStyle(ChatFormatting.GREEN)
-                .append(Component.literal(file.getFileName().toString()).withStyle(Style.EMPTY
+                .append(com.quietplease.Txt.literal(file.getFileName().toString()).withStyle(Style.EMPTY
                         .withColor(ChatFormatting.YELLOW).withUnderlined(true)
                         .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.toAbsolutePath().toString())))));
         return 1;
