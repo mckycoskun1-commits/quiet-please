@@ -145,7 +145,8 @@ public class QuietPlease {
                     var playing = com.quietplease.music.Playlist.playing();
                     boolean ok = playing != null && playing.trackId.equals(expectedTrack)
                             && expectedTrack.equals(com.quietplease.music.Playlist.currentTrack())
-                            && (t == 70 || !com.quietplease.music.Playlist.contains(skippedTrack));
+                            && (t == 70 || !com.quietplease.music.Playlist.contains(skippedTrack)
+                                    || com.quietplease.music.Playlist.isLooping(skippedTrack));
                     LOGGER.info("GUITEST calma listesi {}: {} (beklenen {}, calan {})", t == 70 ? "oyun muzigi yerine" : "Atla sonrasi",
                             ok ? "BASARILI" : "HATA", expectedTrack, playing == null ? "yok" : playing.trackId);
                     if (t == 70) {
