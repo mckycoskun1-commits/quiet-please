@@ -125,71 +125,80 @@ final class DevSelfTest {
         Identifier a = menuFiles.get(0), b = menuFiles.get(1), c = menuFiles.get(2), d = menuFiles.get(3);
         java.util.function.Predicate<Identifier> all = id -> true;
         try {
-            // Sirayla, sonra basa sar
-            Playlist.clear();
+            // Sirayla calar, calan parca bitince listeden cikar (oyuncunun favorileri/gecmisi karismasin diye bos baslar)
+            Playlist.restore(new com.google.gson.JsonObject());
             Playlist.add(a);
             Playlist.add(b);
             Playlist.add(c);
             Playlist.add(a); // ayni parca iki kez eklenmez
-            Playlist.setRepeat(Playlist.Repeat.REPEAT_LIST);
             check(failures, Playlist.size() == 3, "calma listesi: tekrar eklenen parca listede iki kez");
             check(failures, Playlist.upcoming().equals(List.of(0, 1, 2)), "calma listesi: baslangic sirasi " + Playlist.upcoming());
-            List<Integer> order = new ArrayList<>();
-            for (int i = 0; i < 4; i++) order.add(Playlist.advanceForTest(all));
-            check(failures, order.equals(List.of(0, 1, 2, 0)), "calma listesi: tekrar sirasi " + order);
-            Playlist.advanceForTest(all); // simdi b caliyor (sira 1)
-            check(failures, Playlist.upcoming().equals(List.of(2, 0)) && Playlist.isNextRound(0) && !Playlist.isNextRound(2),
-                    "calma listesi: siradakiler " + Playlist.upcoming());
+            List<Identifier> played = new ArrayList<>();
+            for (int i = 0; i < 4; i++) {
+                int idx = Playlist.advanceForTest(all);
+                played.add(idx < 0 ? null : Playlist.tracks().get(idx));
+            }
+            check(failures, java.util.Arrays.asList(a, b, c, null).equals(played) && Playlist.isEmpty(),
+                    "calma listesi: calinanlar cikmali " + played + " kalan " + Playlist.tracks());
 
-            // Calinamayan parca atlanir
-            Playlist.setNext(0);
-            List<Integer> skipped = new ArrayList<>();
-            for (int i = 0; i < 3; i++) skipped.add(Playlist.advanceForTest(id -> !id.equals(b)));
-            check(failures, skipped.equals(List.of(0, 2, 0)), "calma listesi: kapali parcayi atlama " + skipped);
-
-            // Calandan once silinince siradaki yine dogru
-            Playlist.setNext(1);
-            Playlist.advanceForTest(all); // b caliyor
-            Playlist.removeAt(0);         // a silindi
-            int next = Playlist.advanceForTest(all);
-            check(failures, next >= 0 && Playlist.tracks().get(next).equals(c), "calma listesi: silmeden sonra siradaki c olmaliydi");
-
-            // Sonda dur -> -1, liste degisince yeniden baslar
+            // Dongudeki parca silinmez, sona gecer
             Playlist.clear();
-            Playlist.add(a);
-            Playlist.add(b);
-            Playlist.setRepeat(Playlist.Repeat.STOP);
-            List<Integer> stop = new ArrayList<>();
-            for (int i = 0; i < 3; i++) stop.add(Playlist.advanceForTest(all));
-            check(failures, stop.equals(List.of(0, 1, -1)) && Playlist.hasEnded(), "calma listesi: sonda dur " + stop);
-            check(failures, Playlist.advanceForTest(all) == -1, "calma listesi: bittikten sonra -1 kalmali");
-            Playlist.setNext(0);
-            check(failures, !Playlist.hasEnded() && Playlist.advanceForTest(all) == 0, "calma listesi: ▶ sonrasi yeniden baslamali");
+            for (Identifier id : List.of(a, b, c)) Playlist.add(id);
+            Playlist.toggleLoop(a);
+            Playlist.advanceForTest(all); // a caliyor
+            check(failures, Playlist.upcoming().equals(List.of(1, 2)), "calma listesi: calan parca siradakilerde olmamali " + Playlist.upcoming());
+            Playlist.advanceForTest(all); // a bitti -> sona, b caliyor
+            check(failures, Playlist.tracks().equals(List.of(b, c, a)), "calma listesi: dongu sona atmali " + Playlist.tracks());
+            Playlist.advanceForTest(all); // b bitti -> silindi, c caliyor
+            Playlist.advanceForTest(all); // c bitti -> silindi, a caliyor
+            check(failures, Playlist.tracks().equals(List.of(a)) && a.equals(Playlist.currentTrack()),
+                    "calma listesi: dongusuzler silinmeli " + Playlist.tracks());
+            int again = Playlist.advanceForTest(all);
+            check(failures, again == 0 && Playlist.tracks().equals(List.of(a)), "calma listesi: tek dongulu parca tekrar calmali");
 
-            // Tasima ve karistirma: calan parca basta kalir
+            // Calinamayan parca atlanir ama listede kalir
+            Playlist.clear();
+            for (Identifier id : List.of(a, b, c)) Playlist.add(id);
+            int first = Playlist.advanceForTest(id -> !id.equals(a));
+            check(failures, first == 1 && Playlist.contains(a), "calma listesi: kapali parcayi atlama " + first);
+
+            // ▶: secilen parca basa gelir; calan parca silinince bir sonraki baslatmada baska parca silinmez
+            Playlist.setNext(2); // c basa
+            check(failures, Playlist.tracks().get(0).equals(c), "calma listesi: siradaki yapma " + Playlist.tracks());
+            Playlist.remove(b); // calan parca (b) silindi
+            int afterRemove = Playlist.advanceForTest(all);
+            check(failures, afterRemove == 0 && Playlist.tracks().equals(List.of(c, a)), "calma listesi: calan silinince " + Playlist.tracks());
+
+            // Tasima ve karistirma
             Playlist.clear();
             for (Identifier id : List.of(a, b, c, d)) Playlist.add(id);
-            Playlist.setRepeat(Playlist.Repeat.REPEAT_LIST);
-            Playlist.advanceForTest(all);
-            Playlist.advanceForTest(all); // b caliyor (sira 1)
             Playlist.swap(2, 3);
             check(failures, Playlist.tracks().equals(List.of(a, b, d, c)), "calma listesi: yer degistirme " + Playlist.tracks());
             Playlist.shuffle();
-            check(failures, Playlist.tracks().get(0).equals(b) && Playlist.position() == 0
-                    && new HashSet<>(Playlist.tracks()).equals(Set.of(a, b, c, d)), "calma listesi: karistirma " + Playlist.tracks());
+            check(failures, new HashSet<>(Playlist.tracks()).equals(Set.of(a, b, c, d)), "calma listesi: karistirma " + Playlist.tracks());
 
-            // Surekli karistir: tur bitince liste karisir, ayni parca arka arkaya gelmez
-            Playlist.setRepeat(Playlist.Repeat.SHUFFLE);
-            for (int round = 0; round < 20; round++) {
-                Identifier last = null;
-                for (int i = 0; i < 4; i++) {
-                    int idx = Playlist.advanceForTest(all);
-                    Identifier now = Playlist.tracks().get(idx);
-                    if (now.equals(last)) failures.add("calma listesi: surekli karistirmada ayni parca arka arkaya");
-                    last = now;
-                }
-            }
-            check(failures, Playlist.size() == 4, "calma listesi: karistirmada parca kayboldu");
+            // Favoriler: siraya da eklenir, calinca favori kalir, yildiz kaldirilinca siradan da cikar
+            Playlist.clear();
+            Playlist.toggleFavorite(d);
+            check(failures, Playlist.isFavorite(d) && Playlist.contains(d), "favori: siraya eklenmeli");
+            Playlist.advanceForTest(all);
+            Playlist.advanceForTest(all);
+            check(failures, Playlist.isFavorite(d) && !Playlist.contains(d), "favori: calinca favori kalmali, siradan cikmali");
+            Playlist.toggleFavorite(d);
+            Playlist.toggleFavorite(d);
+            Playlist.toggleFavorite(d);
+            check(failures, !Playlist.isFavorite(d) && !Playlist.contains(d) && Playlist.history().get(0).equals(d),
+                    "favori: kaldirilinca siradan da cikmali, gecmiste kalmali");
+
+            // Dosyaya yazip okuyunca dongu, favori ve gecmis korunur
+            Playlist.clear();
+            Playlist.add(b);
+            Playlist.toggleLoop(b);
+            Playlist.toggleFavorite(c);
+            com.google.gson.JsonObject saved = Playlist.snapshot();
+            Playlist.restore(saved);
+            check(failures, Playlist.tracks().equals(List.of(b, c)) && Playlist.isLooping(b) && Playlist.isFavorite(c)
+                    && !Playlist.isFavorite(b) && Playlist.history().contains(b), "calma listesi: kaydet/yukle " + saved);
 
             // Arka plan muzigi tanimi
             check(failures, ModOptions.isBackground(Musics.MENU) && ModOptions.isBackground(Musics.GAME)
@@ -216,7 +225,7 @@ final class DevSelfTest {
             // Devralma: mod kapaliyken hic, aciksa sadece arka plan muziginde
             Playlist.clear();
             Playlist.add(c);
-            Playlist.setRepeat(Playlist.Repeat.REPEAT_LIST);
+            Playlist.toggleLoop(c); // ikinci denemede de listede kalsin
             ModOptions.playlistMode = false;
             check(failures, Playlist.startInstead(Musics.MENU) == null, "devralma: mod kapaliyken devralmamali");
             ModOptions.playlistMode = true;

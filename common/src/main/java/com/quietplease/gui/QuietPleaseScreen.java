@@ -191,22 +191,40 @@ public class QuietPleaseScreen extends Screen {
         if (list == null) return;
         String q = query.trim().toLowerCase(Locale.ROOT);
         list.clear();
-        boolean playlistOnly = modFilter.equals(PLAYLIST_FILTER);
+        boolean favoritesOnly = modFilter.equals(PLAYLIST_FILTER);
+        // En ustte Favoriler: yalnizca en az bir favori varsa
+        if (modFilter.isEmpty() || favoritesOnly) {
+            List<MusicTrack> favorites = Playlist.favorites().stream()
+                    .map(tracksById::get)
+                    .filter(t -> t != null && matches(t, q))
+                    .filter(t -> showOther || favoritesOnly || t.kind() != MusicTrack.Kind.OTHER)
+                    .collect(Collectors.toList());
+            if (!favorites.isEmpty()) {
+                list.add(new HeaderEntry(Lang.tr("screen.favorites").getString(), favorites, true));
+                for (int i = 0; i < favorites.size(); i++) list.add(new TrackEntry(favorites.get(i), i % 2 == 1));
+            }
+        }
+        if (favoritesOnly) {
+            list.setScrollAmount(0);
+            return;
+        }
         library.forEach((mod, tracks) -> {
-            if (!modFilter.isEmpty() && !playlistOnly && !modFilter.equals(mod)) return;
-            String modName = MusicLibrary.modName(mod);
+            if (!modFilter.isEmpty() && !modFilter.equals(mod)) return;
             List<MusicTrack> visible = tracks.stream()
-                    .filter(t -> !playlistOnly || Playlist.contains(t.id()))
-                    .filter(t -> showOther || playlistOnly || t.kind() != MusicTrack.Kind.OTHER)
-                    .filter(t -> q.isEmpty()
-                            || t.id().toString().toLowerCase(Locale.ROOT).contains(q)
-                            || modName.toLowerCase(Locale.ROOT).contains(q))
+                    .filter(t -> showOther || t.kind() != MusicTrack.Kind.OTHER)
+                    .filter(t -> matches(t, q))
                     .collect(Collectors.toList());
             if (visible.isEmpty()) return;
-            list.add(new HeaderEntry(modName, visible));
+            list.add(new HeaderEntry(MusicLibrary.modName(mod), visible, false));
             for (int i = 0; i < visible.size(); i++) list.add(new TrackEntry(visible.get(i), i % 2 == 1));
         });
         list.setScrollAmount(0);
+    }
+
+    private static boolean matches(MusicTrack t, String q) {
+        return q.isEmpty()
+                || t.id().toString().toLowerCase(Locale.ROOT).contains(q)
+                || MusicLibrary.modName(t.namespace()).toLowerCase(Locale.ROOT).contains(q);
     }
 
     // ------------------------------------------------------------------ cizim ve yasam dongusu
@@ -433,12 +451,14 @@ public class QuietPleaseScreen extends Screen {
 
         private final String modName;
         private final List<MusicTrack> tracks;
+        private final boolean favorites;
         private final Button allOn;
         private final Button allOff;
 
-        HeaderEntry(String modName, List<MusicTrack> tracks) {
+        HeaderEntry(String modName, List<MusicTrack> tracks, boolean favorites) {
             this.modName = modName;
             this.tracks = tracks;
+            this.favorites = favorites;
             this.allOn = smallButton(Lang.tr("screen.enable_all"), () -> setAll(true));
             this.allOff = smallButton(Lang.tr("screen.disable_all"), () -> setAll(false));
         }
@@ -460,10 +480,10 @@ public class QuietPleaseScreen extends Screen {
             g.fillGradient(left - 1, top + height, left + width + 3, top + height + 1, ACCENT_SOFT, ACCENT_SOFT);
 
             int midY = top + (height - 8) / 2;
-            g.item(stack(Items.JUKEBOX), left + 2, top + (height - 16) / 2);
+            g.item(stack(favorites ? Items.NETHER_STAR : Items.JUKEBOX), left + 2, top + (height - 16) / 2);
 
             long off = tracks.stream().filter(t -> MusicSettings.isDisabled(t.id())).count();
-            Component name = Component.literal(modName).withStyle(ChatFormatting.BOLD);
+            Component name = Component.literal(favorites ? "★ " + modName : modName).withStyle(ChatFormatting.BOLD);
             int nameX = left + 22;
             g.text(font, name, nameX, midY, GOLD);
             MutableComponent info = Lang.count("tracks", tracks.size());
@@ -511,14 +531,12 @@ public class QuietPleaseScreen extends Screen {
                 else MusicPreview.play(track);
             }).size(20, 20).tooltip(Tooltip.create(Lang.tr("screen.play.tooltip"))).build();
             this.star = Button.builder(Component.empty(), b -> {
-                Playlist.toggle(track.id());
+                Playlist.toggleFavorite(track.id());
                 MusicSettings.save();
-                // "★ Calma listesi" filtresindeyken listeden cikarilan parca ekrandan da kalksin
-                if (modFilter.equals(PLAYLIST_FILTER)) {
-                    double scroll = list.scrollAmount();
-                    rebuildList();
-                    list.setScrollAmount(scroll);
-                }
+                // Favoriler grubu en ustte: yildizlanan parca oraya gelsin, yildizi kaldirilan oradan kalksin
+                double scroll = list.scrollAmount();
+                rebuildList();
+                list.setScrollAmount(scroll);
             }).size(20, 20).build();
             this.slider = new VolumeSlider(track);
             this.toggle = Button.builder(Component.empty(), b -> {
@@ -556,7 +574,7 @@ public class QuietPleaseScreen extends Screen {
             play.setMessage(playing
                     ? Component.literal("■").withStyle(s -> s.withColor(ACCENT & 0xFFFFFF))
                     : Component.literal("▶"));
-            boolean starred = Playlist.contains(track.id());
+            boolean starred = Playlist.isFavorite(track.id());
             star.setPosition(left + 22, by);
             star.setMessage(starred
                     ? Component.literal("★").withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
@@ -616,6 +634,10 @@ public class QuietPleaseScreen extends Screen {
             List<FormattedCharSequence> lines = new ArrayList<>();
             lines.add(Component.literal(track.shortName()).withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
                     .append(Component.literal("  ").append(track.kind().displayName()).withStyle(ChatFormatting.GRAY)).getVisualOrderText());
+            if (!Minecraft.getInstance().hasControlDown()) {
+                lines.add(Lang.tr("screen.details_hint").withStyle(ChatFormatting.DARK_GRAY).getVisualOrderText());
+                return lines;
+            }
             lines.add(Component.literal(track.id().toString()).withStyle(ChatFormatting.DARK_GRAY).getVisualOrderText());
             lines.add(Lang.tr("screen.events").withStyle(ChatFormatting.GRAY).getVisualOrderText());
             track.events().stream().map(Object::toString).sorted().limit(12)
