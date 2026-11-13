@@ -1,6 +1,6 @@
 # Quiet Please
 
-Minecraft 1.21.1 (NeoForge) için istemci tarafı bir mod. Mod paketlerindeki müzikleri tek tek
+Minecraft 1.21.1 için istemci tarafı bir mod; tek kod tabanından Fabric, Forge ve NeoForge sürümleri çıkar. Mod paketlerindeki müzikleri tek tek
 yönetmeyi amaçlar: her müziğin sesini ayrı ayrı kısmak ya da hiç çalınmamasını sağlamak.
 
 > İlk adı "Music Box" idi; Modrinth'te aynı adlı iki mod olduğu için **Quiet Please** olarak değiştirildi.
@@ -13,28 +13,36 @@ Proje klasöründe (PowerShell):
 
 | Ne yapar | Komut |
 |---|---|
-| Modu derler; bitmiş jar `dist/` klasörüne kopyalanır | `.\gradlew.bat build` |
-| Modu yüklenmiş halde Minecraft'ı açar (test için) | `.\gradlew.bat runClient` |
+| Üç yükleyicinin jar'larını derler ve `dist/` klasörüne kopyalar | `.\gradlew.bat collectJars` |
+| Sadece derler (jar'lar `<yükleyici>/build/libs/` içinde kalır) | `.\gradlew.bat build` |
+| Modu Fabric ile açar (test için) | `.\gradlew.bat :fabric:runClient` |
+| Modu Forge ile açar | `.\gradlew.bat :forge:runClient` |
+| Modu NeoForge ile açar | `.\gradlew.bat :neoforge:runClient` |
 | Derleme çıktılarını siler | `.\gradlew.bat clean` |
 
-- Derleme çıktıları `build/`, test oyununun klasörü (modlar, ayarlar, loglar, ekran görüntüleri) `run/` içinde.
-- Bitmiş jar ayrıca `dist/` klasörüne kopyalanır.
-- Test oyununa başka mod eklemek için jar'ları `run/mods` klasörüne koy.
+- Jar adları `quietplease-<yükleyici>-<sürüm>+<minecraft>.jar` biçimindedir, örneğin `quietplease-fabric-1.1.0+1.21.1.jar`.
+- Hangi yükleyicilerin derleneceği `gradle.properties` içindeki `enabled_platforms` satırında.
+- Her yükleyicinin test oyunu kendi klasöründedir: `fabric/run`, `forge/run`, `neoforge/run`
+  (modlar, ayarlar, loglar, ekran görüntüleri). Başka mod eklemek için jar'ları ilgili `run/mods` klasörüne koy.
+- Fabric test oyunu Fabric API'yi kendisi ekler; Mod Menu sadece derleme için kullanılır.
+- Gradle için Java 21 gerekir; yoksa Gradle uygun JDK'yı kendisi indirir.
 
 ### OneDrive notu
 
 Projeyi OneDrive'daki bir klasöre koyma: OneDrive eşitlediği dosyaları Gradle'ın okuyamadığı bir türe çeviriyor.
-Yine de oraya konursa `build.gradle` bunu fark edip derleme çıktılarını ve test oyununu
-`%USERPROFILE%\.quietplease-dev` altına alır.
+Proje bu yüzden `C:\Users\mckyc\QuietPlease` altında duruyor.
 
 ## Klasör yapısı
 
-- `src/main/java/com/quietplease/` modun Java kodu
-- `src/main/resources/quietplease.png` mod listesinde görünen ikon (256 px)
+- `common/` üç yükleyicinin ortak kodu: `common/src/main/java/com/quietplease/` (panel, müzik mantığı, komutlar,
+  mixin'ler; yükleyiciye özgü işler `platform/` arayüzlerinin arkasında)
+- `fabric/`, `forge/`, `neoforge/` her yükleyicinin giriş noktası, olay bağlantıları ve mod bilgisi dosyası
+  (`fabric.mod.json`, `META-INF/mods.toml`, `META-INF/neoforge.mods.toml`)
+- `common/src/main/resources/quietplease.png` mod listesinde görünen ikon (256 px)
 - Panel başlığındaki logo ayrı bir resim değil: oyunun kendi Jukebox eşyası çiziliyor
-- `src/main/resources/assets/quietplease/lang/` çeviriler (İngilizce ve Türkçe)
-- `src/main/templates/META-INF/neoforge.mods.toml` mod bilgileri (ad, yazar, açıklama)
-- `gradle.properties` Minecraft/NeoForge sürümleri, mod kimliği (`quietplease`), sürüm ve lisans
+- `common/src/main/resources/assets/quietplease/lang/` çeviriler (İngilizce ve Türkçe)
+- `gradle.properties` Minecraft ve yükleyici sürümleri, Java sürümü, mod kimliği (`quietplease`), sürüm ve lisans;
+  `forge/gradle.properties` ve `neoforge/gradle.properties` yükleyiciye özgü ayarlar
 - `art/quietplease-icon.png` ikonun büyük hali (1024 px, Modrinth ikonu) · `art/quietplease-folder.ico` Windows klasör ikonu
 - `docs/` mod sayfası taslağı ve ekran görüntüleri
 - `TESTING.md` elle test listesi
@@ -83,7 +91,7 @@ Liste boşsa ya da mod kapalıysa her şey vanilla gibidir. Sıra `config/quietp
 
 ## Dil desteği
 
-Tüm yazılar `src/main/resources/assets/quietplease/lang/` içindeki dosyalardadır: `en_us.json` (İngilizce, varsayılan)
+Tüm yazılar `common/src/main/resources/assets/quietplease/lang/` içindeki dosyalardadır: `en_us.json` (İngilizce, varsayılan)
 ve `tr_tr.json` (Türkçe). Oyun hangi dildeyse o dosya kullanılır; çevirisi olmayan dillerde İngilizce görünür.
 Yeni bir dil eklemek için `en_us.json` dosyasını kopyalayıp dil koduyla adlandırmak (örneğin `de_de.json`) ve
 metinleri çevirmek yeterli.
@@ -109,8 +117,17 @@ Ayarlar `config/quietplease.json` dosyasında saklanır (parça ayarları, `opti
 
 ## Geliştirici notu
 
-Sadece geliştirme ortamında (`runClient`) ve `QUIETPLEASE_AUTODUMP` ortam değişkeni ayarlıyken: ana menüde küçük bir
+Sadece geliştirme ortamında (`:fabric:runClient`, `:forge:runClient` ya da `:neoforge:runClient`) ve
+`QUIETPLEASE_AUTODUMP` ortam değişkeni ayarlıyken: ana menüde küçük bir
 öz-test çalışır (parça atlama, ses çarpanı, çalma listesi seçimi, şarkı arası, hazır ayar), müzik listesi
 `quietplease-tracks.txt` dosyasına yazılır ve `QUIETPLEASE_AUTODUMP=gui` ise panel, Ayarlar ekranı ve çalma listesi paneli
 açılıp ekran görüntüsü alınır; bir deneme dünyasında çalma listesinin oyun müziğini devraldığı ve Atla'nın sıradakine geçtiği kontrol edilir. Sonuçlar test oyununun `logs/latest.log`
-dosyasında `SELFTEST` / `GUITEST` olarak görünür. Gerçek oyunda (launcher'dan) bu kod hiç çalışmaz.
+dosyasında (örneğin `fabric/run/logs/latest.log`) `SELFTEST` / `GUITEST` olarak görünür. Gerçek oyunda (launcher'dan) bu kod hiç çalışmaz.
+
+PowerShell'de bir yükleyiciyi tam testle açmak:
+
+```powershell
+$env:QUIETPLEASE_AUTODUMP = "gui"; .\gradlew.bat :fabric:runClient
+```
+
+Bittikten sonra değişkeni kaldırmak için `Remove-Item Env:QUIETPLEASE_AUTODUMP`.
