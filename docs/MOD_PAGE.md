@@ -8,11 +8,11 @@
 |---|---|
 | Proje türü | Mod |
 | Yükleyici | Fabric, Forge, NeoForge |
-| Minecraft sürümü | 1.20.1 (Fabric, Forge); 1.21.1, 26.2 ve 26.3 (Fabric, Forge, NeoForge) |
+| Minecraft sürümü | 1.18.2, 1.19.2, 1.20.1 (Fabric, Forge); 1.21.1, 26.1.2, 26.2 ve 26.3 (Fabric, Forge, NeoForge); Fabric sürümleri Quilt ile de çalışır |
 | Ortam (environment) | Client: **required** · Server: **unsupported** (sadece istemci) |
 | Kategoriler | **Utility**, **Management** |
 | Etiket önerileri | music, sound, volume, audio, modpack, client-side |
-| İkon | `art/quietplease-icon.png` (1024 px) |
+| İkon | `art/jukebox-icon/quietplease-icon-1024.png` (1024 px) |
 | Galeri | `docs/screenshots/panel-en.png`, `docs/screenshots/options-button.png`, `docs/screenshots/pause-menu.png` |
 | Lisans | **MIT** (`LICENSE` dosyası) |
 
@@ -47,11 +47,14 @@ Big modpacks bring a lot of music – and not all of it fits together.
 - English and Turkish
 
 ## Supported versions
+- **Minecraft 1.18.2** – Fabric, Forge
+- **Minecraft 1.19.2** – Fabric, Forge
 - **Minecraft 1.20.1** – Fabric, Forge
 - **Minecraft 1.21.1** – Fabric, Forge, NeoForge
+- **Minecraft 26.1.2** – Fabric, Forge, NeoForge
 - **Minecraft 26.2** – Fabric, Forge, NeoForge
 - **Minecraft 26.3** – Fabric, Forge, NeoForge
-- The Fabric versions need **Fabric API**
+- The Fabric versions need **Fabric API** and also run on **Quilt** (with Fabric API)
 
 ## How to open it
 **Esc → ♪ Quiet Please** (top-right corner), **Options → ♪ Quiet Please**, or **Options → Music & Sounds → ♪ Quiet Please**,
@@ -63,7 +66,7 @@ or **Mods → Quiet Please → Config**. Power users can also use `/quietplease`
 - Picks up modded music too – for example the boss themes of L_Ender's Cataclysm and Mowzie's Mobs.
 
 ## AI disclosure
-The code of this mod was written with the help of an AI assistant (Claude), and the project icon was created with an AI image tool. The gallery screenshots are real in-game screenshots.
+The code of this mod was written with the help of an AI assistant (Claude), and the project icon is rendered from Minecraft's own jukebox and music disc textures. The gallery screenshots are real in-game screenshots.
 ```
 
 ## Uzun açıklama (Türkçe – istersen ikinci dil olarak)
@@ -91,11 +94,14 @@ Büyük mod paketleri bir sürü müzik getirir ve hepsi birbirine uymaz.
 - İngilizce ve Türkçe
 
 ## Desteklenen sürümler
+- **Minecraft 1.18.2** – Fabric, Forge
+- **Minecraft 1.19.2** – Fabric, Forge
 - **Minecraft 1.20.1** – Fabric, Forge
 - **Minecraft 1.21.1** – Fabric, Forge, NeoForge
+- **Minecraft 26.1.2** – Fabric, Forge, NeoForge
 - **Minecraft 26.2** – Fabric, Forge, NeoForge
 - **Minecraft 26.3** – Fabric, Forge, NeoForge
-- Fabric sürümleri **Fabric API** ister
+- Fabric sürümleri **Fabric API** ister ve **Quilt** üzerinde de çalışır (Fabric API ile)
 
 ## Nasıl açılır
 **Ayarlar → ♪ Quiet Please** (sağ üst köşe), **Ayarlar → Müzik ve Sesler → ♪ Quiet Please**
