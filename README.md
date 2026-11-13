@@ -84,7 +84,10 @@ boss müzikleri etkilenmez. Tasarım ayrıntıları: [docs/IMPROVEMENTS.md](docs
 
 Paneldeki **Çalma listesi** düğmesi, Ayarlar ekranı ya da `/quietplease playlist`. Bir müzik çalar gibi: üstte çalan şarkı ve
 ilerleme çubuğu, altında sıradaki şarkılar numaralı; **▶** şimdi çal, **▲/▼** sırada taşı, **✕** çıkar, **Şarkı ekle** sekmesinde
-arama ve mod filtresiyle ekleme, **Atla**, **Karıştır**, **Tekrar** (listeyi tekrarla / sürekli karıştır / sonda dur), **Temizle**.
+arama ve mod filtresiyle ekleme, **Atla**, **Karıştır**, **Temizle**. Çalan şarkı bitince sıradan çıkar; **∞** düğmesi açık olan şarkı
+silinmez, sıranın sonuna geçer. Geniş ekranda sıranın yanında **Önerilenler** paneli favorileri, daha önce eklenenleri ve
+sevilen Minecraft şarkılarını karışık gösterir. Ana paneldeki **☆** şarkıyı favorilere ve sıraya ekler; favoriler panelin en
+üstünde **Favoriler** grubunda durur (hiç favori yoksa grup görünmez).
 **Çalma listesi modu** açıkken oyun her arka plan şarkısı başlatacağında (menü, oyun, biyomlar, su altı, Nether, End) rastgele
 parça yerine listedeki sıradakini çalar. Ejderha/jenerik müziği ve modların doğrudan çaldığı boss müzikleri yine araya girer.
 Liste boşsa ya da mod kapalıysa her şey vanilla gibidir. Sıra `config/quietplease.json` dosyasında saklanır.
