@@ -140,16 +140,19 @@ final class DevSelfTest {
             check(failures, java.util.Arrays.asList(a, b, c, null).equals(played) && Playlist.isEmpty(),
                     "calma listesi: calinanlar cikmali " + played + " kalan " + Playlist.tracks());
 
-            // Dongudeki parca silinmez, sona gecer
+            // Dongudeki parca silinmez, yerinde kalir; sira ardindan devam eder, sonda basa doner
             Playlist.clear();
             for (ResourceLocation id : List.of(a, b, c)) Playlist.add(id);
             Playlist.toggleLoop(a);
             Playlist.advanceForTest(all); // a caliyor
             check(failures, Playlist.upcoming().equals(List.of(1, 2)), "calma listesi: calan parca siradakilerde olmamali " + Playlist.upcoming());
-            Playlist.advanceForTest(all); // a bitti -> sona, b caliyor
-            check(failures, Playlist.tracks().equals(List.of(b, c, a)), "calma listesi: dongu sona atmali " + Playlist.tracks());
+            Playlist.advanceForTest(all); // a bitti -> yerinde, b caliyor
+            check(failures, Playlist.tracks().equals(List.of(a, b, c)) && b.equals(Playlist.currentTrack()),
+                    "calma listesi: dongu yerinde kalmali " + Playlist.tracks());
+            check(failures, Playlist.upcoming().equals(List.of(2, 0)), "calma listesi: siradakiler basa donmeli " + Playlist.upcoming());
             Playlist.advanceForTest(all); // b bitti -> silindi, c caliyor
-            Playlist.advanceForTest(all); // c bitti -> silindi, a caliyor
+            check(failures, c.equals(Playlist.currentTrack()), "calma listesi: b'den sonra c calmali " + Playlist.currentTrack());
+            Playlist.advanceForTest(all); // c bitti -> silindi, basa donup a caliyor
             check(failures, Playlist.tracks().equals(List.of(a)) && a.equals(Playlist.currentTrack()),
                     "calma listesi: dongusuzler silinmeli " + Playlist.tracks());
             int again = Playlist.advanceForTest(all);
@@ -161,12 +164,19 @@ final class DevSelfTest {
             int first = Playlist.advanceForTest(id -> !id.equals(a));
             check(failures, first == 1 && Playlist.contains(a), "calma listesi: kapali parcayi atlama " + first);
 
-            // ▶: secilen parca basa gelir; calan parca silinince bir sonraki baslatmada baska parca silinmez
-            Playlist.setNext(2); // c basa
-            check(failures, Playlist.tracks().get(0).equals(c), "calma listesi: siradaki yapma " + Playlist.tracks());
-            Playlist.remove(b); // calan parca (b) silindi
+            // ▶: secilen parca yerinden oynamaz; calan parca (b) biter, sira secilenin ardindan devam eder
+            Playlist.add(d); // a b c d, b caliyor
+            Playlist.setNext(2); // c
+            check(failures, Playlist.tracks().equals(List.of(a, c, d)) && Playlist.currentTrack() == null,
+                    "calma listesi: siradaki yapma " + Playlist.tracks());
+            int chosen = Playlist.advanceForTest(all);
+            check(failures, chosen == 1 && c.equals(Playlist.currentTrack()), "calma listesi: secilen calmali " + chosen);
+            check(failures, Playlist.upcoming().equals(List.of(2, 0)), "calma listesi: secilenin ardindan devam " + Playlist.upcoming());
+            // calan parca listeden cikarilinca ardindaki calar
+            Playlist.remove(c);
             int afterRemove = Playlist.advanceForTest(all);
-            check(failures, afterRemove == 0 && Playlist.tracks().equals(List.of(c, a)), "calma listesi: calan silinince " + Playlist.tracks());
+            check(failures, afterRemove == 1 && Playlist.tracks().equals(List.of(a, d)) && d.equals(Playlist.currentTrack()),
+                    "calma listesi: calan silinince " + Playlist.tracks() + " " + Playlist.currentTrack());
 
             // Tasima ve karistirma
             Playlist.clear();
