@@ -25,6 +25,14 @@ public final class GuiGraphics extends GuiComponent {
         return pose;
     }
 
+    public int guiWidth() {
+        return net.minecraft.client.Minecraft.getInstance().getWindow().getGuiScaledWidth();
+    }
+
+    public int guiHeight() {
+        return net.minecraft.client.Minecraft.getInstance().getWindow().getGuiScaledHeight();
+    }
+
     public void fill(int x1, int y1, int x2, int y2, int color) {
         GuiComponent.fill(pose, x1, y1, x2, y2, color);
     }
