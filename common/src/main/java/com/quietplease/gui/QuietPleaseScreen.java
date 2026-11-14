@@ -316,7 +316,7 @@ public class QuietPleaseScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // Mod filtresi: sol tik bir sonraki moda gecer (Minecraft'in kendi davranisi), sag tik bir oncekine doner.
-        if (button == 1 && modButton != null && modButton.isMouseOver(mouseX, mouseY) && !modValues.isEmpty()) {
+        if (button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT && modButton != null && modButton.isMouseOver(mouseX, mouseY) && !modValues.isEmpty()) {
             int i = modValues.indexOf(modButton.getValue());
             String previous = modValues.get(Math.floorMod(i - 1, modValues.size()));
             modButton.setValue(previous); // setValue geri cagrimi tetiklemez, filtreyi kendimiz uyguluyoruz
@@ -325,7 +325,7 @@ public class QuietPleaseScreen extends Screen {
             modButton.playDownSound(minecraft.getSoundManager());
             return true;
         }
-        if (button == 0 && !nowPlaying.isEmpty() && overNowPlaying(mouseX, mouseY)) {
+        if (button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT && !nowPlaying.isEmpty() && overNowPlaying(mouseX, mouseY)) {
             // Tiklaninca calan parcayi listede goster; birden fazla parca caliyorsa her tiklamada siradakine gec.
             MusicTrack shown = nowPlaying.get(Math.floorMod(nowPlayingIndex, nowPlaying.size()));
             nowPlayingIndex++;
