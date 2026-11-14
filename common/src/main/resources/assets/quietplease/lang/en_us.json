@@ -147,5 +147,27 @@
   "key.categories.quietplease": "Quiet Please",
   "key.category.quietplease.main": "Quiet Please",
   "key.quietplease.open": "Open the music panel",
-  "key.quietplease.skip": "Skip the current song"
+  "key.quietplease.skip": "Skip the current song",
+  "key.quietplease.favorite": "Favorite the current song",
+  "key.quietplease.playlist_mode": "Toggle playlist mode",
+
+  "quietplease.screen.mod_volume": "Mod: %s%%",
+  "quietplease.screen.mod_volume.tooltip": "Volume for every song from this mod. Each song's own volume is applied on top of it",
+  "quietplease.cmd.mod_volume": "%1$s: every song now plays at %2$s%%",
+  "quietplease.settings.song_popup": "Song popup",
+  "quietplease.settings.song_popup.tooltip": "When a new song starts, a small card slides in from the side of the screen for a few seconds",
+  "quietplease.settings.song_popup.example": "Example song",
+  "quietplease.settings.popup_position": "Popup",
+  "quietplease.settings.popup_position.tooltip": "Where the song popup appears. Pick a side your minimap and other HUD mods don't use",
+  "quietplease.settings.popup_position.right_middle": "Right, middle",
+  "quietplease.settings.popup_position.left_middle": "Left, middle",
+  "quietplease.settings.popup_position.right_bottom": "Right, bottom",
+  "quietplease.settings.popup_position.left_top": "Left, top",
+  "quietplease.settings.fade_skip": "Fade on skip",
+  "quietplease.settings.fade_skip.tooltip": "Skip turns the song down over 1.5 seconds instead of cutting it off. Press Skip again to stop it right away",
+  "quietplease.key.favorite.added": "★ Added to favorites: %s",
+  "quietplease.key.favorite.removed": "Removed from favorites: %s",
+  "quietplease.key.favorite.nothing": "No background music is playing right now",
+  "quietplease.key.playlist_mode.changed": "Playlist mode: %s",
+  "quietplease.key.playlist_mode.empty": "Playlist mode: %s – the playlist is empty, add songs with ☆"
 }

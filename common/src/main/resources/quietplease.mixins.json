@@ -8,6 +8,7 @@
     "SoundEngineAccessor",
     "SoundManagerAccessor",
     "WeighedSoundEventsAccessor",
+    "GuiMixin",
     "MusicManagerMixin",
     "SoundEngineMixin",
     "WeighedSoundEventsMixin"

@@ -85,7 +85,10 @@ public final class QuietPleaseCommands {
                 .then(lit("mod")
                         .then(arg("mod", StringArgumentType.word()).suggests(MODS)
                                 .then(lit("off").executes(ctx -> setModEnabled(ctx, false)))
-                                .then(lit("on").executes(ctx -> setModEnabled(ctx, true)))))
+                                .then(lit("on").executes(ctx -> setModEnabled(ctx, true)))
+                                .then(lit("volume")
+                                        .then(arg("percent", IntegerArgumentType.integer(0, 100))
+                                                .executes(QuietPleaseCommands::setModVolume)))))
                 .then(lit("reset")
                         .then(arg("track", IdentifierArgument.id()).suggests(TRACKS)
                                 .executes(QuietPleaseCommands::reset)))
@@ -237,6 +240,20 @@ public final class QuietPleaseCommands {
         say(ctx, Lang.tr(enabled ? "cmd.mod_on" : "cmd.mod_off", MusicLibrary.modName(mod), Lang.count("tracks", tracks.size()))
                 .withStyle(enabled ? ChatFormatting.GREEN : ChatFormatting.RED));
         return tracks.size();
+    }
+
+    private static int setModVolume(CommandContext<?> ctx) {
+        String mod = StringArgumentType.getString(ctx, "mod");
+        if (!MusicLibrary.scan().containsKey(mod)) {
+            fail(Lang.tr("cmd.no_music", mod));
+            return 0;
+        }
+        int percent = IntegerArgumentType.getInteger(ctx, "percent");
+        MusicSettings.setModVolume(mod, percent);
+        MusicSettings.save();
+        MusicSettings.applyToPlayingSounds();
+        say(ctx, Lang.tr("cmd.mod_volume", MusicLibrary.modName(mod), percent).withStyle(ChatFormatting.GREEN));
+        return 1;
     }
 
     private static int resetAll(CommandContext<?> ctx) {

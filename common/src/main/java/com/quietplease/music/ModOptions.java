@@ -55,6 +55,33 @@ public final class ModOptions {
     public static Gap gap = Gap.VANILLA;
     public static int gapMinSeconds = 30;
     public static int gapMaxSeconds = 60;
+    public static boolean songPopup = true;
+    public static PopupPosition popupPosition = PopupPosition.RIGHT_MIDDLE;
+    public static boolean fadeOnSkip = true;
+
+    public enum PopupPosition {
+        RIGHT_MIDDLE("right_middle", true),
+        LEFT_MIDDLE("left_middle", false),
+        RIGHT_BOTTOM("right_bottom", true),
+        LEFT_TOP("left_top", false);
+
+        public final String id;
+        public final boolean right;
+
+        PopupPosition(String id, boolean right) {
+            this.id = id;
+            this.right = right;
+        }
+
+        public Component displayName() {
+            return Lang.tr("settings.popup_position." + id);
+        }
+
+        static PopupPosition byId(String id) {
+            for (PopupPosition p : values()) if (p.id.equals(id)) return p;
+            return RIGHT_MIDDLE;
+        }
+    }
 
     private ModOptions() {}
 
@@ -115,6 +142,9 @@ public final class ModOptions {
         gap = Gap.VANILLA;
         gapMinSeconds = 30;
         gapMaxSeconds = 60;
+        songPopup = true;
+        popupPosition = PopupPosition.RIGHT_MIDDLE;
+        fadeOnSkip = true;
     }
 
     static void read(JsonObject o) {
@@ -128,6 +158,9 @@ public final class ModOptions {
         if (o.has("gap")) gap = Gap.byId(o.get("gap").getAsString().toLowerCase(Locale.ROOT));
         if (o.has("gapMinSeconds")) gapMinSeconds = Mth.clamp(o.get("gapMinSeconds").getAsInt(), 0, GAP_SLIDER_MAX_SECONDS);
         if (o.has("gapMaxSeconds")) gapMaxSeconds = Mth.clamp(o.get("gapMaxSeconds").getAsInt(), 0, GAP_SLIDER_MAX_SECONDS);
+        songPopup = bool(o, "songPopup", songPopup);
+        if (o.has("popupPosition")) popupPosition = PopupPosition.byId(o.get("popupPosition").getAsString().toLowerCase(Locale.ROOT));
+        fadeOnSkip = bool(o, "fadeOnSkip", fadeOnSkip);
     }
 
     static JsonObject write() {
@@ -140,6 +173,9 @@ public final class ModOptions {
         o.addProperty("gap", gap.id);
         o.addProperty("gapMinSeconds", gapMinSeconds);
         o.addProperty("gapMaxSeconds", gapMaxSeconds);
+        o.addProperty("songPopup", songPopup);
+        o.addProperty("popupPosition", popupPosition.id);
+        o.addProperty("fadeOnSkip", fadeOnSkip);
         return o;
     }
 
