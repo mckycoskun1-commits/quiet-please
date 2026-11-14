@@ -418,7 +418,7 @@ public class QuietPlaylistScreen extends Screen {
         double mouseY = event.y();
         int button = event.button();
         // Mod filtresine sag tik: bir onceki mod (ana paneldeki gibi)
-        if (button == 1 && modButton != null && modButton.isMouseOver(mouseX, mouseY) && !modValues.isEmpty()) {
+        if (button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT && modButton != null && modButton.isMouseOver(mouseX, mouseY) && !modValues.isEmpty()) {
             int i = modValues.indexOf(modButton.getValue());
             String previous = modValues.get(Math.floorMod(i - 1, modValues.size()));
             modButton.setValue(previous);
