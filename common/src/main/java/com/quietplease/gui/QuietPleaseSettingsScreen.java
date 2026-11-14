@@ -23,7 +23,8 @@ import net.minecraft.util.Mth;
 public class QuietPleaseSettingsScreen extends Screen {
 
     private static final int BUTTON_W = 150;
-    private static final int ROW = 24;
+    private int row = 24;
+    private int groupGap = 8;
 
     @Nullable
     private final Screen parent;
@@ -39,19 +40,37 @@ public class QuietPleaseSettingsScreen extends Screen {
     protected void init() {
         int left = width / 2 - BUTTON_W - 4;
         int right = width / 2 + 4;
-        int y = 36;
+        boolean compact = height < 270;
+        row = compact ? 22 : 24;
+        groupGap = compact ? 4 : 8;
+        int y = compact ? 32 : 36;
 
         // Menu dugmeleri ve yazilar
         addRenderableWidget(toggle("settings.now_playing_text", ModOptions.nowPlayingText)
                 .create(left, y, BUTTON_W, 20, Lang.tr("settings.now_playing_text"), (b, v) -> ModOptions.nowPlayingText = v));
         addRenderableWidget(toggle("settings.show_ambient", ModOptions.showAmbient)
                 .create(right, y, BUTTON_W, 20, Lang.tr("settings.show_ambient"), (b, v) -> ModOptions.showAmbient = v));
-        y += ROW;
+        y += row;
         addRenderableWidget(toggle("settings.pause_button", ModOptions.pauseMenuButton)
                 .create(left, y, BUTTON_W, 20, Lang.tr("settings.pause_button"), (b, v) -> ModOptions.pauseMenuButton = v));
         addRenderableWidget(toggle("settings.options_button", ModOptions.optionsButton)
                 .create(right, y, BUTTON_W, 20, Lang.tr("settings.options_button"), (b, v) -> ModOptions.optionsButton = v));
-        y += ROW;
+        y += row;
+
+        addRenderableWidget(toggle("settings.song_popup", ModOptions.songPopup)
+                .create(left, y, BUTTON_W, 20, Lang.tr("settings.song_popup"), (b, v) -> {
+                    ModOptions.songPopup = v;
+                    if (v) SongPopup.preview();
+                }));
+        addRenderableWidget(CycleButton.<ModOptions.PopupPosition>builder(ModOptions.PopupPosition::displayName)
+                .withInitialValue(ModOptions.popupPosition)
+                .withValues(ModOptions.PopupPosition.values())
+                .withTooltip(v -> Tooltip.create(Lang.tr("settings.popup_position.tooltip")))
+                .create(right, y, BUTTON_W, 20, Lang.tr("settings.popup_position"), (b, v) -> {
+                    ModOptions.popupPosition = v;
+                    SongPopup.preview();
+                }));
+        y += row;
 
         // Calma listesi
         addRenderableWidget(toggle("settings.playlist_mode", ModOptions.playlistMode)
@@ -60,18 +79,20 @@ public class QuietPleaseSettingsScreen extends Screen {
                 .bounds(right, y, BUTTON_W, 20)
                 .tooltip(Tooltip.create(Lang.tr("playlist.open.tooltip")))
                 .build());
-        y += ROW + 8;
+        y += row + groupGap;
 
         // Sarki arasi
         addRenderableWidget(CycleButton.<ModOptions.Gap>builder(ModOptions.Gap::displayName)
                 .withValues(ModOptions.Gap.values())
                 .withInitialValue(ModOptions.gap)
                 .withTooltip(v -> Tooltip.create(Lang.tr("settings.gap." + v.id + ".tooltip")))
-                .create(left, y, BUTTON_W * 2 + 8, 20, Lang.tr("settings.gap"), (b, v) -> {
+                .create(left, y, BUTTON_W, 20, Lang.tr("settings.gap"), (b, v) -> {
                     ModOptions.gap = v;
                     updateSliders();
                 }));
-        y += ROW;
+        addRenderableWidget(toggle("settings.fade_skip", ModOptions.fadeOnSkip)
+                .create(right, y, BUTTON_W, 20, Lang.tr("settings.fade_skip"), (b, v) -> ModOptions.fadeOnSkip = v));
+        y += row;
         minSlider = addRenderableWidget(new GapSlider(left, y, "settings.gap.min", ModOptions.gapMinSeconds, s -> {
             ModOptions.gapMinSeconds = s;
             if (s > ModOptions.gapMaxSeconds) maxSlider.setSeconds(s);
@@ -104,7 +125,13 @@ public class QuietPleaseSettingsScreen extends Screen {
         g.drawCenteredString(font, title, width / 2, 14, 0xFFFFC966);
         // Sarki arasinin kisa aciklamasi, kaydiricilarin altinda
         Component hint = Lang.tr("settings.gap.hint").withStyle(ChatFormatting.GRAY);
-        g.drawWordWrap(font, hint, width / 2 - BUTTON_W - 4, maxSlider.getY() + 28, BUTTON_W * 2 + 8, 0xFF9A8C78);
+        int hintY = maxSlider.getY() + 26;
+        for (var line : font.split(hint, BUTTON_W * 2 + 8)) {
+            if (hintY + font.lineHeight > height - 30) break;
+            g.drawString(font, line, width / 2 - BUTTON_W - 4, hintY, 0xFF9A8C78, false);
+            hintY += font.lineHeight;
+        }
+        SongPopup.render(g);
     }
 
     @Override

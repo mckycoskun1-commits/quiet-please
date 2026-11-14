@@ -47,6 +47,8 @@ public final class MusicSettings {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<ResourceLocation, TrackSetting> SETTINGS = new ConcurrentHashMap<>();
+    /** Mod kimligi -> o modun tum parcalari icin ses seviyesi; sadece %100'den farkli olanlar. */
+    private static final Map<String, Integer> MOD_VOLUME = new ConcurrentHashMap<>();
     /** Kapali parca sayisi; sifirsa parca secimine hic karismayiz (hiz icin). */
     private static volatile int disabledCount = 0;
 
@@ -71,20 +73,40 @@ public final class MusicSettings {
         return s != null && !s.enabled();
     }
 
-    /** Ses seviyesi carpani: kapaliysa 0, degilse volume/100. */
+    /** Ses seviyesi carpani: kapaliysa 0, degilse parcanin ve modunun ses seviyesi carpimi. */
     public static float factor(ResourceLocation track) {
+        float mod = modFactor(track);
         TrackSetting s = SETTINGS.get(track);
-        if (s == null) return 1.0F;
-        return s.enabled() ? s.volume() / 100.0F : 0.0F;
+        if (s == null) return mod;
+        return s.enabled() ? s.volume() / 100.0F * mod : 0.0F;
+    }
+
+    /** Bir modun tum parcalari icin ses seviyesi (%0-100, varsayilan 100). */
+    public static int modVolume(String namespace) {
+        return MOD_VOLUME.getOrDefault(namespace, DEFAULT_VOLUME);
+    }
+
+    public static void setModVolume(String namespace, int volume) {
+        int v = Math.max(0, Math.min(100, volume));
+        if (v == DEFAULT_VOLUME) MOD_VOLUME.remove(namespace);
+        else MOD_VOLUME.put(namespace, v);
+    }
+
+    private static float modFactor(ResourceLocation track) {
+        if (MOD_VOLUME.isEmpty()) return 1.0F;
+        Integer v = MOD_VOLUME.get(track.getNamespace());
+        return v == null ? 1.0F : v / 100.0F;
     }
 
     /** Calan bir ses icin carpan. Ses henuz bir dosyaya cozulmemisse etkilenmez. */
     public static float factor(SoundInstance instance) {
         // Onizleme: kapali olsa bile dinlenebilsin, ama ayarlanan ses seviyesiyle.
-        if (instance instanceof MusicPreview.PreviewSound preview) return get(preview.trackId).volume() / 100.0F;
+        if (instance instanceof MusicPreview.PreviewSound preview) {
+            return get(preview.trackId).volume() / 100.0F * modFactor(preview.trackId);
+        }
         // Onizleme calarken oyunun kendi arka plan muzigi susar.
         if (MusicPreview.hasPreview() && instance.getSource() == SoundSource.MUSIC) return 0.0F;
-        if (SETTINGS.isEmpty()) return 1.0F;
+        if (SETTINGS.isEmpty() && MOD_VOLUME.isEmpty()) return 1.0F;
         Sound sound;
         try {
             sound = instance.getSound();
@@ -111,6 +133,7 @@ public final class MusicSettings {
 
     public static void resetAll() {
         SETTINGS.clear();
+        MOD_VOLUME.clear();
         recount();
     }
 
@@ -166,6 +189,16 @@ public final class MusicSettings {
         } catch (Exception e) {
             QuietPlease.LOGGER.error("Parca ayarlari okunamadi", e);
         }
+        MOD_VOLUME.clear();
+        try {
+            JsonObject mods = root != null && root.has("mods") ? root.getAsJsonObject("mods") : new JsonObject();
+            for (String mod : mods.keySet()) {
+                JsonObject o = mods.getAsJsonObject(mod);
+                if (o.has("volume")) setModVolume(mod, o.get("volume").getAsInt());
+            }
+        } catch (Exception e) {
+            QuietPlease.LOGGER.error("Mod ses seviyeleri okunamadi", e);
+        }
         try {
             ModOptions.read(root != null && root.has("options") ? root.getAsJsonObject("options") : null);
         } catch (Exception e) {
@@ -192,6 +225,13 @@ public final class MusicSettings {
         });
         JsonObject root = new JsonObject();
         root.add("tracks", tracks);
+        JsonObject mods = new JsonObject();
+        new TreeMap<>(Map.copyOf(MOD_VOLUME)).forEach((mod, v) -> {
+            JsonObject o = new JsonObject();
+            o.addProperty("volume", v);
+            mods.add(mod, o);
+        });
+        root.add("mods", mods);
         root.add("options", ModOptions.write());
         root.add("playlist", Playlist.write());
         return root;

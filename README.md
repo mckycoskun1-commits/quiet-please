@@ -64,13 +64,25 @@ ESC menüsünde düğmenin hemen altında, Ayarlar ekranlarında düğmenin solu
 Mod filtresi düğmesinde sol tık sonraki moda, sağ tık önceki moda geçer.
 Çubuğun sağındaki **Atla** çalan arka plan şarkısını durdurur. Başlıkta solda **Ayarlar**, sağda **Çalma listesi** düğmesi var;
 her parça satırındaki **☆/★** parçayı çalma listesine ekler/çıkarır, mod filtresindeki **★ Çalma listesi** sadece listedekileri gösterir.
+Her mod başlığında **Mod: %100** kaydırıcısı o modun tüm şarkılarının sesini birlikte ayarlar; her şarkının kendi ses ayarı
+bunun üstüne çarpılır (örneğin mod %50, şarkı %40 ise şarkı %20 çalar).
+
+## Şarkı bildirimi
+
+Oyunda yeni bir müzik başlayınca ekranın kenarından küçük bir kart kayarak çıkar: plak ya da nota bloğu ikonu, şarkının adı,
+geldiği mod ve oynayan küçük ekolayzer çubukları. Yaklaşık 4 saniye sonra kart aynı kenara geri girer. Kart ekranın ortasına
+hiç gelmez ve mini haritaların, iksir ikonlarının durduğu sağ üst köşeyi kullanmaz. Yeri Ayarlar'dan seçilir: **Sağ, orta**
+(varsayılan), **Sol, orta**, **Sağ, alt**, **Sol, üst**. Ayarlar ekranında yer değiştirince örnek bir kart hemen görünür.
+F1 ile arayüz gizlenince kart da gizlenir.
 
 ## Ayarlar
 
 Paneldeki **Ayarlar** düğmesi ya da `/quietplease settings`: ESC menüsündeki ve Ayarlar ekranlarındaki düğme (ayrı ayrı),
 çalan şarkı yazısı, listede ortam sesleri, çalma listesi modu ve **şarkı arası** (iki arka plan şarkısı arasındaki sessizlik:
 Vanilla / Kısa 30–60 sn / Yok / Özel kaydırıcılar). Şarkı arası sadece arka plan müziğini değiştirir; ejderha, jenerik ve
-boss müzikleri etkilenmez. Tasarım ayrıntıları: [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md).
+boss müzikleri etkilenmez. Ayrıca **Şarkı bildirimi** (açık/kapalı), **Bildirim** yeri ve **Yumuşak atlama**: açıkken
+Atla'ya basınca şarkı aniden kesilmez, 1,5 saniyede sesi azalarak biter; bu sırada Atla'ya bir daha basılırsa hemen geçer.
+Tasarım ayrıntıları: [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md).
 
 ## Çalma listesi
 
@@ -87,10 +99,11 @@ Liste boşsa ya da mod kapalıysa her şey vanilla gibidir. Sıra `config/quietp
 
 ## Dil desteği
 
-Tüm yazılar `src/main/resources/assets/quietplease/lang/` içindeki dosyalardadır: `en_us.json` (İngilizce, varsayılan)
-ve `tr_tr.json` (Türkçe). Oyun hangi dildeyse o dosya kullanılır; çevirisi olmayan dillerde İngilizce görünür.
-Yeni bir dil eklemek için `en_us.json` dosyasını kopyalayıp dil koduyla adlandırmak (örneğin `de_de.json`) ve
-metinleri çevirmek yeterli.
+Tüm yazılar `common/src/main/resources/assets/quietplease/lang/` içindeki dosyalardadır: `en_us.json` (İngilizce, varsayılan),
+`tr_tr.json` (Türkçe), `de_de.json` (Almanca), `es_es.json` (İspanyolca), `ru_ru.json` (Rusça), `pt_br.json`
+(Portekizce, Brezilya) ve `zh_cn.json` (Çince, basitleştirilmiş). Oyun hangi dildeyse o dosya kullanılır; çevirisi olmayan
+dillerde İngilizce görünür. Yeni bir dil eklemek için `en_us.json` dosyasını kopyalayıp dil koduyla adlandırmak (örneğin
+`fr_fr.json`) ve metinleri çevirmek yeterli. Yeni bir yazı eklenince yedi dosyanın hepsine eklenmeli.
 
 ## Sohbet komutları
 
@@ -99,22 +112,25 @@ metinleri çevirmek yeterli.
 - `/quietplease volume <parça> <0-100>` parçanın ses seviyesi
 - `/quietplease off <parça>` / `/quietplease on <parça>` parçayı kapat / aç
 - `/quietplease mod <mod> off` / `on` bir modun tüm parçalarını kapat / aç
+- `/quietplease mod <mod> volume <0-100>` bir modun tüm parçalarının ses seviyesi
 - `/quietplease reset <parça>` / `/quietplease resetall` ayarları sıfırla
 - `/quietplease dump` tam listeyi (ayarlarla birlikte) oyun klasöründeki `quietplease-tracks.txt` dosyasına yazar
 - `/quietplease gui` paneli açar
 - `/quietplease settings` / `/quietplease playlist` Ayarlar ekranını / çalma listesi panelini açar
 - `/quietplease skip` çalan arka plan şarkısını atlar
-- Kısayol tuşları: **Options → Controls → Key Binds → Quiet Please** altında "Müzik panelini aç" ve "Çalan şarkıyı atla"
-  (varsayılan olarak boş; istediğin tuşu ata)
+- Kısayol tuşları: **Options → Controls → Key Binds → Quiet Please** altında "Müzik panelini aç", "Çalan şarkıyı atla",
+  "Çalan şarkıyı favorilere ekle" (bir daha basınca çıkarır) ve "Çalma listesi modunu aç/kapat"
+  (varsayılan olarak boş; istediğin tuşu ata). Sonuç hotbar'ın üstünde kısa bir yazıyla görünür.
 - `/quietplease export <ad>` / `/quietplease import <ad>` tüm ayarları (çalma listesi dahil)
   `config/quietplease-presets/<ad>.json` olarak kaydeder / yükler
 
-Ayarlar `config/quietplease.json` dosyasında saklanır (parça ayarları, `options` ve `playlist` bölümleri; eski dosyalar aynen yüklenir).
+Ayarlar `config/quietplease.json` dosyasında saklanır (parça ayarları, `mods`, `options` ve `playlist` bölümleri; eski dosyalar aynen yüklenir).
 
 ## Geliştirici notu
 
 Sadece geliştirme ortamında (`runClient`) ve `QUIETPLEASE_AUTODUMP` ortam değişkeni ayarlıyken: ana menüde küçük bir
-öz-test çalışır (parça atlama, ses çarpanı, çalma listesi seçimi, şarkı arası, hazır ayar), müzik listesi
+öz-test çalışır (parça atlama, ses çarpanı, mod ses çarpanı, çalma listesi seçimi, şarkı arası, hazır ayar), müzik listesi
 `quietplease-tracks.txt` dosyasına yazılır ve `QUIETPLEASE_AUTODUMP=gui` ise panel, Ayarlar ekranı ve çalma listesi paneli
-açılıp ekran görüntüsü alınır; bir deneme dünyasında çalma listesinin oyun müziğini devraldığı ve Atla'nın sıradakine geçtiği kontrol edilir. Sonuçlar test oyununun `logs/latest.log`
+açılıp ekran görüntüsü alınır; bir deneme dünyasında çalma listesinin oyun müziğini devraldığı, Atla'nın şarkıyı yumuşakça
+kısıp sıradakine geçtiği kontrol edilir ve şarkı bildiriminin sağda ve solda ekran görüntüsü alınır. Sonuçlar test oyununun `logs/latest.log`
 dosyasında `SELFTEST` / `GUITEST` olarak görünür. Gerçek oyunda (launcher'dan) bu kod hiç çalışmaz.

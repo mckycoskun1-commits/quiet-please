@@ -32,6 +32,7 @@ public final class QuietPleaseForge {
             QuietPlease.onScreenInit(event.getScreen());
             MenuButton.onInit(event.getScreen(), event::addListener);
         });
+        MinecraftForge.EVENT_BUS.addListener((net.minecraftforge.client.event.RenderGuiEvent.Post event) -> com.quietplease.gui.SongPopup.renderHud(event.getGuiGraphics()));
         MinecraftForge.EVENT_BUS.addListener((ScreenEvent.Render.Post event) -> MenuButton.onRender(event.getScreen(), event.getGuiGraphics()));
         context.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
                 () -> new ConfigScreenHandler.ConfigScreenFactory((mc, parent) -> new QuietPleaseScreen(parent)));
