@@ -27,8 +27,9 @@ public final class SongPopup {
     private static final long SLIDE_IN_MS = 350;
     private static final long HOLD_MS = 4000;
     private static final long SLIDE_OUT_MS = 450;
-    private static final int HEIGHT = 26;
-    private static final int MAX_WIDTH = 170;
+    private static final int HEIGHT = 16;
+    private static final int TEXT_MAX = 150;
+    private static final float TEXT_SCALE = 0.75F;
     private static final int MARGIN = 4;
 
     private static final Set<SoundInstance> KNOWN = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -99,48 +100,48 @@ public final class SongPopup {
         if (shownAt < 0 || !ModOptions.songPopup) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.options.hideGui) return;
-        long age = Util.getMillis() - shownAt;
-        double visible;
-        if (age < SLIDE_IN_MS) visible = easeOut(age / (double) SLIDE_IN_MS);
-        else if (age < SLIDE_IN_MS + HOLD_MS) visible = 1;
-        else if (age < SLIDE_IN_MS + HOLD_MS + SLIDE_OUT_MS) visible = 1 - easeIn((age - SLIDE_IN_MS - HOLD_MS) / (double) SLIDE_OUT_MS);
-        else {
-            shownAt = -1;
-            return;
-        }
+        double visible = visible();
+        if (visible < 0) return;
 
         Font font = mc.font;
         int screenW = mc.getWindow().getGuiScaledWidth();
         int screenH = mc.getWindow().getGuiScaledHeight();
-        int textX = 25;
-        int eqW = 12;
-        int textMax = MAX_WIDTH - textX - eqW - 8;
-        String name = fit(font, title, textMax);
-        String from = fit(font, subtitle, textMax);
-        int w = textX + Math.max(font.width(name), font.width(from)) + eqW + 8;
+        String name = fit(font, title, TEXT_MAX);
+        String from = fit(font, subtitle, TEXT_MAX);
+        int textW = (int) Math.ceil(Math.max(font.width(name), font.width(from)) * TEXT_SCALE);
+        int w = 20 + textW + 5 + 8;
 
         ModOptions.PopupPosition pos = ModOptions.popupPosition;
-        boolean right = pos.right;
         int hidden = (int) Math.round((1 - visible) * (w + MARGIN + 2));
-        int x = right ? screenW - w - MARGIN + hidden : MARGIN - hidden;
-        int y = switch (pos) {
-            case RIGHT_MIDDLE, LEFT_MIDDLE -> (screenH - HEIGHT) / 2 + 24;
-            case RIGHT_BOTTOM -> screenH - HEIGHT - 30;
+        int x = pos.right ? screenW - w - MARGIN + hidden : MARGIN - hidden;
+        int y = top(pos, screenH);
+
+        g.renderItem(icon, x, y);
+        int textX = x + 20;
+        g.pose().pushPose();
+        g.pose().translate(textX, y + 2, 0);
+        g.pose().scale(TEXT_SCALE, TEXT_SCALE, 1.0F);
+        g.drawString(font, name, 0, 0, QuietPleaseScreen.GOLD, true);
+        g.drawString(font, from, 0, 10, 0xFFD8CCB4, true);
+        g.pose().popPose();
+        QuietPleaseScreen.drawEqualizer(g, textX + textW + 5, y + 14, QuietPleaseScreen.PLAYING);
+    }
+
+    private static int top(ModOptions.PopupPosition pos, int screenH) {
+        return switch (pos) {
+            case RIGHT_MIDDLE, LEFT_MIDDLE -> screenH / 2 + 36;
+            case RIGHT_BOTTOM -> screenH - HEIGHT - 26;
             case LEFT_TOP -> MARGIN + 2;
         };
+    }
 
-        g.fill(x + 1, y, x + w - 1, y + HEIGHT, 0xD8140F0A);
-        g.fill(x, y + 1, x + w, y + HEIGHT - 1, 0xD8140F0A);
-        g.fill(x + 1, y, x + w - 1, y + 1, 0x60E89A3C);
-        g.fill(x + 1, y + HEIGHT - 1, x + w - 1, y + HEIGHT, 0x40000000);
-        int stripeX = right ? x : x + w - 2;
-        g.fill(stripeX, y + 2, stripeX + 2, y + HEIGHT - 2, QuietPleaseScreen.ACCENT);
-
-        int inner = right ? x + 3 : x;
-        g.renderItem(icon, inner + 4, y + (HEIGHT - 16) / 2);
-        g.drawString(font, name, inner + textX, y + 4, QuietPleaseScreen.GOLD, false);
-        g.drawString(font, from, inner + textX, y + 14, QuietPleaseScreen.MUTED, false);
-        QuietPleaseScreen.drawEqualizer(g, inner + w - eqW - 4, y + HEIGHT - 6, QuietPleaseScreen.PLAYING);
+    private static double visible() {
+        long age = Util.getMillis() - shownAt;
+        if (age < SLIDE_IN_MS) return easeOut(age / (double) SLIDE_IN_MS);
+        if (age < SLIDE_IN_MS + HOLD_MS) return 1;
+        if (age < SLIDE_IN_MS + HOLD_MS + SLIDE_OUT_MS) return 1 - easeIn((age - SLIDE_IN_MS - HOLD_MS) / (double) SLIDE_OUT_MS);
+        shownAt = -1;
+        return -1;
     }
 
     private static String fit(Font font, String s, int max) {
