@@ -35,13 +35,14 @@ import net.minecraft.util.RandomSource;
  * Arka plan calma listesi: oyuncunun sectigi parcalar, sirasiyla.
  *
  * Calma listesi modu aciksa, oyun bir ARKA PLAN muzigi baslatacagi zaman (bkz. {@link ModOptions#isBackground})
- * rastgele parca yerine listedeki ilk calinabilir parca calar. Calan parca bitince listeden cikar; "dongu" isaretli
- * parca ise silinmez, listenin sonuna gecer. Ejderha/jenerik muzigi ve modlarin dogrudan caldigi sesler
- * (cogu boss muzigi) hic etkilenmez. Liste bossa ya da mod kapaliysa oyun eskisi gibi davranir.
+ * rastgele parca yerine listedeki siradaki calinabilir parca calar. Calan parca listede yerinde durur; bitince
+ * listeden cikar, "dongu" isaretli parca ise yerinde kalir. Sonra ardindaki parca calar, liste bitince basa doner.
+ * Ejderha/jenerik muzigi ve modlarin dogrudan caldigi sesler (cogu boss muzigi) hic etkilenmez. Liste bossa ya da
+ * mod kapaliysa oyun eskisi gibi davranir.
  *
  * config/quietplease.json icindeki "playlist" bolumunde saklanir:
  * <pre>
- * "playlist": { "tracks": [...], "loop": [...], "history": [...] }
+ * "playlist": { "tracks": [...], "loop": [...], "history": [...], "favorites": [...], "next": "..." }
  * </pre>
  */
 public final class Playlist {
@@ -68,16 +69,19 @@ public final class Playlist {
     }
 
     private static final List<Identifier> QUEUE = new ArrayList<>();
-    /** Dongu isaretli parcalar: calinca silinmez, sona gecer. */
+    /** Dongu isaretli parcalar: calinca silinmez, yerinde kalir. */
     private static final Set<Identifier> LOOP = new HashSet<>();
     /** Oyuncunun daha once listeye ekledigi parcalar, en yenisi basta (oneriler icin). */
     private static final List<Identifier> HISTORY = new ArrayList<>();
     private static final int HISTORY_MAX = 64;
     /** Yildizli parcalar, eklenme sirasiyla. Calinca silinmez; ana panelde en ustte "Favoriler" grubu. */
     private static final Set<Identifier> FAVORITES = new LinkedHashSet<>();
-    /** Baslatilan ve henuz bitmemis parca; bitince listeden cikar (ya da donguyse sona gecer). */
+    /** Baslatilan ve henuz bitmemis parca; bitince listeden cikar (donguyse yerinde kalir). */
     @Nullable
     private static Identifier currentId;
+    /** Hicbir parca calmiyorken siradaki aramasi bu parcadan baslar; null = listenin basi. */
+    @Nullable
+    private static Identifier nextFrom;
     /** Bir sonraki baslatmada calma listesi modu kapali olsa bile listeden cal (▶ dugmesi). */
     private static boolean oneShot = false;
     /** Her degisiklikte artar; panel listesini ne zaman yenileyecegini buradan anlar. */
@@ -155,13 +159,25 @@ public final class Playlist {
         return ModOptions.playlistMode && !QUEUE.isEmpty();
     }
 
-    /** Sirada calinacak parcalar, calinma sirasiyla (calan parca haric) - listedeki gercek sira numaralari. */
+    /**
+     * Sirada calinacak parcalar, calinma sirasiyla (calan parca haric) - listedeki gercek sira numaralari.
+     * Calan parcanin ardindan baslar, listenin sonuna gelince basa doner.
+     */
     public static List<Integer> upcoming() {
-        List<Integer> order = new ArrayList<>(QUEUE.size());
-        for (int i = 0; i < QUEUE.size(); i++) {
-            if (!QUEUE.get(i).equals(currentId)) order.add(i);
+        int n = QUEUE.size();
+        int playing = currentId == null ? -1 : QUEUE.indexOf(currentId);
+        int start = playing >= 0 ? playing + 1 : startIndex();
+        List<Integer> order = new ArrayList<>(n);
+        for (int k = 0; k < n; k++) {
+            int i = (start + k) % n;
+            if (i != playing) order.add(i);
         }
         return order;
+    }
+
+    /** Hicbir parca calmiyorken siradaki aramasinin baslayacagi sira numarasi. */
+    private static int startIndex() {
+        return nextFrom == null ? 0 : Math.max(0, QUEUE.indexOf(nextFrom));
     }
 
     // ---------------------------------------------------------------- degistirme
@@ -194,7 +210,11 @@ public final class Playlist {
         if (index < 0 || index >= QUEUE.size()) return;
         Identifier id = QUEUE.remove(index);
         LOOP.remove(id);
-        if (id.equals(currentId)) currentId = null;
+        if (id.equals(currentId) || id.equals(nextFrom)) {
+            // calan (ya da siradaki) parca cikarilinca sira, ardindaki parcadan devam eder
+            if (id.equals(currentId)) currentId = null;
+            nextFrom = QUEUE.isEmpty() ? null : QUEUE.get(index % QUEUE.size());
+        }
         changed();
     }
 
@@ -214,8 +234,10 @@ public final class Playlist {
         changed();
     }
 
+    /** Karistirir. Calan parca calmaya devam eder; calmiyorsa yeni sira bastan baslar. */
     public static void shuffle() {
         Collections.shuffle(QUEUE, new java.util.Random(RANDOM.nextLong()));
+        if (currentId == null) nextFrom = null;
         changed();
     }
 
@@ -223,15 +245,20 @@ public final class Playlist {
         QUEUE.clear();
         LOOP.clear();
         currentId = null;
+        nextFrom = null;
         changed();
     }
 
-    /** Siradaki parca bu olsun: listenin basina alinir. Calan parcaysa bastan tekrar calar. */
+    /**
+     * Siradaki parca bu olsun; liste sirasi degismez. Calan parca biter (silinir ya da donguyse yerinde kalir),
+     * secilen parca calinca sira onun ardindan devam eder. Calan parcanin kendisiyse bastan tekrar calar.
+     */
     public static void setNext(int index) {
         if (index < 0 || index >= QUEUE.size()) return;
-        Identifier id = QUEUE.remove(index);
-        QUEUE.add(0, id);
+        Identifier id = QUEUE.get(index);
         if (id.equals(currentId)) currentId = null;
+        else finishCurrent();
+        nextFrom = id;
         changed();
     }
 
@@ -241,28 +268,44 @@ public final class Playlist {
 
     // ---------------------------------------------------------------- secim
 
-    /** Calan parca bitti: listeden cikar, donguyse sona gecer. @return bir parca bitirildi mi */
+    /**
+     * Calan parca bitti: listeden cikar, donguyse yerinde kalir. Siradaki aramasi ardindaki parcadan baslar.
+     *
+     * @return bir parca bitirildi mi
+     */
     static boolean finishCurrent() {
         Identifier done = currentId;
         if (done == null) return false;
         currentId = null;
-        if (QUEUE.remove(done) && LOOP.contains(done)) QUEUE.add(done);
-        else LOOP.remove(done);
+        int i = QUEUE.indexOf(done);
+        if (i >= 0) {
+            if (LOOP.contains(done)) {
+                i++;
+            } else {
+                QUEUE.remove(i);
+                LOOP.remove(done);
+            }
+            nextFrom = QUEUE.isEmpty() ? null : QUEUE.get(i % QUEUE.size());
+        }
         version++;
         return true;
     }
 
     /**
-     * Calan parcayi bitirir, sonra listedeki ilk calinabilir parcayi secer. Calinamayanlari (kapali, yuklu degil)
-     * atlar ama listede birakir.
+     * Calan parcayi bitirir, sonra siradaki ilk calinabilir parcayi secer (ardindan baslayip basa donerek).
+     * Calinamayanlari (kapali, yuklu degil) atlar ama listede birakir.
      *
      * @return sira numarasi; -1 = calinacak parca yok (oyunun kendi muzigi calsin)
      */
     static int advance(Predicate<Identifier> playable) {
         finishCurrent();
-        for (int i = 0; i < QUEUE.size(); i++) {
+        int n = QUEUE.size();
+        int start = startIndex();
+        for (int k = 0; k < n; k++) {
+            int i = (start + k) % n;
             if (playable.test(QUEUE.get(i))) {
                 currentId = QUEUE.get(i);
+                nextFrom = currentId; // oyun kapanirsa bir dahaki sefere bu parcadan devam
                 version++;
                 return i;
             }
@@ -440,6 +483,7 @@ public final class Playlist {
         HISTORY.clear();
         FAVORITES.clear();
         currentId = null;
+        nextFrom = null;
         if (o != null) {
             List<Identifier> favorites = new ArrayList<>();
             // eski dosyalarda favori yok: yildiz o zamanlar siraya ekliyordu, siradakiler favori sayilir
@@ -452,6 +496,10 @@ public final class Playlist {
             readIds(o, "history", HISTORY);
             for (Identifier id : QUEUE) if (!HISTORY.contains(id)) HISTORY.add(id);
             while (HISTORY.size() > HISTORY_MAX) HISTORY.remove(HISTORY.size() - 1);
+            if (o.has("next") && o.get("next").isJsonPrimitive()) {
+                Identifier next = Identifier.tryParse(o.get("next").getAsString());
+                if (next != null && QUEUE.contains(next)) nextFrom = next;
+            }
         }
         version++;
     }
@@ -476,6 +524,8 @@ public final class Playlist {
         o.add("loop", ids(QUEUE.stream().filter(LOOP::contains).toList()));
         o.add("history", ids(HISTORY));
         o.add("favorites", ids(List.copyOf(FAVORITES)));
+        Identifier next = currentId != null ? currentId : nextFrom;
+        if (next != null && QUEUE.contains(next)) o.addProperty("next", next.toString());
         return o;
     }
 }
