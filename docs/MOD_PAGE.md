@@ -13,7 +13,7 @@
 | Kategoriler | **Utility**, **Management** |
 | Etiket önerileri | music, sound, volume, audio, modpack, client-side |
 | İkon | `art/jukebox-icon/quietplease-icon-1024.png` (1024 px) |
-| Galeri | `docs/screenshots/panel-en.png`, `docs/screenshots/options-button.png`, `docs/screenshots/pause-menu.png`; açıklamadaki görseller gh-pages img/ klasöründen gelir (panel-en, playlist-suggestions, pause-menu-now-playing, settings, options-button) |
+| Galeri | `docs/screenshots/panel-en.png`, `docs/screenshots/options-button.png`, `docs/screenshots/pause-menu.png`; açıklamadaki görseller gh-pages img/ klasöründen gelir (panel-en, playlist-suggestions, pause-menu-now-playing, song-popup, popup-settings, music-behavior, settings, options-button) |
 | Lisans | **MIT** (`LICENSE` dosyası) |
 
 ## Kısa açıklama (summary, ~100 karakter)
@@ -37,6 +37,7 @@ Big modpacks bring a lot of music – and not all of it fits together.
 All the music in your game, vanilla and modded, grouped by the mod it comes from. On every row:
 - **On / Off** – turn a track off and the game simply picks another one instead
 - **Volume** – set each track anywhere from 0 to 100 %
+- **Mod volume** – one slider in each mod header turns all songs of that mod up or down at once
 - **Play button** – preview the track right in the panel (background music pauses while you listen)
 - **Star** – keep the song in a Favorites group at the top of the list
 
@@ -61,12 +62,36 @@ Press **Playlist** and pick the songs and their order, like a music player.
 
 Press Esc and the current song is right under the **Quiet Please** button, so you can find a song even if you don't know its name. One click opens the panel.
 
+## A popup when a new song starts
+![A small card in the corner of the screen showing the new song and its mod](https://mckycoskun1-commits.github.io/quiet-please/img/song-popup.png)
+
+When a new song starts, a small card slides in with the song name and the mod it comes from, then slides out again.
+
+![The popup settings screen with a large framed example card](https://mckycoskun1-commits.github.io/quiet-please/img/popup-settings.png)
+
+- **Six positions**, distance from the edge, size and how long it stays
+- **Song and mod name colors**, bold or italic text, shadow and background
+- The icon, the mod name and the little equalizer can each be turned off
+- **Drag the example card** in the popup settings to put it exactly where you want it
+
+## Music that fits the moment
+![The Music behavior screen](https://mckycoskun1-commits.github.io/quiet-please/img/music-behavior.png)
+
+- **Jukebox** – background music turns down or mutes while a music disc plays nearby, and comes back when the disc ends
+- **In background** – turn the music down when you Alt+Tab out of the game
+- **In combat** – turn the music down when you take damage or a hostile mob is close, so you can hear the fight
+- **Fade in/out** – songs start and end softly instead of cutting in and out
+- **No repeats** – the last 5 or 10 songs are skipped when the game picks the next one
+- **Favorites** – songs with a star come up 2, 3 or 5 times as often, even without the playlist
+- **Fade on skip** – Skip turns the song down smoothly; press it again to stop it at once
+
 ## Shorter silence between songs
 ![The Quiet Please settings screen](https://mckycoskun1-commits.github.io/quiet-please/img/settings.png)
 
 - **Music gap** – Vanilla, Short, None or Custom with your own shortest and longest wait. It only changes background music; dragon, credits and boss music are not affected
-- Turn the now-playing text or the menu buttons off
+- Turn the now-playing text, the menu buttons or the song popup off
 - Turn playlist mode on or off, and choose whether ambient tracks show in the list
+- **Popup settings...** and **Music behavior...** open the two screens above
 
 ## Open it from anywhere
 ![The Quiet Please button in the Options screen](https://mckycoskun1-commits.github.io/quiet-please/img/options-button.png)
@@ -74,8 +99,8 @@ Press Esc and the current song is right under the **Quiet Please** button, so yo
 - **Esc → ♪ Quiet Please** (top-right corner)
 - **Options → ♪ Quiet Please** or **Options → Music & Sounds → ♪ Quiet Please**
 - **Mods → Quiet Please → Config**
-- **Key bindings** (unbound by default) to open the panel and skip a song: Controls → Key Binds → Quiet Please
-- **Chat commands**: `/quietplease`, `/quietplease skip`, and `/quietplease export <name>` / `import <name>` to share a setup
+- **Key bindings** (unbound by default) to open the panel, skip a song, favorite the current song and turn playlist mode on or off: Controls → Key Binds → Quiet Please
+- **Chat commands**: `/quietplease`, `/quietplease skip`, `/quietplease mod <mod> volume <0-100>`, and `/quietplease export <name>` / `import <name>` to share a setup
 
 ## Supported versions
 - **Minecraft 1.18.2** – Fabric, Forge
@@ -91,7 +116,7 @@ Press Esc and the current song is right under the **Quiet Please** button, so yo
 - **Client-side only.** Install it on your own game; servers don't need it, and you can join any server.
 - Works for vanilla music, music discs and modded boss and biome music – for example the boss themes of L_Ender's Cataclysm and Mowzie's Mobs.
 - Settings are stored in `config/quietplease.json`, so modpack makers can ship a pre-tuned file.
-- English and Turkish.
+- English, Turkish, German, Spanish, Russian, Brazilian Portuguese and Simplified Chinese.
 
 ## AI disclosure
 The code of this mod was written with the help of an AI assistant (Claude), and the project icon is rendered from Minecraft's own jukebox and music disc textures. All screenshots on this page are real in-game screenshots.
@@ -108,18 +133,20 @@ Büyük mod paketleri bir sürü müzik getirir ve hepsi birbirine uymaz.
 ## Özellikler
 - **Tüm müzikler tek listede**, geldikleri moda göre gruplanmış
 - İstediğin parçayı **kapat** – oyun onun yerine başka bir parça seçer
-- Her parça için **%0–100 ses ayarı**
+- Her parça için **%0–100 ses ayarı**, her mod için de ayrı bir **mod sesi** kaydırıcısı
 - Bir modun **tüm müziklerini tek tıkla kapat**
+- **Şarkı bildirimi** – yeni şarkı başlayınca şarkının ve modun adını gösteren küçük bir kart; yeri, boyutu, renkleri ve yazı stili ayarlanır, örnek kart sürüklenerek yerleştirilir
+- **Müzik davranışı** – yakında plak çalarken, oyun arka plandayken ya da savaşta müziği kıs; şarkıları yumuşak başlat ve bitir, son çalınanları tekrar etme, favorileri daha sık çal
 - Panelde **dinleyerek önizle** (dinlerken arka plan müziği susar)
 - **Arka plan çalma listesi** – şarkıları ve sırasını sen seç, bir müzik çalar gibi: ilerleme çubuklu sıra, yukarı/aşağı taşıma, karıştırma, tekrar. Boss, ejderha ve jenerik müzikleri yine araya girer
 - Çalan arka plan şarkısını **atla** (düğme, `/quietplease skip` ya da seçtiğin bir tuş)
-- Paneli açmak ve şarkı atlamak için **kısayol tuşları** (varsayılan olarak boş)
+- Paneli açmak, şarkı atlamak, çalan şarkıyı favorilere eklemek ve çalma listesi modunu açıp kapatmak için **kısayol tuşları** (varsayılan olarak boş)
 - **Şarkı arası** – arka plan şarkıları arasındaki uzun sessizliği kısalt ya da kaldır
 - **Ayarlar ekranı** – menü düğmelerini ya da çalan şarkı yazısını gizle
 - **Hazır ayarlar** – `/quietplease export <ad>` / `import <ad>` ile ayarları paylaş
 - Arama, mod filtresi ve uzun ortam sesleri için ayrı görünüm
 - Vanilla müzikler, plaklar ve modların boss/biyom müzikleriyle çalışır
-- İngilizce ve Türkçe
+- İngilizce, Türkçe, Almanca, İspanyolca, Rusça, Brezilya Portekizcesi ve Basitleştirilmiş Çince
 
 ## Desteklenen sürümler
 - **Minecraft 1.18.2** – Fabric, Forge
@@ -140,14 +167,18 @@ ya da **Modlar → Quiet Please → Yapılandırma**. Sohbette `/quietplease` ko
 - Ayarlar `config/quietplease.json` dosyasında; mod paketi yapanlar hazır ayarlı bir dosya ekleyebilir.
 ```
 
-## Sonraki sürüm notu (taslak, henüz yayınlanmadı)
+## 1.3.0 sürüm notu (14.11.2026'da 18 dosyayla yayınlandı)
 
 ```markdown
-## Playlist update
-- A song leaves the queue after it plays; the new loop button sends it to the end of the queue instead (replaces the repeat modes)
-- Favorites: the star keeps a song in a Favorites group at the top of the panel (the group appears once you have a favorite)
-- Suggested panel next to the queue: favorites, songs you added before and popular Minecraft songs, mixed
-- Track tooltips are short; hold Ctrl for the full details
+## 1.3.0
+
+- Song popup: a small card shows the song and its mod when a new song starts.
+- Popup settings screen: position, size, duration, colors, text style, shadow, background, icon, mod name and equalizer. Drag the example card to put the popup where you want it.
+- Music behavior screen: mute or lower background music near a playing jukebox, while the game is in the background or in combat. Fade songs in and out, skip recently played songs and pick favorites more often.
+- Fade on skip: Skip turns the song down smoothly, a second press skips at once.
+- Volume slider for each mod in the panel, and `/quietplease mod <mod> volume`.
+- New keys: favorite the current song and turn playlist mode on or off.
+- New languages: German, Spanish, Russian, Brazilian Portuguese and Simplified Chinese.
 ```
 
 ## 1.1.0 sürüm notu (taslak, `improvements` dalı – henüz yayınlanmadı)
