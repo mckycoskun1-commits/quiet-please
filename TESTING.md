@@ -71,7 +71,9 @@ Bu dalın jar'ı `dist/quietplease-1.1.0.jar` olur (1.0.0 jar'ına dokunmaz).
 9. [ ] **Queue** sekmesinde **▲/▼** sırayı değiştiriyor, **✕** çıkarıyor, **Clear** onay soruyor.
 10. [ ] **Playlist mode: ON**, **▶** bir şarkıda → o şarkı hemen çalıyor, üstte ilerleme çubuğu ve süre (ör. 0:12 / 3:21) ilerliyor;
         ESC'de (tek oyunculu) oyun durunca süre de duruyor.
-11. [ ] **Skip ⏭** → sıradaki şarkı hemen başlıyor. **Shuffle** → çalan şarkı en üstte kalıyor, gerisi karışıyor.
+11. [ ] **Skip ⏭** → sıradaki şarkı hemen başlıyor. **Shuffle** → çalan şarkı çalmaya devam ediyor, liste karışıyor.
+        Çalan şarkı listede yerinde duruyor ve başında yeşil çizgi var; fareyle üstüne gelinen şarkıda turuncu çizgi çıkıyor.
+        Ortadaki bir şarkıda **▶** → şarkı yerinden oynamıyor, bitince ardındaki çalıyor.
 12. [ ] **Repeat: Stop at end** → son şarkı bitince vanilla müzik dönüyor ve üst çubukta "playlist ended" yazıyor.
 13. [ ] Ana menüde çalma listesi şarkısı çalarken menü müziği onu kesmiyor; bir dünyaya girince liste devam ediyor.
 14. [ ] **Boss müziği (asıl test):** `run/mods` içinde **L_Ender's Cataclysm** varken çalma listesi modu açık, Settings → Music gap: None.
