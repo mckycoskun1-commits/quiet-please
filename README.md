@@ -70,19 +70,44 @@ bunun üstüne çarpılır (örneğin mod %50, şarkı %40 ise şarkı %20 çala
 ## Şarkı bildirimi
 
 Oyunda yeni bir müzik başlayınca ekranın kenarından küçük bir kart kayarak çıkar: plak ya da nota bloğu ikonu, şarkının adı,
-geldiği mod ve oynayan küçük ekolayzer çubukları. Yaklaşık 4 saniye sonra kart aynı kenara geri girer. Kart ekranın ortasına
-hiç gelmez ve mini haritaların, iksir ikonlarının durduğu sağ üst köşeyi kullanmaz. Yeri Ayarlar'dan seçilir: **Sağ, orta**
-(varsayılan), **Sol, orta**, **Sağ, alt**, **Sol, üst**. Ayarlar ekranında yer değiştirince örnek bir kart hemen görünür.
-F1 ile arayüz gizlenince kart da gizlenir.
+geldiği mod ve oynayan küçük ekolayzer çubukları. Birkaç saniye sonra kart aynı kenara geri girer. F1 ile arayüz gizlenince
+kart da gizlenir.
+
+Ayarlar ekranındaki **Bildirim ayarları...** düğmesi ayrı bir ekran açar. Burada kartın yeri (sağ ya da sol; üst, orta ya da
+alt), kenardan uzaklığı ve yukarı/aşağı kayması, boyutu (%50–%200), ekranda kalma süresi (2–15 sn), şarkı adının ve mod adının
+rengi, yazı stili (normal, kalın, italik), yazı gölgesi, arka planı (yok, hafif, koyu, çerçeveli) ve ikonun, mod adının ve
+ekolayzerin gösterilip gösterilmeyeceği seçilir. Ekranda örnek bir kart her değişikliği anında gösterir. Kartı fareyle tutup
+sürükleyerek de yerini değiştirebilirsin: bırakınca en yakın köşe ya da kenar seçilir, kenar ve yukarı/aşağı kaydırıcıları
+kartın bırakıldığı yere göre ayarlanır. **Sıfırla** hepsini varsayılana döndürür.
 
 ## Ayarlar
 
 Paneldeki **Ayarlar** düğmesi ya da `/quietplease settings`: ESC menüsündeki ve Ayarlar ekranlarındaki düğme (ayrı ayrı),
 çalan şarkı yazısı, listede ortam sesleri, çalma listesi modu ve **şarkı arası** (iki arka plan şarkısı arasındaki sessizlik:
 Vanilla / Kısa 30–60 sn / Yok / Özel kaydırıcılar). Şarkı arası sadece arka plan müziğini değiştirir; ejderha, jenerik ve
-boss müzikleri etkilenmez. Ayrıca **Şarkı bildirimi** (açık/kapalı), **Bildirim** yeri ve **Yumuşak atlama**: açıkken
-Atla'ya basınca şarkı aniden kesilmez, 1,5 saniyede sesi azalarak biter; bu sırada Atla'ya bir daha basılırsa hemen geçer.
+boss müzikleri etkilenmez. Ayrıca **Şarkı bildirimi** (açık/kapalı), **Bildirim ayarları...** ve **Müzik davranışı...**.
 Tasarım ayrıntıları: [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md).
+
+### Müzik davranışı
+
+Ayarlar'daki **Müzik davranışı...** düğmesi ayrı bir ekran açar:
+
+- **Plak çalınca** (Kapalı / Kıs %25 / Sustur, varsayılan Sustur): 64 blok içinde bir jukebox'ta plak çalarken arka plan
+  müziği kısılır ya da susar, plak bitince yavaşça geri gelir.
+- **Arka plandayken** (Kapalı / Kıs %30 / Sustur): Alt+Tab ile oyundan çıkınca arka plan müziği kısılır ya da susar.
+- **Savaşta** (Kapalı / Biraz %60 / Çok %30): hasar alınca (6 saniye boyunca) ya da 12 blok içinde düşman bir yaratık varken
+  müzik kısılır.
+- **Yumuşak geçiş** (Kapalı / 2 sn / 5 sn, varsayılan 2 sn): arka plan şarkıları sessizce açılır ve son saniyelerde sessizce
+  kapanır.
+- **Tekrar etme** (Kapalı / Son 5 / Son 10, varsayılan Son 5): oyun sıradaki şarkıyı seçerken son çalınanları atlar; o
+  durumda çalabilecek başka şarkı yoksa yine de çalar.
+- **Favoriler** (Kapalı / 2 / 3 / 5 kat, varsayılan 2 kat): ★ ile işaretlenen şarkılar, çalma listesi modu kapalıyken de daha
+  sık seçilir.
+- **Yumuşak atlama**: açıkken Atla'ya basınca şarkı aniden kesilmez, 1,5 saniyede sesi azalarak biter; bu sırada Atla'ya bir
+  daha basılırsa hemen geçer.
+
+Kısma ve yumuşak geçiş sadece arka plan müziğine uygulanır; plaklar, önizleme ve diğer sesler etkilenmez. Birden fazla kısma
+aynı anda geçerliyse çarpılır (örneğin savaşta %60 ve arka planda %30 ise müzik %18 çalar).
 
 ## Çalma listesi
 

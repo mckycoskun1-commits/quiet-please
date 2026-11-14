@@ -1,6 +1,7 @@
 package com.quietplease;
 
 import com.quietplease.music.ModOptions;
+import com.quietplease.music.MusicMixer;
 import com.quietplease.music.MusicSettings;
 import com.quietplease.music.Playlist;
 import java.lang.reflect.Field;
@@ -55,6 +56,8 @@ final class DevSelfTest {
 
         // 3) Ses seviyesi: ses motorunun hesabi %40 ile carpilmali.
         try {
+            int fadeBackup = ModOptions.fadeSeconds;
+            ModOptions.fadeSeconds = 0;
             SimpleSoundInstance music = SimpleSoundInstance.forMusic(SoundEvents.MUSIC_MENU.value());
             music.resolve(sm);
             ResourceLocation file = music.getSound().getLocation();
@@ -77,6 +80,7 @@ final class DevSelfTest {
             float modAndTrack = (float) calc.invoke(engine, music);
             MusicSettings.reset(file);
             MusicSettings.setModVolume(file.getNamespace(), 100);
+            ModOptions.fadeSeconds = fadeBackup;
             if (Math.abs(modHalf - base * 0.5F) > 0.001F) failures.add("mod sesi: %50 bekleniyordu, " + base + " -> " + modHalf);
             if (Math.abs(modAndTrack - base * 0.2F) > 0.001F) failures.add("mod sesi: %50 x %40 = %20 bekleniyordu, gelen " + modAndTrack);
             if (MusicSettings.modVolume(file.getNamespace()) != 100) failures.add("mod sesi: %100'e donmedi");
@@ -88,6 +92,8 @@ final class DevSelfTest {
         } catch (ReflectiveOperationException e) {
             failures.add("ses testi calistirilamadi: " + e);
         }
+
+        testSelection(menu, files, random, failures);
 
         // 4) Calma listesi ve sarki arasi (ayarlar test sonunda geri alinir)
         testPlaylist(files, failures);
@@ -117,6 +123,47 @@ final class DevSelfTest {
 
         if (failures.isEmpty()) QuietPlease.LOGGER.info("SELFTEST BASARILI ({} menu parcasi ile)", files.size());
         else failures.forEach(f -> QuietPlease.LOGGER.error("SELFTEST HATA: {}", f));
+    }
+
+    private static void testSelection(WeighedSoundEvents menu, List<ResourceLocation> files, RandomSource random, List<String> failures) {
+        int repeatBackup = ModOptions.noRepeat;
+        int favoriteBackup = ModOptions.favoriteWeight;
+        ResourceLocation favorite = files.get(0);
+        boolean wasFavorite = Playlist.isFavorite(favorite);
+        com.google.gson.JsonObject playlistBackup = Playlist.snapshot();
+        try {
+            ModOptions.favoriteWeight = 1;
+            ModOptions.noRepeat = 5;
+            MusicMixer.clearRecentForTest();
+            List<ResourceLocation> recent = files.subList(0, Math.min(5, files.size() - 1));
+            recent.forEach(MusicMixer::remember);
+            Set<ResourceLocation> picked = new HashSet<>();
+            for (int i = 0; i < 300; i++) picked.add(menu.getSound(random).getLocation());
+            check(failures, picked.stream().noneMatch(recent::contains), "tekrar etmeme: son calinan parca yine secildi " + picked);
+
+            ModOptions.noRepeat = 0;
+            MusicMixer.optionsChanged();
+            ModOptions.favoriteWeight = 5;
+            if (!wasFavorite) Playlist.toggleFavorite(favorite);
+            int hits = 0;
+            int rounds = 3000;
+            for (int i = 0; i < rounds; i++) if (menu.getSound(random).getLocation().equals(favorite)) hits++;
+            int sum = 0;
+            int favoriteBase = 1;
+            for (Weighted<Sound> w : ((com.quietplease.mixin.WeighedSoundEventsAccessor) menu).quietplease$getList()) {
+                sum += w instanceof Sound s0 ? MusicMixer.weight(s0.getLocation(), w.getWeight()) : w.getWeight();
+                if (w instanceof Sound s && s.getLocation().equals(favorite)) favoriteBase = MusicMixer.weight(favorite, w.getWeight());
+            }
+            double expected = favoriteBase / (double) sum;
+            check(failures, Math.abs(hits / (double) rounds - expected) < 0.08,
+                    "favori agirligi: beklenen ~" + Math.round(expected * 100) + "%, gelen " + Math.round(hits * 100.0 / rounds) + "%");
+            QuietPlease.LOGGER.info("SELFTEST favori x5: {}/{} secim", hits, rounds);
+        } finally {
+            Playlist.restore(playlistBackup);
+            ModOptions.noRepeat = repeatBackup;
+            ModOptions.favoriteWeight = favoriteBackup;
+            MusicMixer.clearRecentForTest();
+        }
     }
 
     private static void check(List<String> failures, boolean ok, String what) {
