@@ -25,6 +25,9 @@
 ```markdown
 # Quiet Please
 
+## Explore the mod here
+[Quiet Please website](https://mckycoskun1-commits.github.io/quiet-please/)
+
 Big modpacks bring a lot of music – and not all of it fits together.
 **Quiet Please** lets you decide, track by track, what you actually want to hear.
 
