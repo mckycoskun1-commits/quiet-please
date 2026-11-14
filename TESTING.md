@@ -99,3 +99,18 @@ Bu dalın jar'ı `dist/quietplease-1.1.0.jar` olur (1.0.0 jar'ına dokunmaz).
 23. [ ] Oyunu kapat, `run/config/quietplease.json` dosyasını bozup (ör. ilk satırı sil) oyunu aç: oyun açılıyor, varsayılanlar geliyor
         ve yanında `quietplease.json.broken` kopyası duruyor.
 24. [ ] Ana panelde Mod filtresi **★ Çalma listesi** iken bir şarkının ★ düğmesine bas: şarkı listeden hemen kalkıyor.
+
+### 1.3.0: şarkı bildirimi, yumuşak atlama, mod sesi, yeni tuşlar, diller
+25. [ ] Dünyada yeni bir müzik başlayınca sağ kenarın ortasından küçük bir kart kayarak çıkıyor (ikon, şarkı adı, mod adı,
+        oynayan çubuklar), 4 saniye kadar sonra sağa geri giriyor. Ekranın ortasına hiç gelmiyor. F1 basılıyken görünmüyor.
+26. [ ] Settings → **Popup** yerini değiştir: her değişiklikte örnek kart o kenarda görünüyor. Sol, orta / Sağ, alt / Sol, üst
+        konumlarında Xaero's Minimap ya da JourneyMap ile üst üste binmiyor. **Song popup: Off** iken hiç kart çıkmıyor.
+27. [ ] **Fade on skip** açıkken Atla: şarkı 1,5 saniyede kısılarak bitiyor, sonra sıradaki geliyor. Kısılırken Atla'ya tekrar
+        basınca hemen geçiyor. Ayar kapalıyken eskisi gibi hemen kesiyor.
+28. [ ] Panelde bir mod başlığındaki **Mod: 100%** kaydırıcısını %50 yap: o modun çalan şarkısı hemen kısılıyor, şarkının kendi
+        kaydırıcısı değişmiyor. `/quietplease mod minecraft volume 30` aynısını yapıyor. Oyunu kapatıp açınca ayar duruyor.
+        Favoriler başlığında bu kaydırıcı yok.
+29. [ ] Key Binds'te dört tuş var. "Favorite the current song" tuşu çalan şarkıyı favorilere ekliyor (★ yazısı), bir daha basınca
+        çıkarıyor; müzik yokken "çalan müzik yok" diyor. "Toggle playlist mode" tuşu modu açıp kapatıyor, liste boşsa uyarıyor.
+30. [ ] Oyun dilini Deutsch, Español (España), Русский, Português (Brasil) ve 简体中文 yap: panel, Ayarlar ve çalma listesi o dilde,
+        yazılar düğmelerden taşmıyor.

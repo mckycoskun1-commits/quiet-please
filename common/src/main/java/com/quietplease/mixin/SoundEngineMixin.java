@@ -22,7 +22,7 @@ public abstract class SoundEngineMixin {
     @Inject(method = "calculateVolume(Lnet/minecraft/client/resources/sounds/SoundInstance;)F",
             at = @At("RETURN"), cancellable = true)
     private void quietplease$volumeWhilePlaying(SoundInstance sound, CallbackInfoReturnable<Float> cir) {
-        float factor = MusicSettings.factor(sound);
+        float factor = MusicSettings.factor(sound) * com.quietplease.music.MusicControl.fadeFactor(sound);
         if (factor != 1.0F) cir.setReturnValue(cir.getReturnValueF() * factor);
     }
 }

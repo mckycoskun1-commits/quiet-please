@@ -27,6 +27,8 @@ public class QuietPlease {
     public static void clientTick() {
         Minecraft mc = Minecraft.getInstance();
         com.quietplease.music.Playlist.clientTick(mc);
+        com.quietplease.music.MusicControl.clientTick(mc);
+        com.quietplease.gui.SongPopup.tick(mc);
         QuietPleaseKeys.tick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
         if (!autoDumpDone && mc.screen instanceof TitleScreen && mc.getOverlay() == null) onScreenInit(mc.screen);
@@ -153,7 +155,9 @@ public class QuietPlease {
                     expectedTrack = nextUpcoming();
                     mc.getMusicManager().stopPlaying();
                     mc.getMusicManager().startPlaying(net.minecraft.sounds.Musics.GAME);
-                } else if (t == 70 || t == 85) {
+                } else if (t == 69) {
+                    shot(mc, "quietplease-popup.png");
+                } else if (t == 70 || t == 115) {
                     var playing = com.quietplease.music.Playlist.playing();
                     boolean ok = playing != null && playing.trackId.equals(expectedTrack)
                             && expectedTrack.equals(com.quietplease.music.Playlist.currentTrack())
@@ -164,15 +168,27 @@ public class QuietPlease {
                     if (t == 70) {
                         skippedTrack = expectedTrack;
                         expectedTrack = nextUpcoming();
+                        popupPositionBackup = com.quietplease.music.ModOptions.popupPosition;
+                        com.quietplease.music.ModOptions.popupPosition = com.quietplease.music.ModOptions.PopupPosition.LEFT_MIDDLE;
+                        fadingSound = ((com.quietplease.mixin.MusicManagerAccessor) mc.getMusicManager()).quietplease$getCurrentMusic();
                         com.quietplease.music.MusicControl.skip();
                     }
-                } else if (t == 100) mc.pauseGame(false);             // ESC
-                else if (t == 120) shot(mc, "quietplease-pause.png");
-                else if (t == 122) mc.setScreen(new QuietPleaseScreen(mc.screen));
-                else if (t == 140) {
+                } else if (t == 85) {
+                    float f = fadingSound == null ? -1 : com.quietplease.music.MusicControl.fadeFactor(fadingSound);
+                    boolean ok = com.quietplease.music.MusicControl.isFading() && f > 0 && f < 1
+                            && mc.getSoundManager().isActive(fadingSound);
+                    LOGGER.info("GUITEST yumusak atlama: {} (carpan {})", ok ? "BASARILI" : "HATA", f);
+                } else if (t == 123) {
+                    shot(mc, "quietplease-popup-left.png");
+                } else if (t == 125) {
+                    com.quietplease.music.ModOptions.popupPosition = popupPositionBackup;
+                    mc.pauseGame(false);
+                } else if (t == 145) shot(mc, "quietplease-pause.png");
+                else if (t == 147) mc.setScreen(new QuietPleaseScreen(mc.screen));
+                else if (t == 165) {
                     LOGGER.info("GUITEST oyun ici panel: oyun duraklatildi mi: {}", mc.isPaused());
                     shot(mc, "quietplease-ingame.png");
-                } else if (t == 145) {
+                } else if (t == 170) {
                     // Ornek calma listesini geri al
                     if (playlistBackup != null) com.quietplease.music.Playlist.restore(playlistBackup);
                     com.quietplease.music.ModOptions.playlistMode = playlistModeBackup;
@@ -185,6 +201,8 @@ public class QuietPlease {
     }
 
     private static int worldJoinTick = -1;
+    private static com.quietplease.music.ModOptions.PopupPosition popupPositionBackup = com.quietplease.music.ModOptions.PopupPosition.RIGHT_MIDDLE;
+    private static net.minecraft.client.resources.sounds.SoundInstance fadingSound;
     private static net.minecraft.resources.ResourceLocation expectedTrack;
     private static net.minecraft.resources.ResourceLocation skippedTrack;
 
