@@ -13,7 +13,7 @@
 | Kategoriler | **Utility**, **Management** |
 | Etiket önerileri | music, sound, volume, audio, modpack, client-side |
 | İkon | `art/jukebox-icon/quietplease-icon-1024.png` (1024 px) |
-| Galeri | `docs/screenshots/panel-en.png`, `docs/screenshots/options-button.png`, `docs/screenshots/pause-menu.png` |
+| Galeri | `docs/screenshots/panel-en.png`, `docs/screenshots/options-button.png`, `docs/screenshots/pause-menu.png`; açıklamadaki görseller gh-pages img/ klasöründen gelir (panel-en, playlist-suggestions, pause-menu-now-playing, settings, options-button) |
 | Lisans | **MIT** (`LICENSE` dosyası) |
 
 ## Kısa açıklama (summary, ~100 karakter)
@@ -31,25 +31,51 @@
 Big modpacks bring a lot of music – and not all of it fits together.
 **Quiet Please** lets you decide, track by track, what you actually want to hear.
 
+## Every music track in one list
+![The Quiet Please panel with every music track grouped by mod](https://mckycoskun1-commits.github.io/quiet-please/img/panel-en.png)
 
-## Features
-- **Every music track in one list**, grouped by the mod it comes from
-- **Turn off** any track – the game simply picks another one instead
-- **Per-track volume** from 0 to 100 %
-- **Disable all music of a mod** with one click
-- **Preview** any track inside the panel (background music pauses while you listen)
-- **See what is playing right now** – in the panel and right under the button in the ESC menu, so you can find a song even if you don't know its name
-- **Background playlist** – pick the songs and their order, like a music player: queue with progress bar, move up/down, shuffle. A song leaves the queue once it has played; turn on its loop button to keep it in its place. When the queue reaches the end it starts again from the top. Boss, dragon and credits music still interrupt it
-- **Favorites** – star a song to keep it in a Favorites group at the top of the panel
-- **Suggestions** – next to the queue, a short mixed list of your favorites, songs you added before and well-known Minecraft songs, one click to add
-- **Skip** the current background song (button, `/quietplease skip` or a key you choose)
-- **Key bindings** (unbound by default) to open the panel and skip a song
-- **Music gap** – shorten (or remove) the long silence between background songs
-- **Settings screen** – hide the menu buttons or the now-playing text
-- **Presets** – `/quietplease export <name>` / `import <name>` to share a setup
-- Search, mod filter, and an optional "ambient" view for long ambience loops
-- Works for vanilla music, music discs and modded boss/biome music
-- English and Turkish
+All the music in your game, vanilla and modded, grouped by the mod it comes from. On every row:
+- **On / Off** – turn a track off and the game simply picks another one instead
+- **Volume** – set each track anywhere from 0 to 100 %
+- **Play button** – preview the track right in the panel (background music pauses while you listen)
+- **Star** – keep the song in a Favorites group at the top of the list
+
+On top of the list:
+- **Enable all / Disable all** – switch off every track of a mod with one click
+- **Search box, Mod filter and Ambient** – find a track fast, or also show the long ambience loops
+- **Now playing bar** – the song you hear right now, with a **Skip** button next to it
+
+## Your own background playlist
+![The playlist: queue on the left, suggested songs on the right](https://mckycoskun1-commits.github.io/quiet-please/img/playlist-suggestions.png)
+
+Press **Playlist** and pick the songs and their order, like a music player.
+- Every song in the queue has **play now, move up, move down, loop and remove** buttons
+- A song leaves the queue once it has played; turn on its **loop** button to keep it in its place
+- When the queue reaches the end, it starts again from the top
+- **Suggested** on the right: your favorites, songs you added before and well-known Minecraft songs. One click adds a song to the end of the queue, and hovering shows why it was suggested
+- **Shuffle** and **Clear** at the bottom
+- Boss, dragon and credits music still interrupt the playlist
+
+## Always know what is playing
+![The current song shown under the Quiet Please button in the pause menu](https://mckycoskun1-commits.github.io/quiet-please/img/pause-menu-now-playing.png)
+
+Press Esc and the current song is right under the **Quiet Please** button, so you can find a song even if you don't know its name. One click opens the panel.
+
+## Shorter silence between songs
+![The Quiet Please settings screen](https://mckycoskun1-commits.github.io/quiet-please/img/settings.png)
+
+- **Music gap** – Vanilla, Short, None or Custom with your own shortest and longest wait. It only changes background music; dragon, credits and boss music are not affected
+- Turn the now-playing text or the menu buttons off
+- Turn playlist mode on or off, and choose whether ambient tracks show in the list
+
+## Open it from anywhere
+![The Quiet Please button in the Options screen](https://mckycoskun1-commits.github.io/quiet-please/img/options-button.png)
+
+- **Esc → ♪ Quiet Please** (top-right corner)
+- **Options → ♪ Quiet Please** or **Options → Music & Sounds → ♪ Quiet Please**
+- **Mods → Quiet Please → Config**
+- **Key bindings** (unbound by default) to open the panel and skip a song: Controls → Key Binds → Quiet Please
+- **Chat commands**: `/quietplease`, `/quietplease skip`, and `/quietplease export <name>` / `import <name>` to share a setup
 
 ## Supported versions
 - **Minecraft 1.18.2** – Fabric, Forge
@@ -61,17 +87,14 @@ Big modpacks bring a lot of music – and not all of it fits together.
 - **Minecraft 26.3** – Fabric, Forge, NeoForge
 - The Fabric versions need **Fabric API** and also run on **Quilt** (with Fabric API)
 
-## How to open it
-**Esc → ♪ Quiet Please** (top-right corner), **Options → ♪ Quiet Please**, or **Options → Music & Sounds → ♪ Quiet Please**,
-or **Mods → Quiet Please → Config**. Power users can also use `/quietplease` in chat.
-
 ## Good to know
 - **Client-side only.** Install it on your own game; servers don't need it, and you can join any server.
+- Works for vanilla music, music discs and modded boss and biome music – for example the boss themes of L_Ender's Cataclysm and Mowzie's Mobs.
 - Settings are stored in `config/quietplease.json`, so modpack makers can ship a pre-tuned file.
-- Picks up modded music too – for example the boss themes of L_Ender's Cataclysm and Mowzie's Mobs.
+- English and Turkish.
 
 ## AI disclosure
-The code of this mod was written with the help of an AI assistant (Claude), and the project icon is rendered from Minecraft's own jukebox and music disc textures. The gallery screenshots are real in-game screenshots.
+The code of this mod was written with the help of an AI assistant (Claude), and the project icon is rendered from Minecraft's own jukebox and music disc textures. All screenshots on this page are real in-game screenshots.
 ```
 
 ## Uzun açıklama (Türkçe – istersen ikinci dil olarak)
