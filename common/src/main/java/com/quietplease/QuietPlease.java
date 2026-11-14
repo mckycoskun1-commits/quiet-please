@@ -56,11 +56,17 @@ public class QuietPlease {
                 mc.gui.setScreen(new QuietPleaseScreen(new TitleScreen()));
             }
             case 108 -> {
-                // Mod filtresine sag tik: "Tumu"den bir geri -> listenin son modu olmali
+                // Mod filtresine gercek fare yolundan (MouseHandler) sag tik: "Tumu"den bir geri -> son mod olmali
                 int w = mc.getWindow().getGuiScaledWidth();
                 int rowW = Math.min(w - 20, 420);
                 double x = (w - rowW) / 2.0 + (rowW - 150 - 96 - 8) + 4 + 75;
-                mc.gui.screen().mouseClicked(new net.minecraft.client.input.MouseButtonEvent(x, 42, new net.minecraft.client.input.MouseButtonInfo(1, 0)), false);
+                LOGGER.info("GUITEST mod filtresi once: {}", modFilterValue(mc));
+                realMouse(mc, x, 42, 1);
+                LOGGER.info("GUITEST mod filtresi sag tiktan sonra: {}", modFilterValue(mc));
+                realMouse(mc, x, 42, 0);
+                LOGGER.info("GUITEST mod filtresi sol tiktan sonra: {}", modFilterValue(mc));
+                realMouse(mc, x, 42, 1);
+                LOGGER.info("GUITEST mod filtresi tekrar sag tik: {}", modFilterValue(mc));
             }
             case 112 -> shot(mc, "quietplease-modfilter.png");
             case 114 -> mc.gui.setScreen(new QuietPleaseScreen(new TitleScreen())); // filtre sifirlansin
@@ -95,10 +101,25 @@ public class QuietPlease {
                 com.quietplease.music.Playlist.playNow(0);
                 mc.gui.setScreen(new com.quietplease.gui.QuietPlaylistScreen(new TitleScreen()));
             }
+            case 148 -> {
+                // Imlec 3. satirin ustunde: o satirda turuncu cizgi, calan 1. satirda yesil cizgi gorunmeli
+                for (var child : mc.gui.screen().children()) {
+                    if (child instanceof net.minecraft.client.gui.components.AbstractSelectionList<?> rows && rows.children().size() > 2) {
+                        // satirin ilk dugmesinin (▶) solundaki ad alani
+                        Object row = rows.children().get(2);
+                        if (row instanceof net.minecraft.client.gui.components.events.ContainerEventHandler c && !c.children().isEmpty()
+                                && c.children().get(0) instanceof net.minecraft.client.gui.components.AbstractWidget play) {
+                            realMouse(mc, play.getX() - 60, play.getY() + 9, -1);
+                        }
+                    }
+                }
+            }
             case 150 -> {
                 var playing = com.quietplease.music.Playlist.playing();
-                boolean ok = playing != null && playing.trackId.equals(com.quietplease.music.Playlist.tracks().get(0));
-                LOGGER.info("GUITEST calma listesi menude: {} ({})", ok ? "BASARILI" : "HATA", playing == null ? "calmiyor" : playing.trackId);
+                boolean ok = playing != null && playing.trackId.equals(com.quietplease.music.Playlist.tracks().get(0))
+                        && com.quietplease.music.Playlist.size() == 5;
+                LOGGER.info("GUITEST calma listesi menude: {} ({}, listede {} sarki)", ok ? "BASARILI" : "HATA",
+                        playing == null ? "calmiyor" : playing.trackId, com.quietplease.music.Playlist.size());
                 shot(mc, "quietplease-playlist.png");
             }
             case 151 -> mc.gui.setScreen(new QuietPleaseScreen(new TitleScreen()));
@@ -182,6 +203,43 @@ public class QuietPlease {
     }
     private static com.google.gson.JsonObject playlistBackup;
     private static boolean playlistModeBackup;
+
+    /**
+     * Gelistirme testi: imleci bir GUI noktasina tasir ve istenirse oyunun kendi fare kodundan (MouseHandler.onButton)
+     * basip birakir; boylece yukleyicilerin (Fabric/NeoForge/Forge) fare olaylari da araya girer.
+     *
+     * @param button 0 sol, 1 sag; -1 = sadece imleci tasi
+     */
+    private static void realMouse(Minecraft mc, double guiX, double guiY, int button) {
+        try {
+            var window = mc.getWindow();
+            Class<?> type = net.minecraft.client.MouseHandler.class;
+            var xpos = type.getDeclaredField("xpos");
+            var ypos = type.getDeclaredField("ypos");
+            xpos.setAccessible(true);
+            ypos.setAccessible(true);
+            xpos.setDouble(mc.mouseHandler, guiX * window.getScreenWidth() / window.getGuiScaledWidth());
+            ypos.setDouble(mc.mouseHandler, guiY * window.getScreenHeight() / window.getGuiScaledHeight());
+            if (button < 0) return;
+            var onButton = type.getDeclaredMethod("onButton", long.class, net.minecraft.client.input.MouseButtonInfo.class, int.class);
+            onButton.setAccessible(true);
+            var info = new net.minecraft.client.input.MouseButtonInfo(button, 0);
+            onButton.invoke(mc.mouseHandler, window.handle(), info, 1);
+            onButton.invoke(mc.mouseHandler, window.handle(), info, 0);
+        } catch (ReflectiveOperationException e) {
+            LOGGER.error("GUITEST fare olayi gonderilemedi", e);
+        }
+    }
+
+    /** Ekrandaki mod filtresi dugmesinin degeri (yoksa "-"). */
+    private static String modFilterValue(Minecraft mc) {
+        for (var child : mc.gui.screen().children()) {
+            if (child instanceof net.minecraft.client.gui.components.CycleButton<?> cycle && cycle.getValue() instanceof String s) {
+                return s.isEmpty() ? "(Tumu)" : s;
+            }
+        }
+        return "-";
+    }
 
     private static void shot(Minecraft mc, String name) {
         net.minecraft.client.Screenshot.grab(mc.gameDirectory, name, mc.gameRenderer.mainRenderTarget(), 1,
