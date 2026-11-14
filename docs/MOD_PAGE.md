@@ -39,7 +39,7 @@ Big modpacks bring a lot of music – and not all of it fits together.
 - **Disable all music of a mod** with one click
 - **Preview** any track inside the panel (background music pauses while you listen)
 - **See what is playing right now** – in the panel and right under the button in the ESC menu, so you can find a song even if you don't know its name
-- **Background playlist** – pick the songs and their order, like a music player: queue with progress bar, move up/down, shuffle. A song leaves the queue once it has played; turn on its loop button to send it to the end instead. Boss, dragon and credits music still interrupt it
+- **Background playlist** – pick the songs and their order, like a music player: queue with progress bar, move up/down, shuffle. A song leaves the queue once it has played; turn on its loop button to keep it in its place. When the queue reaches the end it starts again from the top. Boss, dragon and credits music still interrupt it
 - **Favorites** – star a song to keep it in a Favorites group at the top of the panel
 - **Suggestions** – next to the queue, a short mixed list of your favorites, songs you added before and well-known Minecraft songs, one click to add
 - **Skip** the current background song (button, `/quietplease skip` or a key you choose)
