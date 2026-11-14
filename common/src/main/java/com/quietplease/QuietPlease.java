@@ -197,7 +197,26 @@ public class QuietPlease {
                 else if (t == 165) {
                     LOGGER.info("GUITEST oyun ici panel: oyun duraklatildi mi: {}", mc.isPaused());
                     shot(mc, "quietplease-ingame.png");
-                } else if (t == 170) {
+                } else if (t == 168) {
+                    mc.setScreen(new com.quietplease.gui.SongPopupSettingsScreen(null));
+                } else if (t == 176) {
+                    shot(mc, "quietplease-popup-settings.png");
+                } else if (t == 178) {
+                    com.quietplease.music.ModOptions.popupPosition = com.quietplease.music.ModOptions.PopupPosition.LEFT_TOP;
+                    com.quietplease.music.ModOptions.popupScale = 150;
+                    com.quietplease.music.ModOptions.popupOffsetX = 20;
+                    com.quietplease.music.ModOptions.popupOffsetY = 30;
+                    com.quietplease.music.ModOptions.popupBackground = com.quietplease.music.ModOptions.PopupBackground.FRAMED;
+                    com.quietplease.music.ModOptions.popupTitleColor = com.quietplease.music.ModOptions.PopupColor.AQUA;
+                    com.quietplease.music.ModOptions.popupModColor = com.quietplease.music.ModOptions.PopupColor.WHITE;
+                    com.quietplease.music.ModOptions.popupTextStyle = com.quietplease.music.ModOptions.TextStyle.BOLD;
+                    mc.setScreen(new com.quietplease.gui.SongPopupSettingsScreen(null));
+                } else if (t == 186) {
+                    shot(mc, "quietplease-popup-settings-custom.png");
+                } else if (t == 188) {
+                    com.quietplease.music.ModOptions.resetPopup();
+                    mc.setScreen(null);
+                } else if (t == 190) {
                     // Ornek calma listesini geri al
                     if (playlistBackup != null) com.quietplease.music.Playlist.restore(playlistBackup);
                     com.quietplease.music.ModOptions.playlistMode = playlistModeBackup;

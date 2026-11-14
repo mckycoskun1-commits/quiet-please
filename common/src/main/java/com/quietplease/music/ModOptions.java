@@ -59,18 +59,42 @@ public final class ModOptions {
     public static PopupPosition popupPosition = PopupPosition.RIGHT_MIDDLE;
     public static boolean fadeOnSkip = true;
 
+    public static int popupScale = 100;
+    public static int popupDuration = 4;
+    public static int popupOffsetX = 0;
+    public static int popupOffsetY = 0;
+    public static PopupColor popupTitleColor = PopupColor.GOLD;
+    public static PopupColor popupModColor = PopupColor.BEIGE;
+    public static TextStyle popupTextStyle = TextStyle.NORMAL;
+    public static boolean popupShadow = true;
+    public static PopupBackground popupBackground = PopupBackground.NONE;
+    public static boolean popupShowIcon = true;
+    public static boolean popupShowMod = true;
+    public static boolean popupEqualizer = true;
+
+    public static final int POPUP_SCALE_MIN = 50;
+    public static final int POPUP_SCALE_MAX = 200;
+    public static final int POPUP_DURATION_MIN = 2;
+    public static final int POPUP_DURATION_MAX = 15;
+    public static final int POPUP_OFFSET_X_MAX = 150;
+    public static final int POPUP_OFFSET_Y_MAX = 150;
+
     public enum PopupPosition {
-        RIGHT_MIDDLE("right_middle", true),
-        LEFT_MIDDLE("left_middle", false),
-        RIGHT_BOTTOM("right_bottom", true),
-        LEFT_TOP("left_top", false);
+        RIGHT_MIDDLE("right_middle", true, 1),
+        RIGHT_TOP("right_top", true, 0),
+        RIGHT_BOTTOM("right_bottom", true, 2),
+        LEFT_TOP("left_top", false, 0),
+        LEFT_MIDDLE("left_middle", false, 1),
+        LEFT_BOTTOM("left_bottom", false, 2);
 
         public final String id;
         public final boolean right;
+        public final int row;
 
-        PopupPosition(String id, boolean right) {
+        PopupPosition(String id, boolean right, int row) {
             this.id = id;
             this.right = right;
+            this.row = row;
         }
 
         public Component displayName() {
@@ -80,6 +104,90 @@ public final class ModOptions {
         static PopupPosition byId(String id) {
             for (PopupPosition p : values()) if (p.id.equals(id)) return p;
             return RIGHT_MIDDLE;
+        }
+    }
+
+    public enum PopupColor {
+        GOLD("gold", 0xFFC966),
+        BEIGE("beige", 0xD8CCB4),
+        WHITE("white", 0xFFFFFF),
+        GRAY("gray", 0xAAAAAA),
+        YELLOW("yellow", 0xFFFF66),
+        ORANGE("orange", 0xFFA040),
+        RED("red", 0xFF6666),
+        PINK("pink", 0xFF8FD0),
+        PURPLE("purple", 0xC79BFF),
+        BLUE("blue", 0x7FB2FF),
+        AQUA("aqua", 0x66FFFF),
+        GREEN("green", 0x7EE08A);
+
+        public final String id;
+        public final int rgb;
+
+        PopupColor(String id, int rgb) {
+            this.id = id;
+            this.rgb = rgb;
+        }
+
+        public int argb() {
+            return 0xFF000000 | rgb;
+        }
+
+        public Component displayName() {
+            return Lang.tr("popup.color." + id).withStyle(s -> s.withColor(rgb));
+        }
+
+        static PopupColor byId(String id, PopupColor fallback) {
+            for (PopupColor c : values()) if (c.id.equals(id)) return c;
+            return fallback;
+        }
+    }
+
+    public enum TextStyle {
+        NORMAL("normal", false, false),
+        BOLD("bold", true, false),
+        ITALIC("italic", false, true),
+        BOLD_ITALIC("bold_italic", true, true);
+
+        public final String id;
+        public final boolean bold;
+        public final boolean italic;
+
+        TextStyle(String id, boolean bold, boolean italic) {
+            this.id = id;
+            this.bold = bold;
+            this.italic = italic;
+        }
+
+        public Component displayName() {
+            return Lang.tr("popup.style." + id).withStyle(s -> s.withBold(bold).withItalic(italic));
+        }
+
+        static TextStyle byId(String id) {
+            for (TextStyle t : values()) if (t.id.equals(id)) return t;
+            return NORMAL;
+        }
+    }
+
+    public enum PopupBackground {
+        NONE("none"),
+        SOFT("soft"),
+        DARK("dark"),
+        FRAMED("framed");
+
+        public final String id;
+
+        PopupBackground(String id) {
+            this.id = id;
+        }
+
+        public Component displayName() {
+            return Lang.tr("popup.background." + id);
+        }
+
+        static PopupBackground byId(String id) {
+            for (PopupBackground b : values()) if (b.id.equals(id)) return b;
+            return NONE;
         }
     }
 
@@ -143,8 +251,24 @@ public final class ModOptions {
         gapMinSeconds = 30;
         gapMaxSeconds = 60;
         songPopup = true;
-        popupPosition = PopupPosition.RIGHT_MIDDLE;
         fadeOnSkip = true;
+        resetPopup();
+    }
+
+    public static void resetPopup() {
+        popupPosition = PopupPosition.RIGHT_MIDDLE;
+        popupScale = 100;
+        popupDuration = 4;
+        popupOffsetX = 0;
+        popupOffsetY = 0;
+        popupTitleColor = PopupColor.GOLD;
+        popupModColor = PopupColor.BEIGE;
+        popupTextStyle = TextStyle.NORMAL;
+        popupShadow = true;
+        popupBackground = PopupBackground.NONE;
+        popupShowIcon = true;
+        popupShowMod = true;
+        popupEqualizer = true;
     }
 
     static void read(JsonObject o) {
@@ -161,6 +285,18 @@ public final class ModOptions {
         songPopup = bool(o, "songPopup", songPopup);
         if (o.has("popupPosition")) popupPosition = PopupPosition.byId(o.get("popupPosition").getAsString().toLowerCase(Locale.ROOT));
         fadeOnSkip = bool(o, "fadeOnSkip", fadeOnSkip);
+        popupScale = integer(o, "popupScale", popupScale, POPUP_SCALE_MIN, POPUP_SCALE_MAX);
+        popupDuration = integer(o, "popupDuration", popupDuration, POPUP_DURATION_MIN, POPUP_DURATION_MAX);
+        popupOffsetX = integer(o, "popupOffsetX", popupOffsetX, 0, POPUP_OFFSET_X_MAX);
+        popupOffsetY = integer(o, "popupOffsetY", popupOffsetY, -POPUP_OFFSET_Y_MAX, POPUP_OFFSET_Y_MAX);
+        if (o.has("popupTitleColor")) popupTitleColor = PopupColor.byId(string(o, "popupTitleColor"), PopupColor.GOLD);
+        if (o.has("popupModColor")) popupModColor = PopupColor.byId(string(o, "popupModColor"), PopupColor.BEIGE);
+        if (o.has("popupTextStyle")) popupTextStyle = TextStyle.byId(string(o, "popupTextStyle"));
+        popupShadow = bool(o, "popupShadow", popupShadow);
+        if (o.has("popupBackground")) popupBackground = PopupBackground.byId(string(o, "popupBackground"));
+        popupShowIcon = bool(o, "popupShowIcon", popupShowIcon);
+        popupShowMod = bool(o, "popupShowMod", popupShowMod);
+        popupEqualizer = bool(o, "popupEqualizer", popupEqualizer);
     }
 
     static JsonObject write() {
@@ -176,7 +312,27 @@ public final class ModOptions {
         o.addProperty("songPopup", songPopup);
         o.addProperty("popupPosition", popupPosition.id);
         o.addProperty("fadeOnSkip", fadeOnSkip);
+        o.addProperty("popupScale", popupScale);
+        o.addProperty("popupDuration", popupDuration);
+        o.addProperty("popupOffsetX", popupOffsetX);
+        o.addProperty("popupOffsetY", popupOffsetY);
+        o.addProperty("popupTitleColor", popupTitleColor.id);
+        o.addProperty("popupModColor", popupModColor.id);
+        o.addProperty("popupTextStyle", popupTextStyle.id);
+        o.addProperty("popupShadow", popupShadow);
+        o.addProperty("popupBackground", popupBackground.id);
+        o.addProperty("popupShowIcon", popupShowIcon);
+        o.addProperty("popupShowMod", popupShowMod);
+        o.addProperty("popupEqualizer", popupEqualizer);
         return o;
+    }
+
+    private static int integer(JsonObject o, String key, int fallback, int min, int max) {
+        return o.has(key) ? Mth.clamp(o.get(key).getAsInt(), min, max) : fallback;
+    }
+
+    private static String string(JsonObject o, String key) {
+        return o.get(key).getAsString().toLowerCase(Locale.ROOT);
     }
 
     private static boolean bool(JsonObject o, String key, boolean fallback) {

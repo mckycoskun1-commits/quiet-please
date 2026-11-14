@@ -70,17 +70,21 @@ bunun üstüne çarpılır (örneğin mod %50, şarkı %40 ise şarkı %20 çala
 ## Şarkı bildirimi
 
 Oyunda yeni bir müzik başlayınca ekranın kenarından küçük bir kart kayarak çıkar: plak ya da nota bloğu ikonu, şarkının adı,
-geldiği mod ve oynayan küçük ekolayzer çubukları. Yaklaşık 4 saniye sonra kart aynı kenara geri girer. Kart ekranın ortasına
-hiç gelmez ve mini haritaların, iksir ikonlarının durduğu sağ üst köşeyi kullanmaz. Yeri Ayarlar'dan seçilir: **Sağ, orta**
-(varsayılan), **Sol, orta**, **Sağ, alt**, **Sol, üst**. Ayarlar ekranında yer değiştirince örnek bir kart hemen görünür.
-F1 ile arayüz gizlenince kart da gizlenir.
+geldiği mod ve oynayan küçük ekolayzer çubukları. Birkaç saniye sonra kart aynı kenara geri girer. F1 ile arayüz gizlenince
+kart da gizlenir.
+
+Ayarlar ekranındaki **Bildirim ayarları...** düğmesi ayrı bir ekran açar. Burada kartın yeri (sağ ya da sol; üst, orta ya da
+alt), kenardan uzaklığı ve yukarı/aşağı kayması, boyutu (%50–%200), ekranda kalma süresi (2–15 sn), şarkı adının ve mod adının
+rengi, yazı stili (normal, kalın, italik), yazı gölgesi, arka planı (yok, hafif, koyu, çerçeveli) ve ikonun, mod adının ve
+ekolayzerin gösterilip gösterilmeyeceği seçilir. Ekranda örnek bir kart her değişikliği anında gösterir; fare kartın üstüne
+gelince kart gizlenir, altındaki düğmeye tıklanabilir. **Sıfırla** hepsini varsayılana döndürür.
 
 ## Ayarlar
 
 Paneldeki **Ayarlar** düğmesi ya da `/quietplease settings`: ESC menüsündeki ve Ayarlar ekranlarındaki düğme (ayrı ayrı),
 çalan şarkı yazısı, listede ortam sesleri, çalma listesi modu ve **şarkı arası** (iki arka plan şarkısı arasındaki sessizlik:
 Vanilla / Kısa 30–60 sn / Yok / Özel kaydırıcılar). Şarkı arası sadece arka plan müziğini değiştirir; ejderha, jenerik ve
-boss müzikleri etkilenmez. Ayrıca **Şarkı bildirimi** (açık/kapalı), **Bildirim** yeri ve **Yumuşak atlama**: açıkken
+boss müzikleri etkilenmez. Ayrıca **Şarkı bildirimi** (açık/kapalı), **Bildirim ayarları...** ve **Yumuşak atlama**: açıkken
 Atla'ya basınca şarkı aniden kesilmez, 1,5 saniyede sesi azalarak biter; bu sırada Atla'ya bir daha basılırsa hemen geçer.
 Tasarım ayrıntıları: [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md).
 
