@@ -385,6 +385,7 @@ nav.links a:hover { color: var(--text); }
   border-left: 3px solid transparent;
 }
 .qrow:hover { background: rgba(255, 255, 255, 0.05); }
+.qrow:hover { border-left-color: var(--gold); }
 .qrow.is-playing { border-left-color: var(--green); background: var(--green-soft); }
 .qn { color: var(--dim); font-variant-numeric: tabular-nums; text-align: center; }
 .qrow.is-playing .qn { color: var(--green); }
@@ -730,10 +731,10 @@ code {
           <div>
             <div class="queue" id="queue"></div>
             <div class="pl-tools">
-              <button class="mc-btn small" type="button" id="plShuffle" title="Shuffle the queue (the current song stays first)">Shuffle</button>
+              <button class="mc-btn small" type="button" id="plShuffle" title="Shuffle the queue">Shuffle</button>
               <button class="mc-btn small" type="button" id="plClear">Clear</button>
             </div>
-            <p class="pl-hint">A song leaves the queue after it plays. Turn on its loop button to keep it: it moves to the end instead.</p>
+            <p class="pl-hint">The playing song keeps its place with a green bar. It leaves the queue after it plays and the next one starts. Turn on its loop button to keep it where it is.</p>
             <div class="confirm" id="plConfirm" role="alertdialog" aria-labelledby="plConfirmText" hidden>
               <p id="plConfirmText"></p>
               <div class="cbtns">
@@ -799,7 +800,7 @@ code {
   <section id="download">
     <div class="sec-head">
       <h2 class="shadow">Versions</h2>
-      <p>Version 1.2.0, client side only.</p>
+      <p>Version 1.2.1, client side only.</p>
     </div>
     <div class="vgrid" id="vgrid"></div>
     <p class="vnote">Click a loader to open its download page on CurseForge. The Fabric files need Fabric API and also run on Quilt.</p>
@@ -835,7 +836,7 @@ code {
       <div class="qa"><h3>Do servers need it?</h3><p>No. It is client side only. Install it on your own game and join any server.</p></div>
       <div class="qa"><h3>Does it work with modded music?</h3><p>Yes. It lists vanilla music, music discs and music from other mods, for example the boss themes of L_Ender's Cataclysm and Mowzie's Mobs.</p></div>
       <div class="qa"><h3>What happens when I switch a song off?</h3><p>The game simply picks another song instead.</p></div>
-      <div class="qa"><h3>Does a song stay in the playlist after it plays?</h3><p>No, it leaves the queue and the next song starts. Turn on its loop button to keep it: it moves to the end of the queue instead.</p></div>
+      <div class="qa"><h3>Does a song stay in the playlist after it plays?</h3><p>No, it leaves the queue when it ends and the song after it starts. Turn on its loop button to keep it in its place. When the queue reaches the end it starts again from the top.</p></div>
       <div class="qa"><h3>Does the playlist stop boss music?</h3><p>No. Dragon, credits and boss music still play. The playlist only takes over the normal background music.</p></div>
       <div class="qa"><h3>Why do I hear a preview with Music at 0%?</h3><p>Previews play on the master channel, so you can check a song even when your music slider is all the way down.</p></div>
       <div class="qa"><h3>Where are my settings saved?</h3><p>In <code>config/quietplease.json</code>. Modpack makers can ship a ready file, and <code>/quietplease export</code> and <code>import</code> save and load presets.</p></div>
@@ -873,6 +874,17 @@ code {
       <h2 class="shadow">What's new</h2>
     </div>
     <div class="changes">
+      <div class="rel">
+        <div class="rel-h"><span class="tag">1.2.1</span><h3>Playlist fixes</h3></div>
+        <ul>
+          <li>The playing song keeps its place in the queue, marked with a green bar. The song under the mouse gets the orange bar</li>
+          <li>Play now no longer moves a song to the top. When it ends, the queue goes on with the next song and starts again from the top at the end</li>
+          <li>A looped song stays where it is instead of moving to the end</li>
+          <li>The queue remembers where it was and goes on from there after a restart</li>
+          <li>The song name next to the Quiet Please button is larger and easier to read</li>
+          <li>Minecraft 26.3: right click on the mod filter goes back to the previous mod again, and clicking the now playing bar works</li>
+        </ul>
+      </div>
       <div class="rel">
         <div class="rel-h"><span class="tag">1.2.0</span><h3>Queue, loop and favorites</h3></div>
         <ul>
@@ -982,6 +994,7 @@ code {
   var loops = [];
   var added = [];
   var plCur = -1;
+  var plFrom = -1;
   var current = 0;
   var playing = false;
   var muted = false;
@@ -1121,9 +1134,14 @@ code {
     return -1;
   }
   function plActive() { return plMode && playlist.length > 0; }
+  function startIdx() {
+    var p = plFrom >= 0 ? playlist.indexOf(plFrom) : -1;
+    return p >= 0 ? p : 0;
+  }
   function firstOnInPlaylist(avoid) {
-    for (var q = 0; q < playlist.length; q++) {
-      var j = playlist[q];
+    var n = playlist.length, s = startIdx();
+    for (var k = 0; k < n; k++) {
+      var j = playlist[(s + k) % n];
       if (j !== avoid && all[j].on) return j;
     }
     return -1;
@@ -1147,6 +1165,7 @@ code {
     if (p >= 0) playlist.splice(p, 1);
     var lp = loops.indexOf(i);
     if (lp >= 0) loops.splice(lp, 1);
+    if (p >= 0 && (plCur === i || plFrom === i)) plFrom = playlist.length ? playlist[p % playlist.length] : -1;
     if (plCur === i) plCur = -1;
   }
   function finishCur() {
@@ -1156,8 +1175,9 @@ code {
     var p = playlist.indexOf(d);
     var lp = loops.indexOf(d);
     if (p >= 0) {
-      playlist.splice(p, 1);
-      if (lp >= 0) playlist.push(d);
+      if (lp >= 0) p++;
+      else playlist.splice(p, 1);
+      plFrom = playlist.length ? playlist[p % playlist.length] : -1;
     } else if (lp >= 0) {
       loops.splice(lp, 1);
     }
@@ -1176,7 +1196,7 @@ code {
     clearWait();
     if (!resume) pausedSec = 0;
     setCurrent(i);
-    if (fromPl) plCur = i;
+    if (fromPl) { plCur = i; plFrom = i; }
     playing = true;
     startSound(pausedSec);
     render();
@@ -1390,14 +1410,12 @@ code {
 
   var queueEl = $("queue");
   var LOOP_SVG = ico("M8 8C6.5 5.8 5.3 5 4 5a3 3 0 0 0 0 6c1.3 0 2.5-.8 4-3s2.7-3 4-3a3 3 0 0 1 0 6c-1.3 0-2.5-.8-4-3z");
-  var LOOP_ON_TIP = "Loop on: after it plays, this song moves to the end of the queue";
+  var LOOP_ON_TIP = "Loop on: this song stays in the queue after it plays";
   var LOOP_OFF_TIP = "Loop off: this song leaves the queue after it plays. Click to keep it in the queue";
 
   function playFromPlaylist(i) {
     var resume = current === i && plCur === i && !wait && pausedSec > 0;
     if (plCur >= 0 && plCur !== i) finishCur();
-    var p = playlist.indexOf(i);
-    if (p > 0) { playlist.splice(p, 1); playlist.unshift(i); }
     if (!plMode) plMode = true;
     save();
     play(i, resume, true);
@@ -1494,8 +1512,11 @@ code {
   }
 
   function peekNext() {
-    for (var q = 0; q < playlist.length; q++) {
-      var j = playlist[q];
+    var n = playlist.length;
+    var pc = plCur >= 0 ? playlist.indexOf(plCur) : -1;
+    var s = pc >= 0 ? pc + 1 : startIdx();
+    for (var k = 0; k < n; k++) {
+      var j = playlist[(s + k) % n];
       if (j !== plCur && all[j].on) return j;
     }
     return plCur >= 0 && loops.indexOf(plCur) >= 0 && all[plCur].on ? plCur : -1;
@@ -1723,8 +1744,7 @@ code {
   });
   $("plShuffle").addEventListener("click", function () {
     shuffleArr(playlist);
-    var p = playlist.indexOf(current);
-    if (playing && p > 0) { playlist.splice(p, 1); playlist.unshift(current); }
+    if (plCur < 0) plFrom = -1;
     save();
     render();
   });
@@ -1743,6 +1763,7 @@ code {
     playlist = [];
     loops = [];
     plCur = -1;
+    plFrom = -1;
     confirmEl.hidden = true;
     save();
     render();
@@ -1871,13 +1892,13 @@ code {
 
   var CF_FILES = "https://www.curseforge.com/minecraft/mc-mods/quiet-please/files/";
   var VERS = [
-    ["26.3", { f: 9599463, o: 9599514, n: 9599569 }],
-    ["26.2", { f: 9599484, o: 9599521, n: 9599574 }],
-    ["26.1.2", { f: 9599490, o: 9599527, n: 9599578 }],
-    ["1.21.1", { f: 9599493, o: 9599535, n: 9599586 }],
-    ["1.20.1", { f: 9599500, o: 9599553 }],
-    ["1.19.2", { f: 9599507, o: 9599560 }],
-    ["1.18.2", { f: 9599509, o: 9599566 }]
+    ["26.3", { f: 9606547, o: 9606495, n: 9606488 }],
+    ["26.2", { f: 9606551, o: 9606500, n: 9606481 }],
+    ["26.1.2", { f: 9606555, o: 9606508, n: 9606472 }],
+    ["1.21.1", { f: 9606559, o: 9606515, n: 9606444 }],
+    ["1.20.1", { f: 9606566, o: 9606519 }],
+    ["1.19.2", { f: 9606572, o: 9606522 }],
+    ["1.18.2", { f: 9606578, o: 9606528 }]
   ];
   var LOADERS = [["f", "lf", "Fabric"], ["o", "lo", "Forge"], ["n", "ln2", "NeoForge"], ["f", "lq", "Quilt"]];
   VERS.forEach(function (v) {
@@ -1887,7 +1908,7 @@ code {
     LOADERS.forEach(function (ld) {
       var id = v[1][ld[0]];
       if (!id) return;
-      l += '<a class="' + ld[1] + '" href="' + CF_FILES + id + '" title="Download Quiet Please 1.2.0 for ' + ld[2] + ' ' + v[0] + '">' + ld[2] + '</a>';
+      l += '<a class="' + ld[1] + '" href="' + CF_FILES + id + '" title="Download Quiet Please 1.2.1 for ' + ld[2] + ' ' + v[0] + '">' + ld[2] + '</a>';
     });
     el.innerHTML = '<div class="v">' + v[0] + '</div><div class="l">' + l + '</div>';
     $("vgrid").appendChild(el);
