@@ -202,7 +202,7 @@ public class QuietPleaseScreen extends Screen {
                     .filter(t -> showOther || favoritesOnly || t.kind() != MusicTrack.Kind.OTHER)
                     .collect(Collectors.toList());
             if (!favorites.isEmpty()) {
-                list.add(new HeaderEntry(Lang.tr("screen.favorites").getString(), favorites, true));
+                list.add(new HeaderEntry(Lang.tr("screen.favorites").getString(), favorites, true, null));
                 for (int i = 0; i < favorites.size(); i++) list.add(new TrackEntry(favorites.get(i), i % 2 == 1));
             }
         }
@@ -217,7 +217,7 @@ public class QuietPleaseScreen extends Screen {
                     .filter(t -> matches(t, q))
                     .collect(Collectors.toList());
             if (visible.isEmpty()) return;
-            list.add(new HeaderEntry(MusicLibrary.modName(mod), visible, false));
+            list.add(new HeaderEntry(MusicLibrary.modName(mod), visible, false, mod));
             for (int i = 0; i < visible.size(); i++) list.add(new TrackEntry(visible.get(i), i % 2 == 1));
         });
         list.setScrollAmount(0);
@@ -453,13 +453,16 @@ public class QuietPleaseScreen extends Screen {
         private final boolean favorites;
         private final Button allOn;
         private final Button allOff;
+        @Nullable
+        private final ModVolumeSlider modVolume;
 
-        HeaderEntry(String modName, List<MusicTrack> tracks, boolean favorites) {
+        HeaderEntry(String modName, List<MusicTrack> tracks, boolean favorites, @Nullable String namespace) {
             this.modName = modName;
             this.tracks = tracks;
             this.favorites = favorites;
             this.allOn = smallButton(Lang.tr("screen.enable_all"), () -> setAll(true));
             this.allOff = smallButton(Lang.tr("screen.disable_all"), () -> setAll(false));
+            this.modVolume = namespace == null ? null : new ModVolumeSlider(namespace);
         }
 
         private void setAll(boolean enabled) {
@@ -478,30 +481,44 @@ public class QuietPleaseScreen extends Screen {
             int midY = top + (height - 8) / 2;
             g.renderItem(favorites ? STAR_ICON : ICON, left + 2, top + (height - 16) / 2);
 
+            allOff.setPosition(left + width - allOff.getWidth(), top + (height - 18) / 2);
+            allOn.setPosition(allOff.getX() - 4 - allOn.getWidth(), allOff.getY());
+            int textEnd = allOn.getX() - 6;
+            if (modVolume != null) {
+                modVolume.setPosition(allOn.getX() - 4 - ModVolumeSlider.WIDTH, allOff.getY());
+                textEnd = modVolume.getX() - 6;
+            }
+
             long off = tracks.stream().filter(t -> MusicSettings.isDisabled(t.id())).count();
-            Component name = Component.literal(favorites ? "★ " + modName : modName).withStyle(ChatFormatting.BOLD);
             int nameX = left + 22;
+            String plain = favorites ? "★ " + modName : modName;
+            Component name = Component.literal(plain).withStyle(ChatFormatting.BOLD);
+            int nameMax = textEnd - nameX;
+            if (font.width(name) > nameMax) {
+                String cut = font.plainSubstrByWidth(plain, Math.max(0, nameMax - font.width("…") - 4)) + "…";
+                name = Component.literal(cut).withStyle(ChatFormatting.BOLD);
+            }
             g.drawString(font, name, nameX, midY, GOLD);
             MutableComponent info = Lang.count("tracks", tracks.size());
             if (off > 0) info.append(" · ").append(Lang.tr("count.off", off));
-            g.drawString(font, info, nameX + font.width(name) + 6, midY, off > 0 ? 0xFFE07060 : MUTED);
+            int infoX = nameX + font.width(name) + 6;
+            if (infoX + font.width(info) <= textEnd) g.drawString(font, info, infoX, midY, off > 0 ? 0xFFE07060 : MUTED);
 
-            allOff.setPosition(left + width - allOff.getWidth(), top + (height - 18) / 2);
-            allOn.setPosition(allOff.getX() - 4 - allOn.getWidth(), allOff.getY());
             allOn.active = off > 0;
             allOff.active = off < tracks.size();
+            if (modVolume != null) modVolume.render(g, mouseX, mouseY, partialTick);
             allOn.render(g, mouseX, mouseY, partialTick);
             allOff.render(g, mouseX, mouseY, partialTick);
         }
 
         @Override
         public List<? extends GuiEventListener> children() {
-            return List.of(allOn, allOff);
+            return modVolume == null ? List.of(allOn, allOff) : List.of(modVolume, allOn, allOff);
         }
 
         @Override
         public List<? extends NarratableEntry> narratables() {
-            return List.of(allOn, allOff);
+            return modVolume == null ? List.of(allOn, allOff) : List.of(modVolume, allOn, allOff);
         }
     }
 
@@ -670,6 +687,34 @@ public class QuietPleaseScreen extends Screen {
             case MUSIC -> new ItemStack(Items.NOTE_BLOCK);
             case OTHER -> new ItemStack(Items.ECHO_SHARD);
         };
+    }
+
+    private static class ModVolumeSlider extends AbstractSliderButton {
+        static final int WIDTH = 84;
+        private final String namespace;
+
+        ModVolumeSlider(String namespace) {
+            super(0, 0, WIDTH, 18, Component.empty(), MusicSettings.modVolume(namespace) / 100.0);
+            this.namespace = namespace;
+            setTooltip(Tooltip.create(Lang.tr("screen.mod_volume.tooltip")));
+            updateMessage();
+        }
+
+        private int percent() {
+            return Mth.clamp((int) Math.round(value * 100), 0, 100);
+        }
+
+        @Override
+        protected void updateMessage() {
+            int p = percent();
+            setMessage(Lang.tr("screen.mod_volume", p).withStyle(p == 100 ? ChatFormatting.WHITE : ChatFormatting.YELLOW));
+        }
+
+        @Override
+        protected void applyValue() {
+            MusicSettings.setModVolume(namespace, percent());
+            MusicSettings.applyToPlayingSounds();
+        }
     }
 
     /** %0-100 ses kaydiricisi. Degisiklik calan seslere aninda uygulanir. */

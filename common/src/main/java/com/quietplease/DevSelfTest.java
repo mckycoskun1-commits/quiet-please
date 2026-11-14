@@ -71,6 +71,15 @@ final class DevSelfTest {
             float disabled = (float) calc.invoke(engine, music);
             MusicSettings.reset(file);
             float after = (float) calc.invoke(engine, music);
+            MusicSettings.setModVolume(file.getNamespace(), 50);
+            float modHalf = (float) calc.invoke(engine, music);
+            MusicSettings.setVolume(file, 40);
+            float modAndTrack = (float) calc.invoke(engine, music);
+            MusicSettings.reset(file);
+            MusicSettings.setModVolume(file.getNamespace(), 100);
+            if (Math.abs(modHalf - base * 0.5F) > 0.001F) failures.add("mod sesi: %50 bekleniyordu, " + base + " -> " + modHalf);
+            if (Math.abs(modAndTrack - base * 0.2F) > 0.001F) failures.add("mod sesi: %50 x %40 = %20 bekleniyordu, gelen " + modAndTrack);
+            if (MusicSettings.modVolume(file.getNamespace()) != 100) failures.add("mod sesi: %100'e donmedi");
 
             if (Math.abs(withSetting - base * 0.4F) > 0.001F) failures.add("ses: %40 bekleniyordu, " + base + " -> " + withSetting);
             if (disabled != 0F) failures.add("ses: kapali parca 0 olmali, gelen " + disabled);
