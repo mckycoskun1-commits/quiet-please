@@ -53,11 +53,11 @@ public class QuietPlease {
                 int rowW = Math.min(w - 20, 420);
                 double x = (w - rowW) / 2.0 + (rowW - 150 - 96 - 8) + 4 + 75;
                 LOGGER.info("GUITEST mod filtresi once: {}", modFilterValue(mc));
-                realMouse(mc, x, 42, 1);
+                realMouse(mc, x, 42, com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT);
                 LOGGER.info("GUITEST mod filtresi sag tiktan sonra: {}", modFilterValue(mc));
-                realMouse(mc, x, 42, 0);
+                realMouse(mc, x, 42, com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT);
                 LOGGER.info("GUITEST mod filtresi sol tiktan sonra: {}", modFilterValue(mc));
-                realMouse(mc, x, 42, 1);
+                realMouse(mc, x, 42, com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_RIGHT);
                 LOGGER.info("GUITEST mod filtresi tekrar sag tik: {}", modFilterValue(mc));
             }
             case 112 -> shot(mc, "quietplease-modfilter.png");
@@ -199,7 +199,7 @@ public class QuietPlease {
      * Gelistirme testi: imleci bir GUI noktasina tasir ve istenirse oyunun kendi fare kodundan (MouseHandler.onPress)
      * basip birakir; boylece yukleyicilerin (Fabric/NeoForge/Forge) fare olaylari da araya girer.
      *
-     * @param button 0 sol, 1 sag; -1 = sadece imleci tasi
+     * @param button InputConstants.MOUSE_BUTTON_LEFT / RIGHT; -1 = sadece imleci tasi
      */
     private static void realMouse(Minecraft mc, double guiX, double guiY, int button) {
         try {
