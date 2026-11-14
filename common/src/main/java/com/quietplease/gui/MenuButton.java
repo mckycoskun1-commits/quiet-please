@@ -28,7 +28,6 @@ import net.minecraft.resources.ResourceLocation;
 public final class MenuButton {
 
     private static final int NOW_PLAYING_COLOR = 0xFF7EE08A;
-    private static final float TEXT_SCALE = 0.75F;
 
     /** Su an ekranda olan dugme ve ait oldugu ekran (yazi bu dugmenin altina cizilir). */
     @Nullable
@@ -74,29 +73,27 @@ public final class MenuButton {
 
         MusicTrack track = playing.get(0);
         Font font = Minecraft.getInstance().font;
-        String text = "♪ " + track.shortName() + " · " + MusicLibrary.modName(track.namespace());
-        if (playing.size() > 1) text += "  +" + (playing.size() - 1);
+        String more = playing.size() > 1 ? "  +" + (playing.size() - 1) : "";
 
         // ESC menusunde: dugmenin hemen altinda (o kose bos). Ayarlar ekranlarinda alttaki satir dolu oldugu icin
         // dugmenin solunda, ayni hizada; baslik yazisina carpmayacak kadar genislikte.
         boolean below = screen instanceof PauseScreen;
-        float available;
+        int available;
         if (below) {
-            available = 180;
+            available = 200;
         } else {
             int titleRight = (screen.width + font.width(screen.getTitle())) / 2 + 8;
             available = button.getX() - 6 - titleRight;
             if (available < 40) return;
         }
-        int maxW = (int) (available / TEXT_SCALE);
-        if (font.width(text) > maxW) text = font.plainSubstrByWidth(text, maxW - font.width("…")) + "…";
-        float w = font.width(text) * TEXT_SCALE;
-        float x = below ? button.getX() + button.getWidth() - w : button.getX() - 6 - w;
-        float y = below ? button.getY() + button.getHeight() + 3 : button.getY() + (button.getHeight() - 8 * TEXT_SCALE) / 2;
-        g.pose().pushPose();
-        g.pose().translate(x, y, 0);
-        g.pose().scale(TEXT_SCALE, TEXT_SCALE, 1);
-        g.drawString(font, text, 0, 0, NOW_PLAYING_COLOR);
-        g.pose().popPose();
+        // Tam boy yazi (kucultulmus piksel yazi bulanik ve zor okunuyordu). Sigmazsa once mod adi, sonra sarki adinin
+        // sonu kisalir.
+        String text = "♪ " + track.shortName() + " · " + MusicLibrary.modName(track.namespace()) + more;
+        if (font.width(text) > available) text = "♪ " + track.shortName() + more;
+        if (font.width(text) > available) text = font.plainSubstrByWidth(text, available - font.width("…")) + "…";
+        int w = font.width(text);
+        int x = below ? button.getX() + button.getWidth() - w : button.getX() - 6 - w;
+        int y = below ? button.getY() + button.getHeight() + 3 : button.getY() + (button.getHeight() - 8) / 2;
+        g.drawString(font, text, x, y, NOW_PLAYING_COLOR);
     }
 }

@@ -46,9 +46,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Calma listesi paneli: bir muzik calar gibi, en ustte calan sarki (ilerleme cubuguyla), altinda siradaki
- * sarkilar numarali. Sira degistirme (▲/▼), cikarma (✕), hemen calma (▶), atlama, karistirma, tekrar modu ve
- * "Sarki ekle" sekmesinde tum muziklerden ekleme.
+ * Calma listesi paneli: bir muzik calar gibi, en ustte calan sarki (ilerleme cubuguyla), altinda listenin tamami
+ * numarali; calan sarki yerinde durur ve basinda yesil cizgi vardir. Sira degistirme (▲/▼), cikarma (✕), hemen
+ * calma (▶), dongu (∞), atlama, karistirma ve "Sarki ekle" sekmesinde tum muziklerden ekleme.
  */
 public class QuietPlaylistScreen extends Screen {
 
@@ -245,8 +245,7 @@ public class QuietPlaylistScreen extends Screen {
                 for (int i = 0; i < visible.size(); i++) list.add(new AddRow(visible.get(i), i % 2 == 1));
             });
         } else {
-            List<Integer> order = Playlist.upcoming();
-            for (int k = 0; k < order.size(); k++) list.add(new QueueRow(k, order));
+            for (int i = 0; i < Playlist.size(); i++) list.add(new QueueRow(i));
         }
         shownVersion = Playlist.version();
         list.setScrollAmount(sameView ? scroll : 0);
@@ -490,7 +489,7 @@ public class QuietPlaylistScreen extends Screen {
         return Button.builder(Component.literal(symbol), b -> action.run()).size(18, 18).tooltip(Tooltip.create(tooltip)).build();
     }
 
-    /** Siradaki bir sarki: numara, ad, mod, [▶] [▲] [▼] [∞] [✕]. */
+    /** Listedeki bir sarki: numara, ad, mod, [▶] [▲] [▼] [∞] [✕]. */
     private class QueueRow extends Row {
         private final int number;
         private final int index;
@@ -501,9 +500,9 @@ public class QuietPlaylistScreen extends Screen {
         private final Button remove;
         private final List<Button> buttons;
 
-        QueueRow(int k, List<Integer> order) {
-            this.number = k + 1;
-            this.index = order.get(k);
+        QueueRow(int index) {
+            this.number = index + 1;
+            this.index = index;
             ResourceLocation id = Playlist.tracks().get(index);
             boolean looping = Playlist.isLooping(id);
             this.loop = iconButton("∞", Lang.tr(looping ? "playlist.loop.on.tooltip" : "playlist.loop.off.tooltip"), () -> {
@@ -517,19 +516,19 @@ public class QuietPlaylistScreen extends Screen {
                 rebuildList();
             });
             this.up = iconButton("▲", Lang.tr("playlist.up.tooltip"), () -> {
-                Playlist.swap(index, order.get(k - 1));
+                Playlist.swap(index, index - 1);
                 rebuildList();
             });
             this.down = iconButton("▼", Lang.tr("playlist.down.tooltip"), () -> {
-                Playlist.swap(index, order.get(k + 1));
+                Playlist.swap(index, index + 1);
                 rebuildList();
             });
             this.remove = iconButton("✕", Lang.tr("playlist.remove.tooltip"), () -> {
                 Playlist.removeAt(index);
                 rebuildList();
             });
-            up.active = k > 0;
-            down.active = k < order.size() - 1;
+            up.active = index > 0;
+            down.active = index < Playlist.size() - 1;
             this.buttons = List.of(play, up, down, loop, remove);
         }
 
@@ -541,11 +540,15 @@ public class QuietPlaylistScreen extends Screen {
             MusicTrack track = tracksById.get(id);
             boolean disabled = MusicSettings.isDisabled(id);
             boolean missing = track == null;
+            boolean current = id.equals(Playlist.currentTrack());
             play.active = !disabled && !missing;
 
             if (hovering) g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_HOVER);
+            else if (current) g.fill(left - 3, top - 1, left + width + 3, top + height + 1, PLAYING_BG);
             else if (number % 2 == 0) g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_ALT);
-            if (number == 1) g.fill(left - 3, top - 1, left - 1, top + height + 1, ACCENT); // siradaki
+            // Soldaki cizgi: calan sarki yesil, imlecin ustundeki sarki turuncu
+            if (current) g.fill(left - 3, top - 1, left - 1, top + height + 1, PLAYING);
+            else if (hovering) g.fill(left - 3, top - 1, left - 1, top + height + 1, ACCENT);
 
             int textY = top + (height - 8) / 2;
             String num = number + ".";
@@ -558,7 +561,7 @@ public class QuietPlaylistScreen extends Screen {
                 x += 20;
             }
 
-            int color = TEXT;
+            int color = current ? PLAYING : TEXT;
             MutableComponent name = Component.literal(shortName(id));
             if (disabled) name.withStyle(ChatFormatting.STRIKETHROUGH);
             MutableComponent info = Component.literal("  " + MusicLibrary.modName(id.getNamespace()));
@@ -633,8 +636,12 @@ public class QuietPlaylistScreen extends Screen {
         public void render(GuiGraphics g, int i, int top, int left, int width, int height,
                            int mouseX, int mouseY, boolean hovering, float partialTick) {
             boolean in = Playlist.contains(track.id());
-            if (hovering) g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_HOVER);
-            else if (alternate) g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_ALT);
+            if (hovering) {
+                g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_HOVER);
+                g.fill(left - 3, top - 1, left - 1, top + height + 1, ACCENT);
+            } else if (alternate) {
+                g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_ALT);
+            }
             g.renderItem(icon, left + 2, top + (height - 16) / 2);
             toggle.setPosition(left + width - toggle.getWidth(), top + (height - 18) / 2);
             toggle.setMessage(in ? Lang.tr("playlist.added").withStyle(ChatFormatting.GREEN) : Lang.tr("playlist.add"));
