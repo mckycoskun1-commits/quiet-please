@@ -495,6 +495,12 @@ footer a { color: #c4c3cc; }
 .tl + .tl { margin-top: 14px; }
 .tl-track { position: relative; height: 34px; overflow: hidden; background: repeating-linear-gradient(45deg, #2e2d35 0 6px, #24232a 6px 12px); }
 .tl-track .s { position: absolute; top: 0; bottom: 0; background: var(--green); opacity: 0.85; box-shadow: inset 1px 0 0 #15141a, inset -1px 0 0 #15141a; }
+.tl-notes { position: relative; height: 34px; margin-top: 4px; }
+.tl-notes i { position: absolute; top: 0; height: 7px; margin-left: 2px; border: 2px solid currentColor; border-top: 0; }
+.tl-notes i::after { content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 4px; margin-left: -1px; background: currentColor; }
+.tl-notes b { position: absolute; top: 13px; font-size: 14px; font-weight: 500; line-height: 1.2; white-space: nowrap; }
+.tl-notes .m { color: var(--green); }
+.tl-notes .q { color: var(--muted); }
 .tl-axis { display: flex; justify-content: space-between; color: var(--dim); font-size: 14px; margin-top: 4px; }
 .tl-legend { display: flex; gap: 20px; flex-wrap: wrap; color: var(--muted); font-size: 15px; margin-top: 8px; }
 .tl-legend span { display: inline-flex; align-items: center; gap: 8px; }
@@ -762,8 +768,8 @@ code {
         <label class="vol"><span id="gMaxL"></span><input type="range" id="gMax" min="0" max="1200" step="5" aria-label="Longest wait"></label>
       </div>
       <div>
-        <div class="tl"><div class="tl-h">Minecraft default</div><div class="tl-track" id="trackA"></div></div>
-        <div class="tl"><div class="tl-h">With your choice</div><div class="tl-track" id="trackB"></div></div>
+        <div class="tl"><div class="tl-h">Minecraft default</div><div class="tl-track" id="trackA"></div><div class="tl-notes" id="notesA" aria-hidden="true"></div></div>
+        <div class="tl"><div class="tl-h">With your choice</div><div class="tl-track" id="trackB"></div><div class="tl-notes" id="notesB" aria-hidden="true"></div></div>
         <div class="tl-axis"><span>0 min</span><span>15</span><span>30</span><span>45</span><span>60 min</span></div>
         <div class="tl-legend"><span><i class="lg-m"></i>Music</span><span><i class="lg-s"></i>Silence</span></div>
       </div>
@@ -1806,6 +1812,40 @@ code {
       return '<span class="s" style="left:' + (s.a / HOUR * 100) + '%;width:' + ((s.b - s.a) / HOUR * 100) + '%" title="' + s.title + '"></span>';
     }).join("");
   }
+  function drawNotes(el, tl) {
+    el.innerHTML = "";
+    var w = el.clientWidth;
+    if (!w || !tl.segs.length) return;
+    var gaps = [];
+    tl.segs.forEach(function (s, i) {
+      var next = i + 1 < tl.segs.length ? tl.segs[i + 1].a : HOUR;
+      if (next - s.b > 1) gaps.push({ a: s.b, b: next });
+    });
+    var taken = [];
+    function place(seg, cls, text) {
+      var x0 = seg.a / HOUR * w, x1 = seg.b / HOUR * w;
+      var lab = document.createElement("b");
+      lab.className = cls;
+      lab.textContent = text;
+      el.appendChild(lab);
+      var lw = lab.offsetWidth;
+      var left = Math.max(0, Math.min(w - lw, (x0 + x1) / 2 - lw / 2));
+      if (taken.some(function (t) { return left < t[1] + 14 && left + lw > t[0] - 14; })) {
+        el.removeChild(lab);
+        return false;
+      }
+      taken.push([left, left + lw]);
+      lab.style.left = left + "px";
+      var br = document.createElement("i");
+      br.className = cls;
+      br.style.left = x0 + "px";
+      br.style.width = Math.max(4, x1 - x0 - 4) + "px";
+      el.appendChild(br);
+      return true;
+    }
+    place(tl.segs[0], "m", "Music");
+    gaps.some(function (g) { return place(g, "q", "Silence"); });
+  }
   function renderGap() {
     $("gapModes").querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.g === opts.gap ? "true" : "false"); });
     $("gapCustom").hidden = opts.gap !== "custom";
@@ -1815,9 +1855,19 @@ code {
     $("gMaxL").textContent = "Longest: " + secLabel(opts.gapMaxSeconds);
     $("gMin").parentNode.style.setProperty("--v", (opts.gapMinSeconds / 12) + "%");
     $("gMax").parentNode.style.setProperty("--v", (opts.gapMaxSeconds / 12) + "%");
-    drawTrack($("trackA"), timeline(gapRange("vanilla")));
-    drawTrack($("trackB"), timeline(gapRange()));
+    var a = timeline(gapRange("vanilla"));
+    var b = timeline(gapRange());
+    drawTrack($("trackA"), a);
+    drawTrack($("trackB"), b);
+    drawNotes($("notesA"), a);
+    drawNotes($("notesB"), b);
   }
+  var gapFrame = 0;
+  window.addEventListener("resize", function () {
+    cancelAnimationFrame(gapFrame);
+    gapFrame = requestAnimationFrame(renderGap);
+  });
+  if (document.fonts) document.fonts.ready.then(renderGap);
 
   var CF_FILES = "https://www.curseforge.com/minecraft/mc-mods/quiet-please/files/";
   var VERS = [
