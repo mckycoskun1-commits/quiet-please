@@ -76,8 +76,22 @@ public final class ModOptions {
     public static final int POPUP_SCALE_MAX = 200;
     public static final int POPUP_DURATION_MIN = 2;
     public static final int POPUP_DURATION_MAX = 15;
-    public static final int POPUP_OFFSET_X_MAX = 150;
-    public static final int POPUP_OFFSET_Y_MAX = 150;
+    public static final int POPUP_OFFSET_X_MAX = 400;
+    public static final int POPUP_OFFSET_Y_MAX = 300;
+
+    public static final int[] JUKEBOX_VALUES = {100, 25, 0};
+    public static final int[] UNFOCUSED_VALUES = {100, 30, 0};
+    public static final int[] COMBAT_VALUES = {100, 60, 30};
+    public static final int[] FADE_VALUES = {0, 2, 5};
+    public static final int[] NO_REPEAT_VALUES = {0, 5, 10};
+    public static final int[] FAVORITE_VALUES = {1, 2, 3, 5};
+
+    public static int jukeboxVolume = 0;
+    public static int unfocusedVolume = 100;
+    public static int combatVolume = 100;
+    public static int fadeSeconds = 2;
+    public static int noRepeat = 5;
+    public static int favoriteWeight = 2;
 
     public enum PopupPosition {
         RIGHT_MIDDLE("right_middle", true, 1),
@@ -252,6 +266,12 @@ public final class ModOptions {
         gapMaxSeconds = 60;
         songPopup = true;
         fadeOnSkip = true;
+        jukeboxVolume = 0;
+        unfocusedVolume = 100;
+        combatVolume = 100;
+        fadeSeconds = 2;
+        noRepeat = 5;
+        favoriteWeight = 2;
         resetPopup();
     }
 
@@ -297,6 +317,21 @@ public final class ModOptions {
         popupShowIcon = bool(o, "popupShowIcon", popupShowIcon);
         popupShowMod = bool(o, "popupShowMod", popupShowMod);
         popupEqualizer = bool(o, "popupEqualizer", popupEqualizer);
+        jukeboxVolume = choice(o, "jukeboxVolume", jukeboxVolume, JUKEBOX_VALUES);
+        unfocusedVolume = choice(o, "unfocusedVolume", unfocusedVolume, UNFOCUSED_VALUES);
+        combatVolume = choice(o, "combatVolume", combatVolume, COMBAT_VALUES);
+        fadeSeconds = choice(o, "fadeSeconds", fadeSeconds, FADE_VALUES);
+        noRepeat = choice(o, "noRepeat", noRepeat, NO_REPEAT_VALUES);
+        favoriteWeight = choice(o, "favoriteWeight", favoriteWeight, FAVORITE_VALUES);
+        MusicMixer.optionsChanged();
+    }
+
+    private static int choice(JsonObject o, String key, int fallback, int[] allowed) {
+        if (!o.has(key)) return fallback;
+        int v = o.get(key).getAsInt();
+        int best = allowed[0];
+        for (int a : allowed) if (Math.abs(a - v) < Math.abs(best - v)) best = a;
+        return best;
     }
 
     static JsonObject write() {
@@ -324,6 +359,12 @@ public final class ModOptions {
         o.addProperty("popupShowIcon", popupShowIcon);
         o.addProperty("popupShowMod", popupShowMod);
         o.addProperty("popupEqualizer", popupEqualizer);
+        o.addProperty("jukeboxVolume", jukeboxVolume);
+        o.addProperty("unfocusedVolume", unfocusedVolume);
+        o.addProperty("combatVolume", combatVolume);
+        o.addProperty("fadeSeconds", fadeSeconds);
+        o.addProperty("noRepeat", noRepeat);
+        o.addProperty("favoriteWeight", favoriteWeight);
         return o;
     }
 

@@ -88,8 +88,10 @@ public class QuietPleaseSettingsScreen extends Screen {
                     ModOptions.gap = v;
                     updateSliders();
                 }));
-        addRenderableWidget(toggle("settings.fade_skip", ModOptions.fadeOnSkip)
-                .create(right, y, BUTTON_W, 20, Lang.tr("settings.fade_skip"), (b, v) -> ModOptions.fadeOnSkip = v));
+        addRenderableWidget(Button.builder(Lang.tr("settings.behavior"), b -> minecraft.setScreen(new MusicBehaviorScreen(this)))
+                .bounds(right, y, BUTTON_W, 20)
+                .tooltip(Tooltip.create(Lang.tr("settings.behavior.tooltip")))
+                .build());
         y += row;
         minSlider = addRenderableWidget(new GapSlider(left, y, "settings.gap.min", ModOptions.gapMinSeconds, s -> {
             ModOptions.gapMinSeconds = s;

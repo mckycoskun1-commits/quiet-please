@@ -81,6 +81,10 @@ public final class SongPopup {
         show(exampleTitle(), "Quiet Please", QuietPleaseScreen.stack(Items.JUKEBOX));
     }
 
+    public static void finishPreviewAnimation() {
+        previewAt = -1;
+    }
+
     public static void replayPreview() {
         previewAt = Util.getMillis();
     }
@@ -118,17 +122,57 @@ public final class SongPopup {
         if (Minecraft.getInstance().options.hideGui) return;
         double visible = visible();
         if (visible < 0) return;
-        draw(g, title, subtitle, icon, visible, -1, -1);
+        draw(g, title, subtitle, icon, visible);
     }
 
-    public static void renderPreview(GuiGraphicsExtractor g, int mouseX, int mouseY) {
+    public static void renderPreview(GuiGraphicsExtractor g, boolean highlight) {
         long age = previewAt < 0 ? SLIDE_IN_MS : Util.getMillis() - previewAt;
         double visible = age < SLIDE_IN_MS ? easeOut(age / (double) SLIDE_IN_MS) : 1;
-        draw(g, exampleTitle(), "Quiet Please", QuietPleaseScreen.stack(Items.JUKEBOX), visible, mouseX, mouseY);
+        Layout l = draw(g, exampleTitle(), "Quiet Please", QuietPleaseScreen.stack(Items.JUKEBOX), visible);
+        if (highlight) g.outline(l.x - 2, l.y - 2, l.outerW + 4, l.outerH + 4, 0xFFFFFFFF);
     }
 
-    private static void draw(GuiGraphicsExtractor g, String songTitle, String songMod, ItemStack songIcon, double visible, int mouseX, int mouseY) {
-        Font font = Minecraft.getInstance().font;
+    public static int[] previewBounds(int screenW, int screenH) {
+        Layout l = layout(Minecraft.getInstance().font, exampleTitle(), "Quiet Please", 1, screenW, screenH);
+        return new int[] {l.x, l.y, l.outerW, l.outerH};
+    }
+
+    public static void placeAt(int x, int y, int screenW, int screenH) {
+        int[] b = previewBounds(screenW, screenH);
+        int w = b[2];
+        int h = b[3];
+        x = Mth.clamp(x, 0, Math.max(0, screenW - w));
+        y = Mth.clamp(y, 0, Math.max(0, screenH - h));
+        boolean right = x + w / 2 >= screenW / 2;
+        int bestRow = 0;
+        int bestDist = Integer.MAX_VALUE;
+        for (int row = 0; row < 3; row++) {
+            int dist = Math.abs(y - baseY(row, h, screenH));
+            if (dist < bestDist) {
+                bestDist = dist;
+                bestRow = row;
+            }
+        }
+        for (ModOptions.PopupPosition p : ModOptions.PopupPosition.values()) {
+            if (p.right == right && p.row == bestRow) ModOptions.popupPosition = p;
+        }
+        int fromEdge = right ? screenW - w - x - MARGIN : x - MARGIN;
+        ModOptions.popupOffsetX = Mth.clamp(fromEdge, 0, ModOptions.POPUP_OFFSET_X_MAX);
+        ModOptions.popupOffsetY = Mth.clamp(y - baseY(bestRow, h, screenH), -ModOptions.POPUP_OFFSET_Y_MAX, ModOptions.POPUP_OFFSET_Y_MAX);
+    }
+
+    private record Layout(Component name, Component from, int pad, int iconW, int textW, int w, int h,
+            float scale, int outerW, int outerH, int x, int y) {}
+
+    private static int baseY(int row, int outerH, int screenH) {
+        return switch (row) {
+            case 0 -> MARGIN + 2;
+            case 1 -> screenH / 2 + 36;
+            default -> screenH - outerH - 26;
+        };
+    }
+
+    private static Layout layout(Font font, String songTitle, String songMod, double visible, int screenW, int screenH) {
         ModOptions.TextStyle style = ModOptions.popupTextStyle;
         boolean showMod = ModOptions.popupShowMod;
         Component name = styled(fit(font, songTitle, style), style);
@@ -142,37 +186,39 @@ public final class SongPopup {
         int h = CONTENT_H + pad * 2;
 
         float scale = ModOptions.popupScale / 100F;
-        int screenW = g.guiWidth();
-        int screenH = g.guiHeight();
         int outerW = (int) Math.ceil(w * scale);
         int outerH = (int) Math.ceil(h * scale);
 
         ModOptions.PopupPosition pos = ModOptions.popupPosition;
         int edge = MARGIN + ModOptions.popupOffsetX;
-        int hidden = (int) Math.round((1 - visible) * (outerW + edge + 2));
-        int x = pos.right ? screenW - outerW - edge + hidden : edge - hidden;
-        int y = switch (pos.row) {
-            case 0 -> MARGIN + 2;
-            case 1 -> screenH / 2 + 36;
-            default -> screenH - outerH - 26;
-        };
-        y = Mth.clamp(y + ModOptions.popupOffsetY, 0, Math.max(0, screenH - outerH));
-        if (mouseX >= x && mouseX < x + outerW && mouseY >= y && mouseY < y + outerH) return;
+        int shown = pos.right ? screenW - outerW - edge : edge;
+        shown = Mth.clamp(shown, 0, Math.max(0, screenW - outerW));
+        int hiddenX = pos.right ? screenW + 2 : -outerW - 2;
+        int x = (int) Math.round(hiddenX + (shown - hiddenX) * visible);
+        int y = Mth.clamp(baseY(pos.row, outerH, screenH) + ModOptions.popupOffsetY, 0, Math.max(0, screenH - outerH));
+        return new Layout(name, from, pad, iconW, textW, w, h, scale, outerW, outerH, x, y);
+    }
+
+    private static Layout draw(GuiGraphicsExtractor g, String songTitle, String songMod, ItemStack songIcon, double visible) {
+        Font font = Minecraft.getInstance().font;
+        Layout l = layout(font, songTitle, songMod, visible, g.guiWidth(), g.guiHeight());
+        boolean showMod = ModOptions.popupShowMod;
 
         g.pose().pushMatrix();
-        g.pose().translate(x, y);
-        g.pose().scale(scale, scale);
-        drawBackground(g, w, h);
-        if (ModOptions.popupShowIcon) g.item(songIcon, pad, pad);
-        int textX = pad + iconW;
+        g.pose().translate(l.x, l.y);
+        g.pose().scale(l.scale, l.scale);
+        drawBackground(g, l.w, l.h);
+        if (ModOptions.popupShowIcon) g.item(songIcon, l.pad, l.pad);
+        int textX = l.pad + l.iconW;
         g.pose().pushMatrix();
-        g.pose().translate(textX, pad + (showMod ? 2 : 5));
+        g.pose().translate(textX, l.pad + (showMod ? 2 : 5));
         g.pose().scale(TEXT_SCALE, TEXT_SCALE);
-        g.text(font, name, 0, 0, ModOptions.popupTitleColor.argb(), ModOptions.popupShadow);
-        if (showMod) g.text(font, from, 0, 10, ModOptions.popupModColor.argb(), ModOptions.popupShadow);
+        g.text(font, l.name, 0, 0, ModOptions.popupTitleColor.argb(), ModOptions.popupShadow);
+        if (showMod) g.text(font, l.from, 0, 10, ModOptions.popupModColor.argb(), ModOptions.popupShadow);
         g.pose().popMatrix();
-        if (ModOptions.popupEqualizer) QuietPleaseScreen.drawEqualizer(g, textX + textW + 5, pad + 14, QuietPleaseScreen.PLAYING);
+        if (ModOptions.popupEqualizer) QuietPleaseScreen.drawEqualizer(g, textX + l.textW + 5, l.pad + 14, QuietPleaseScreen.PLAYING);
         g.pose().popMatrix();
+        return l;
     }
 
     private static void drawBackground(GuiGraphicsExtractor g, int w, int h) {

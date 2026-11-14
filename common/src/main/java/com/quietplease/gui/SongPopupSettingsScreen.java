@@ -23,6 +23,9 @@ public class SongPopupSettingsScreen extends Screen {
 
     @Nullable
     private final Screen parent;
+    private boolean dragging;
+    private double grabX;
+    private double grabY;
 
     public SongPopupSettingsScreen(@Nullable Screen parent) {
         super(Lang.tr("popup.title"));
@@ -108,7 +111,45 @@ public class SongPopupSettingsScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(g, mouseX, mouseY, partialTick);
         g.centeredText(font, title, width / 2, 12, 0xFFFFC966);
-        SongPopup.renderPreview(g, mouseX, mouseY);
+        g.centeredText(font, Lang.tr("popup.drag_hint"), width / 2, height - 42, 0xFF9A8C78);
+        SongPopup.renderPreview(g, dragging || overPreview(mouseX, mouseY));
+    }
+
+    private boolean overPreview(double mouseX, double mouseY) {
+        int[] b = SongPopup.previewBounds(width, height);
+        return mouseX >= b[0] - 2 && mouseX < b[0] + b[2] + 2 && mouseY >= b[1] - 2 && mouseY < b[1] + b[3] + 2;
+    }
+
+    @Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        if (event.button() == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT && overPreview(event.x(), event.y())) {
+            int[] b = SongPopup.previewBounds(width, height);
+            dragging = true;
+            grabX = event.x() - b[0];
+            grabY = event.y() - b[1];
+            SongPopup.finishPreviewAnimation();
+            return true;
+        }
+        return super.mouseClicked(event, doubleClick);
+    }
+
+    @Override
+    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dx, double dy) {
+        if (dragging) {
+            SongPopup.placeAt((int) Math.round(event.x() - grabX), (int) Math.round(event.y() - grabY), width, height);
+            return true;
+        }
+        return super.mouseDragged(event, dx, dy);
+    }
+
+    @Override
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        if (dragging) {
+            dragging = false;
+            rebuildWidgets();
+            return true;
+        }
+        return super.mouseReleased(event);
     }
 
     @Override
