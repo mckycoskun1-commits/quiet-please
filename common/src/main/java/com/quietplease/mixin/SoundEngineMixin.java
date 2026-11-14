@@ -21,7 +21,8 @@ public abstract class SoundEngineMixin {
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"))
     private float quietplease$volumeOnPlay(float original, @Local(argsOnly = true) SoundInstance sound) {
-        return original * MusicSettings.factor(sound) * com.quietplease.music.MusicControl.fadeFactor(sound);
+        return original * MusicSettings.factor(sound) * com.quietplease.music.MusicControl.fadeFactor(sound)
+                * com.quietplease.music.MusicMixer.factor(sound);
     }
 
     /**
@@ -31,7 +32,8 @@ public abstract class SoundEngineMixin {
     @Inject(method = "calculateVolume(Lnet/minecraft/client/resources/sounds/SoundInstance;)F",
             at = @At("RETURN"), cancellable = true)
     private void quietplease$volumeWhilePlaying(SoundInstance sound, CallbackInfoReturnable<Float> cir) {
-        float factor = MusicSettings.factor(sound) * com.quietplease.music.MusicControl.fadeFactor(sound);
+        float factor = MusicSettings.factor(sound) * com.quietplease.music.MusicControl.fadeFactor(sound)
+                * com.quietplease.music.MusicMixer.factor(sound);
         if (factor != 1.0F) cir.setReturnValue(cir.getReturnValueF() * factor);
     }
 }
