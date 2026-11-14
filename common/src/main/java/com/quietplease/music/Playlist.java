@@ -122,6 +122,10 @@ public final class Playlist {
         return FAVORITES.contains(id);
     }
 
+    public static boolean hasFavorites() {
+        return !FAVORITES.isEmpty();
+    }
+
     public static List<Identifier> favorites() {
         return List.copyOf(FAVORITES);
     }
@@ -411,7 +415,10 @@ public final class Playlist {
 
     /** Parcanin suresi (sn). Ilk soruldugunda arka planda okunur; o zamana kadar ya da okunamazsa -1. */
     public static int durationSeconds(PlaylistSound sound) {
-        Sound s = sound.getSound();
+        return durationSeconds(sound.getSound());
+    }
+
+    public static int durationSeconds(@Nullable Sound s) {
         if (s == null) return -1;
         Identifier path = s.getPath();
         Integer known = DURATIONS.get(path);

@@ -62,13 +62,13 @@ public class QuietPleaseSettingsScreen extends Screen {
                     ModOptions.songPopup = v;
                     if (v) SongPopup.preview();
                 }));
-        addRenderableWidget(CycleButton.<ModOptions.PopupPosition>builder(ModOptions.PopupPosition::displayName, ModOptions.popupPosition)
-                .withValues(ModOptions.PopupPosition.values())
-                .withTooltip(v -> Tooltip.create(Lang.tr("settings.popup_position.tooltip")))
-                .create(right, y, BUTTON_W, 20, Lang.tr("settings.popup_position"), (b, v) -> {
-                    ModOptions.popupPosition = v;
-                    SongPopup.preview();
-                }));
+        addRenderableWidget(Button.builder(Lang.tr("settings.popup_settings"), b -> {
+                    SongPopup.replayPreview();
+                    minecraft.gui.setScreen(new SongPopupSettingsScreen(this));
+                })
+                .bounds(right, y, BUTTON_W, 20)
+                .tooltip(Tooltip.create(Lang.tr("settings.popup_settings.tooltip")))
+                .build());
         y += row;
 
         // Calma listesi
@@ -88,8 +88,10 @@ public class QuietPleaseSettingsScreen extends Screen {
                     ModOptions.gap = v;
                     updateSliders();
                 }));
-        addRenderableWidget(toggle("settings.fade_skip", ModOptions.fadeOnSkip)
-                .create(right, y, BUTTON_W, 20, Lang.tr("settings.fade_skip"), (b, v) -> ModOptions.fadeOnSkip = v));
+        addRenderableWidget(Button.builder(Lang.tr("settings.behavior"), b -> minecraft.gui.setScreen(new MusicBehaviorScreen(this)))
+                .bounds(right, y, BUTTON_W, 20)
+                .tooltip(Tooltip.create(Lang.tr("settings.behavior.tooltip")))
+                .build());
         y += row;
         minSlider = addRenderableWidget(new GapSlider(left, y, "settings.gap.min", ModOptions.gapMinSeconds, s -> {
             ModOptions.gapMinSeconds = s;
