@@ -1,5 +1,6 @@
 package com.quietplease.mixin;
 
+import com.quietplease.music.MusicMixer;
 import com.quietplease.music.MusicSettings;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Bir ses olayi (ornegin minecraft:music.game) calinacagi zaman oyun icindeki dosyalardan birini rastgele secer.
- * Burada kapatilan parcalari secimden cikariyoruz; boylece yerlerine hemen baska bir parca secilir.
+ * Kapali parcalar secimden cikar, son calinan parcalar (baska secenek varsa) atlanir, favoriler daha agir basar.
  */
 @Mixin(WeighedSoundEvents.class)
 public abstract class WeighedSoundEventsMixin {
@@ -30,35 +31,56 @@ public abstract class WeighedSoundEventsMixin {
 
     @Inject(method = "getSound()Lnet/minecraft/client/resources/sounds/Sound;",
             at = @At("HEAD"), cancellable = true)
-    private void quietplease$skipDisabledTracks(CallbackInfoReturnable<Sound> cir) {
-        if (!MusicSettings.hasDisabled()) return;
+    private void quietplease$pickTrack(CallbackInfoReturnable<Sound> cir) {
+        boolean disabled = MusicSettings.hasDisabled();
+        boolean extras = MusicMixer.affectsSelection();
+        if (!disabled && !extras) return;
 
         List<Weighted<Sound>> all = list;
         List<Weighted<Sound>> allowed = new ArrayList<>(all.size());
-        boolean removedAny = false;
-        int totalWeight = 0;
+        List<Integer> weights = new ArrayList<>(all.size());
+        List<Boolean> recent = new ArrayList<>(all.size());
+        boolean changed = false;
+        boolean anyFresh = false;
         for (Weighted<Sound> entry : all) {
-            if (entry instanceof Sound sound && MusicSettings.isDisabled(sound.getLocation())) {
-                removedAny = true;
-            } else {
-                allowed.add(entry);
-                totalWeight += entry.getWeight();
+            int weight = entry.getWeight();
+            boolean isRecent = false;
+            if (entry instanceof Sound sound) {
+                if (disabled && MusicSettings.isDisabled(sound.getLocation())) {
+                    changed = true;
+                    continue;
+                }
+                if (extras) {
+                    int w = MusicMixer.weight(sound.getLocation(), weight);
+                    if (w != weight) changed = true;
+                    weight = w;
+                    isRecent = MusicMixer.isRecent(sound.getLocation());
+                    if (isRecent) changed = true;
+                }
             }
+            if (!isRecent) anyFresh = true;
+            allowed.add(entry);
+            weights.add(weight);
+            recent.add(isRecent);
         }
-        if (!removedAny) return; // bu olayda kapali parca yok, oyunun kendi secimi gecerli
+        if (!changed) return;
 
-        if (allowed.isEmpty() || totalWeight <= 0) {
-            // Olaydaki tum parcalar kapali: "bilerek sessiz" sesi dondur, oyun hicbir sey calmaz.
+        int total = 0;
+        for (int i = 0; i < allowed.size(); i++) {
+            if (anyFresh && recent.get(i)) continue;
+            total += weights.get(i);
+        }
+        if (allowed.isEmpty() || total <= 0) {
             cir.setReturnValue(SoundManager.EMPTY_SOUND);
             return;
         }
 
-        // Oyunun kendi agirlikli secimiyle ayni mantik, sadece izin verilen parcalar arasinda.
-        int r = quietplease$random.nextInt(totalWeight);
-        for (Weighted<Sound> entry : allowed) {
-            r -= entry.getWeight();
+        int r = quietplease$random.nextInt(total);
+        for (int i = 0; i < allowed.size(); i++) {
+            if (anyFresh && recent.get(i)) continue;
+            r -= weights.get(i);
             if (r < 0) {
-                cir.setReturnValue(entry.getSound());
+                cir.setReturnValue(allowed.get(i).getSound());
                 return;
             }
         }
