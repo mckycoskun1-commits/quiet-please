@@ -146,5 +146,27 @@
   "quietplease.cmd.preset.imported": "\"%s\" hazır ayarı yüklendi: parça ayarları, ayarlar ve çalma listesi.",
   "key.categories.quietplease": "Quiet Please",
   "key.quietplease.open": "Müzik panelini aç",
-  "key.quietplease.skip": "Çalan şarkıyı atla"
+  "key.quietplease.skip": "Çalan şarkıyı atla",
+  "key.quietplease.favorite": "Çalan şarkıyı favorilere ekle",
+  "key.quietplease.playlist_mode": "Çalma listesi modunu aç/kapat",
+
+  "quietplease.screen.mod_volume": "Mod: %%%s",
+  "quietplease.screen.mod_volume.tooltip": "Bu modun tüm şarkılarının sesi. Her şarkının kendi ses ayarı bunun üstüne uygulanır",
+  "quietplease.cmd.mod_volume": "%1$s: tüm şarkılar artık %%%2$s seste çalıyor",
+  "quietplease.settings.song_popup": "Şarkı bildirimi",
+  "quietplease.settings.song_popup.tooltip": "Yeni bir şarkı başlayınca ekranın kenarından küçük bir kart kayarak çıkar ve birkaç saniye sonra geri girer",
+  "quietplease.settings.song_popup.example": "Örnek şarkı",
+  "quietplease.settings.popup_position": "Bildirim",
+  "quietplease.settings.popup_position.tooltip": "Şarkı bildiriminin çıktığı yer. Mini haritanın ve başka ekran modlarının kullanmadığı bir kenarı seç",
+  "quietplease.settings.popup_position.right_middle": "Sağ, orta",
+  "quietplease.settings.popup_position.left_middle": "Sol, orta",
+  "quietplease.settings.popup_position.right_bottom": "Sağ, alt",
+  "quietplease.settings.popup_position.left_top": "Sol, üst",
+  "quietplease.settings.fade_skip": "Yumuşak atlama",
+  "quietplease.settings.fade_skip.tooltip": "Atla'ya basınca şarkı aniden kesilmez, 1,5 saniyede sesi azalarak biter. Hemen durdurmak için Atla'ya bir kez daha bas",
+  "quietplease.key.favorite.added": "★ Favorilere eklendi: %s",
+  "quietplease.key.favorite.removed": "Favorilerden çıkarıldı: %s",
+  "quietplease.key.favorite.nothing": "Şu an çalan bir arka plan müziği yok",
+  "quietplease.key.playlist_mode.changed": "Çalma listesi modu: %s",
+  "quietplease.key.playlist_mode.empty": "Çalma listesi modu: %s – liste boş, şarkıları ☆ ile ekle"
 }
