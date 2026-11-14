@@ -9,7 +9,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Quiet Please">
 <meta property="og:title" content="Quiet Please - Minecraft music control mod">
-<meta property="og:description" content="Too much music in your modpack? Turn any song down or off, one by one. Playlist, skip, favorites. Fabric, Quilt, Forge and NeoForge.">
+<meta property="og:description" content="Too much music in your modpack? Turn any song down or off, one by one. Playlist, skip, favorites, song popup. Fabric, Quilt, Forge and NeoForge.">
 <meta property="og:url" content="https://mckycoskun1-commits.github.io/quiet-please/">
 <meta property="og:image" content="https://mckycoskun1-commits.github.io/quiet-please/img/og-card.png">
 <meta property="og:image:width" content="1200">
@@ -462,7 +462,7 @@ section { padding: 96px 0; }
 .stage { margin: 0; background: #000000; border: 2px solid #0c0c0f; box-shadow: 0 0 0 2px var(--line-2); }
 .stage img { width: 100%; height: auto; aspect-ratio: 854 / 480; object-fit: contain; background: #000; }
 .stage figcaption { font-size: 18px; color: #d6d5dc; padding: 14px 20px; background: var(--surface); }
-.thumbs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.thumbs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .thumbs button { padding: 0; border: 2px solid var(--line-2); background: #000; cursor: pointer; }
 .thumbs button img { aspect-ratio: 854 / 480; width: 100%; height: auto; object-fit: contain; opacity: 0.6; transition: opacity 0.15s; }
 .thumbs button[aria-current="true"] { border-color: var(--gold); }
@@ -807,7 +807,10 @@ code {
         <button type="button" aria-current="false" data-src="img/pause-menu.png" data-cap="The pause menu button, with the song that is playing right now under it." data-alt="Pause menu with a Quiet Please button in the top right corner and the current song below it"><img src="img/pause-menu.png" alt="Pause menu"></button>
         <button type="button" aria-current="false" data-src="img/options-button.png" data-cap="The same button in the Options screen." data-alt="Options screen with the Quiet Please button"><img src="img/options-button.png" alt="Options"></button>
         <button type="button" aria-current="false" data-src="img/playlist.png" data-cap="Your own playlist: a queue with a loop button on every song, and suggested songs on the right." data-alt="Playlist screen with a numbered queue of songs, a loop button on each song, a Suggested list and Shuffle and Clear buttons"><img src="img/playlist.png" alt="Playlist"></button>
-        <button type="button" aria-current="false" data-src="img/settings.png" data-cap="The settings screen, including the pause between songs." data-alt="Quiet Please settings screen with toggles and music gap sliders"><img src="img/settings.png" alt="Settings"></button>
+        <button type="button" aria-current="false" data-src="img/song-popup.png" data-cap="New song? A small card shows its name and the mod it comes from." data-alt="A small card in the corner of the game screen with a jukebox icon, the song name and Minecraft as its mod"><img src="img/song-popup.png" alt="Song popup"></button>
+        <button type="button" aria-current="false" data-src="img/popup-settings.png" data-cap="Popup settings: place, size, colors and text style. Drag the example card where you want it." data-alt="Song Popup Settings screen with a large framed example card in aqua and white"><img src="img/popup-settings.png" alt="Popup settings"></button>
+        <button type="button" aria-current="false" data-src="img/music-behavior.png" data-cap="Music behavior: quieter near a jukebox, in the background or in a fight, soft fades, no repeats and more favorites." data-alt="Music Behavior screen with Jukebox, In background, In combat, Fade in and out, No repeats, Favorites and Fade on skip buttons"><img src="img/music-behavior.png" alt="Music behavior"></button>
+        <button type="button" aria-current="false" data-src="img/settings.png" data-cap="The settings screen, including the pause between songs." data-alt="Quiet Please settings screen with toggles, the popup and music behavior buttons and music gap sliders"><img src="img/settings.png" alt="Settings"></button>
       </div>
     </div>
   </section>
@@ -815,7 +818,7 @@ code {
   <section id="download">
     <div class="sec-head">
       <h2 class="shadow">Versions</h2>
-      <p>Version 1.2.1, client side only.</p>
+      <p>Version 1.3.0, client side only.</p>
     </div>
     <div class="vgrid" id="vgrid"></div>
     <p class="vnote">Click a loader to open its download page on CurseForge. The Fabric files need Fabric API and also run on Quilt.</p>
@@ -837,7 +840,7 @@ code {
       <ul>
         <li><b>Options</b> and <b>Options, Music &amp; Sounds</b>: the same button, top right</li>
         <li><b>Mods, Quiet Please, Config</b> (on Fabric this needs Mod Menu)</li>
-        <li><b>A key you choose</b> under Options, Controls, Key Binds, Quiet Please. It starts unbound.</li>
+        <li><b>A key you choose</b> under Options, Controls, Key Binds, Quiet Please. It starts unbound. The same list has keys to skip a song, favorite the song that is playing and turn playlist mode on or off.</li>
         <li><code>/quietplease gui</code> in chat</li>
       </ul>
     </div>
@@ -855,8 +858,10 @@ code {
       <div class="qa"><h3>Does the playlist stop boss music?</h3><p>No. Dragon, credits and boss music still play. The playlist only takes over the normal background music.</p></div>
       <div class="qa"><h3>Why do I hear a preview with Music at 0%?</h3><p>Previews play on the master channel, so you can check a song even when your music slider is all the way down.</p></div>
       <div class="qa"><h3>Where are my settings saved?</h3><p>In <code>config/quietplease.json</code>. Modpack makers can ship a ready file, and <code>/quietplease export</code> and <code>import</code> save and load presets.</p></div>
-      <div class="qa"><h3>Which languages are there?</h3><p>English and Turkish. Other languages show the English text.</p></div>
-      <div class="qa"><h3>Can I skip a song with a key?</h3><p>Yes. Open the panel and Skip the current song both have key binds. They start unbound, so pick your own keys.</p></div>
+      <div class="qa"><h3>Which languages are there?</h3><p>English, Turkish, German, Spanish, Russian, Brazilian Portuguese and Simplified Chinese. Other languages show the English text.</p></div>
+      <div class="qa"><h3>Can I skip a song with a key?</h3><p>Yes. Open the panel, Skip the current song, Favorite the current song and Toggle playlist mode all have key binds. They start unbound, so pick your own keys.</p></div>
+      <div class="qa"><h3>Can the music get quieter by itself?</h3><p>Yes. In Settings, Music behavior, it can turn down or mute while a jukebox plays nearby, while the game is in the background or during a fight. Songs can also fade in and out.</p></div>
+      <div class="qa"><h3>Can I turn off the song popup?</h3><p>Yes. Song popup in Settings turns it off. Popup settings changes its place, size, colors and text, and you can drag the example card where you want it.</p></div>
     </div>
   </section>
 
@@ -874,6 +879,7 @@ code {
           <tr><td><code>/quietplease volume &lt;track&gt; &lt;0-100&gt;</code></td><td>Set the volume of one track.</td></tr>
           <tr><td><code>/quietplease off &lt;track&gt;</code>, <code>on &lt;track&gt;</code></td><td>Switch one track off or on.</td></tr>
           <tr><td><code>/quietplease mod &lt;mod&gt; off</code>, <code>on</code></td><td>Switch every track of a mod off or on.</td></tr>
+          <tr><td><code>/quietplease mod &lt;mod&gt; volume &lt;0-100&gt;</code></td><td>Set the volume of every track of a mod at once.</td></tr>
           <tr><td><code>/quietplease reset &lt;track&gt;</code>, <code>resetall</code></td><td>Set one track, or everything, back to default.</td></tr>
           <tr><td><code>/quietplease gui</code>, <code>settings</code>, <code>playlist</code></td><td>Open the panel, the settings screen or the playlist.</td></tr>
           <tr><td><code>/quietplease skip</code></td><td>Skip the background song that is playing.</td></tr>
@@ -889,6 +895,18 @@ code {
       <h2 class="shadow">What's new</h2>
     </div>
     <div class="changes">
+      <div class="rel">
+        <div class="rel-h"><span class="tag">1.3.0</span><h3>Song popup and music behavior</h3></div>
+        <ul>
+          <li>Song popup: a small card shows the song and its mod when a new song starts</li>
+          <li>Popup settings: position, size, how long it stays, colors, text style, shadow, background, icon, mod name and equalizer. Drag the example card to put it where you want</li>
+          <li>Music behavior: turn the music down or off near a playing jukebox, while the game is in the background or in a fight. Fade songs in and out, skip the last songs played and pick favorites more often</li>
+          <li>Fade on skip: Skip turns the song down smoothly, a second press stops it at once</li>
+          <li>A volume slider for each mod in the panel, and <code>/quietplease mod &lt;mod&gt; volume</code></li>
+          <li>New keys: favorite the song that is playing and turn playlist mode on or off</li>
+          <li>German, Spanish, Russian, Brazilian Portuguese and Simplified Chinese</li>
+        </ul>
+      </div>
       <div class="rel">
         <div class="rel-h"><span class="tag">1.2.1</span><h3>Playlist fixes</h3></div>
         <ul>
@@ -1907,13 +1925,13 @@ code {
 
   var CF_FILES = "https://www.curseforge.com/minecraft/mc-mods/quiet-please/files/";
   var VERS = [
-    ["26.3", { f: 9606547, o: 9606495, n: 9606488 }],
-    ["26.2", { f: 9606551, o: 9606500, n: 9606481 }],
-    ["26.1.2", { f: 9606555, o: 9606508, n: 9606472 }],
-    ["1.21.1", { f: 9606559, o: 9606515, n: 9606444 }],
-    ["1.20.1", { f: 9606566, o: 9606519 }],
-    ["1.19.2", { f: 9606572, o: 9606522 }],
-    ["1.18.2", { f: 9606578, o: 9606528 }]
+    ["26.3", { f: 9614087, o: 9614237, n: 9614331 }],
+    ["26.2", { f: 9614080, o: 9614247, n: 9614326 }],
+    ["26.1.2", { f: 9614070, o: 9614255, n: 9614323 }],
+    ["1.21.1", { f: 9614058, o: 9614267, n: 9614316 }],
+    ["1.20.1", { f: 9614050, o: 9614278 }],
+    ["1.19.2", { f: 9614038, o: 9614282 }],
+    ["1.18.2", { f: 9614012, o: 9614291 }]
   ];
   var LOADERS = [["f", "lf", "Fabric"], ["o", "lo", "Forge"], ["n", "ln2", "NeoForge"], ["f", "lq", "Quilt"]];
   VERS.forEach(function (v) {
@@ -1923,7 +1941,7 @@ code {
     LOADERS.forEach(function (ld) {
       var id = v[1][ld[0]];
       if (!id) return;
-      l += '<a class="' + ld[1] + '" href="' + CF_FILES + id + '" title="Download Quiet Please 1.2.1 for ' + ld[2] + ' ' + v[0] + '">' + ld[2] + '</a>';
+      l += '<a class="' + ld[1] + '" href="' + CF_FILES + id + '" title="Download Quiet Please 1.3.0 for ' + ld[2] + ' ' + v[0] + '">' + ld[2] + '</a>';
     });
     el.innerHTML = '<div class="v">' + v[0] + '</div><div class="l">' + l + '</div>';
     $("vgrid").appendChild(el);
