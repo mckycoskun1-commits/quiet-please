@@ -29,6 +29,7 @@ public class QuietPlease {
         Minecraft mc = Minecraft.getInstance();
         com.quietplease.music.Playlist.clientTick(mc);
         com.quietplease.music.MusicControl.clientTick(mc);
+        com.quietplease.music.MusicMixer.clientTick(mc);
         com.quietplease.gui.SongPopup.tick(mc);
         QuietPleaseKeys.tick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
@@ -197,7 +198,56 @@ public class QuietPlease {
                 else if (t == 165) {
                     LOGGER.info("GUITEST oyun ici panel: oyun duraklatildi mi: {}", mc.isPaused());
                     shot(mc, "quietplease-ingame.png");
-                } else if (t == 170) {
+                } else if (t == 168) {
+                    mc.gui.setScreen(new com.quietplease.gui.SongPopupSettingsScreen(null));
+                } else if (t == 176) {
+                    shot(mc, "quietplease-popup-settings.png");
+                } else if (t == 178) {
+                    com.quietplease.music.ModOptions.popupPosition = com.quietplease.music.ModOptions.PopupPosition.LEFT_TOP;
+                    com.quietplease.music.ModOptions.popupScale = 150;
+                    com.quietplease.music.ModOptions.popupOffsetX = 20;
+                    com.quietplease.music.ModOptions.popupOffsetY = 30;
+                    com.quietplease.music.ModOptions.popupBackground = com.quietplease.music.ModOptions.PopupBackground.FRAMED;
+                    com.quietplease.music.ModOptions.popupTitleColor = com.quietplease.music.ModOptions.PopupColor.AQUA;
+                    com.quietplease.music.ModOptions.popupModColor = com.quietplease.music.ModOptions.PopupColor.WHITE;
+                    com.quietplease.music.ModOptions.popupTextStyle = com.quietplease.music.ModOptions.TextStyle.BOLD;
+                    mc.gui.setScreen(new com.quietplease.gui.SongPopupSettingsScreen(null));
+                } else if (t == 186) {
+                    shot(mc, "quietplease-popup-settings-custom.png");
+                } else if (t == 188) {
+                    com.quietplease.music.ModOptions.resetPopup();
+                    mc.gui.setScreen(new com.quietplease.gui.SongPopupSettingsScreen(null));
+                } else if (t == 190) {
+                    var screen = mc.gui.screen();
+                    int w = screen.width;
+                    int h = screen.height;
+                    int[] b = com.quietplease.gui.SongPopup.previewBounds(w, h);
+                    double grabX = b[0] + b[2] / 2.0;
+                    double grabY = b[1] + b[3] / 2.0;
+                    var info = new net.minecraft.client.input.MouseButtonInfo(com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT, 0);
+                    screen.mouseClicked(new net.minecraft.client.input.MouseButtonEvent(grabX, grabY, info), false);
+                    double toX = 20 + b[2] / 2.0;
+                    double toY = 20 + b[3] / 2.0;
+                    screen.mouseDragged(new net.minecraft.client.input.MouseButtonEvent(toX, toY, info), toX - grabX, toY - grabY);
+                    screen.mouseReleased(new net.minecraft.client.input.MouseButtonEvent(toX, toY, info));
+                    int[] after = com.quietplease.gui.SongPopup.previewBounds(w, h);
+                    boolean ok = com.quietplease.music.ModOptions.popupPosition == com.quietplease.music.ModOptions.PopupPosition.LEFT_TOP
+                            && Math.abs(after[0] - 20) <= 1 && Math.abs(after[1] - 20) <= 1;
+                    LOGGER.info("GUITEST bildirimi surukleme: {} (yer {}, kenar {}, dikey {}, kart {},{})", ok ? "BASARILI" : "HATA",
+                            com.quietplease.music.ModOptions.popupPosition, com.quietplease.music.ModOptions.popupOffsetX,
+                            com.quietplease.music.ModOptions.popupOffsetY, after[0], after[1]);
+                } else if (t == 196) {
+                    shot(mc, "quietplease-popup-drag.png");
+                } else if (t == 198) {
+                    com.quietplease.music.ModOptions.resetPopup();
+                    mc.gui.setScreen(new com.quietplease.gui.MusicBehaviorScreen(null));
+                } else if (t == 204) {
+                    shot(mc, "quietplease-behavior.png");
+                    LOGGER.info("GUITEST karistirici: kisma {}, plak yakinda {}, savasta {}", com.quietplease.music.MusicMixer.duck(),
+                            com.quietplease.music.MusicMixer.jukeboxNear(), com.quietplease.music.MusicMixer.inCombat());
+                } else if (t == 206) {
+                    mc.gui.setScreen(null);
+                } else if (t == 210) {
                     // Ornek calma listesini geri al
                     if (playlistBackup != null) com.quietplease.music.Playlist.restore(playlistBackup);
                     com.quietplease.music.ModOptions.playlistMode = playlistModeBackup;
