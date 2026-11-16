@@ -150,6 +150,7 @@
   "key.quietplease.skip": "Çalan şarkıyı atla",
   "key.quietplease.favorite": "Çalan şarkıyı favorilere ekle",
   "key.quietplease.playlist_mode": "Çalma listesi modunu aç/kapat",
+  "key.quietplease.pause": "Müziği duraklat / devam ettir",
 
   "quietplease.screen.mod_volume": "Mod: %%%s",
   "quietplease.screen.mod_volume.tooltip": "Bu modun tüm şarkılarının sesi. Her şarkının kendi ses ayarı bunun üstüne uygulanır",
@@ -231,10 +232,16 @@
   "quietplease.behavior.favorites": "Favoriler",
   "quietplease.behavior.favorites.tooltip": "★ ile işaretlenen şarkılar, çalma listesi modu kapalıyken de bu kadar kat daha sık seçilir",
   "quietplease.settings.fade_skip": "Yumuşak atlama",
-  "quietplease.settings.fade_skip.tooltip": "Atla'ya basınca şarkı aniden kesilmez, 1,5 saniyede sesi azalarak biter. Hemen durdurmak için Atla'ya bir kez daha bas",
+  "quietplease.settings.fade_skip.tooltip": "Atla'ya basınca eski şarkı aniden kesilmez, 1,5 saniyede sesi azalarak biter; sıradaki şarkı o sırada başlar",
+  "quietplease.behavior.normalize": "Ses eşitleme",
+  "quietplease.behavior.normalize.tooltip": "Her şarkının ne kadar yüksek olduğunu bir kez ölçer ve bütün şarkıları Minecraft'ın kendi müziklerinin seviyesine çeker; çok yüksek ya da çok alçak mod müzikleri öne çıkmaz. İlk ölçüm arka planda yapılır",
+  "quietplease.behavior.normalize.measuring": "Şarkılar ölçülüyor: %s kaldı",
   "quietplease.key.favorite.added": "★ Favorilere eklendi: %s",
   "quietplease.key.favorite.removed": "Favorilerden çıkarıldı: %s",
   "quietplease.key.favorite.nothing": "Şu an çalan bir arka plan müziği yok",
+  "quietplease.key.pause.paused": "Müzik duraklatıldı",
+  "quietplease.key.pause.resumed": "Müzik devam ediyor",
+  "quietplease.key.pause.nothing": "Şu an çalan bir arka plan müziği yok",
   "quietplease.key.playlist_mode.changed": "Çalma listesi modu: %s",
   "quietplease.key.playlist_mode.empty": "Çalma listesi modu: %s – liste boş, şarkıları ☆ ile ekle"
 }

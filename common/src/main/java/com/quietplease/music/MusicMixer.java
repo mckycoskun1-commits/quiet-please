@@ -68,6 +68,11 @@ public final class MusicMixer {
         return in * in * out * out;
     }
 
+    /** Duraklatilan sarki devam edince: baslangic zamani duraklatilan sure kadar ileri kayar. */
+    public static void shiftStart(SoundInstance sound, long ms) {
+        STARTED.computeIfPresent(sound, (k, start) -> start + ms);
+    }
+
     private static Sound resolved(SoundInstance sound) {
         try {
             return sound.getSound();
@@ -101,9 +106,11 @@ public final class MusicMixer {
             SongPopup.observe(instance, entry.getValue());
             if (!STARTED.containsKey(instance)) {
                 STARTED.put(instance, Util.getMillis());
-                remember(resolved(instance));
+                Sound started = resolved(instance);
+                remember(started);
+                if (started != null) Loudness.prioritize(started.getLocation());
             }
-            if (ModOptions.fadeSeconds > 0 && fade(instance) < 1.0F) fading = true;
+            if (ModOptions.fadeSeconds > 0 && !MusicControl.isPaused(instance) && fade(instance) < 1.0F) fading = true;
         }
         jukeboxNear = jukebox;
         SongPopup.endTick(mc);

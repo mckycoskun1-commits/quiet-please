@@ -150,6 +150,7 @@
   "key.quietplease.skip": "跳过当前歌曲",
   "key.quietplease.favorite": "收藏当前歌曲",
   "key.quietplease.playlist_mode": "切换播放列表模式",
+  "key.quietplease.pause": "暂停 / 继续音乐",
 
   "quietplease.screen.mod_volume": "模组：%s%%",
   "quietplease.screen.mod_volume.tooltip": "这个模组所有歌曲的音量。每首歌自己的音量会再叠加在上面",
@@ -231,10 +232,16 @@
   "quietplease.behavior.favorites": "收藏",
   "quietplease.behavior.favorites.tooltip": "标记 ★ 的歌曲被选中的频率会提高这么多倍，即使没有开启播放列表模式",
   "quietplease.settings.fade_skip": "柔和跳过",
-  "quietplease.settings.fade_skip.tooltip": "跳过时歌曲在 1.5 秒内逐渐变小，而不是突然中断。再按一次跳过可立即停止",
+  "quietplease.settings.fade_skip.tooltip": "跳过时旧歌曲在 1.5 秒内逐渐变小，同时下一首已经开始，而不是突然中断",
+  "quietplease.behavior.normalize": "音量均衡",
+  "quietplease.behavior.normalize.tooltip": "测量一次每首歌的响度，并把所有歌曲调整到 Minecraft 原版音乐的音量，让过响或过轻的模组音乐不再突兀。首次测量在后台进行",
+  "quietplease.behavior.normalize.measuring": "正在测量歌曲：还剩 %s 首",
   "quietplease.key.favorite.added": "★ 已加入收藏：%s",
   "quietplease.key.favorite.removed": "已从收藏移除：%s",
   "quietplease.key.favorite.nothing": "现在没有背景音乐在播放",
+  "quietplease.key.pause.paused": "音乐已暂停",
+  "quietplease.key.pause.resumed": "音乐继续播放",
+  "quietplease.key.pause.nothing": "现在没有背景音乐在播放",
   "quietplease.key.playlist_mode.changed": "播放列表模式：%s",
   "quietplease.key.playlist_mode.empty": "播放列表模式：%s – 播放列表是空的，用 ☆ 添加歌曲"
 }

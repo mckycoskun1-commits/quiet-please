@@ -150,6 +150,7 @@
   "key.quietplease.skip": "Aktuelles Lied überspringen",
   "key.quietplease.favorite": "Aktuelles Lied zu Favoriten",
   "key.quietplease.playlist_mode": "Wiedergabelisten-Modus umschalten",
+  "key.quietplease.pause": "Musik pausieren / fortsetzen",
 
   "quietplease.screen.mod_volume": "Mod: %s%%",
   "quietplease.screen.mod_volume.tooltip": "Lautstärke für jedes Lied dieser Mod. Die eigene Lautstärke jedes Lieds kommt noch dazu",
@@ -231,10 +232,16 @@
   "quietplease.behavior.favorites": "Favoriten",
   "quietplease.behavior.favorites.tooltip": "Mit ★ markierte Lieder werden so viel öfter gewählt, auch ohne Playlist-Modus",
   "quietplease.settings.fade_skip": "Sanft überspringen",
-  "quietplease.settings.fade_skip.tooltip": "Überspringen blendet das Lied in 1,5 Sekunden aus, statt es abzuschneiden. Nochmal drücken stoppt es sofort",
+  "quietplease.settings.fade_skip.tooltip": "Überspringen blendet das alte Lied in 1,5 Sekunden aus, während das nächste schon beginnt, statt es abzuschneiden",
+  "quietplease.behavior.normalize": "Lautstärke angleichen",
+  "quietplease.behavior.normalize.tooltip": "Misst einmal, wie laut jedes Lied ist, und bringt alle Lieder auf die Lautstärke der Minecraft-Musik, damit sehr laute oder leise Mod-Musik nicht heraussticht. Die erste Messung läuft im Hintergrund",
+  "quietplease.behavior.normalize.measuring": "Lieder werden gemessen: noch %s",
   "quietplease.key.favorite.added": "★ Zu Favoriten hinzugefügt: %s",
   "quietplease.key.favorite.removed": "Aus Favoriten entfernt: %s",
   "quietplease.key.favorite.nothing": "Gerade läuft keine Hintergrundmusik",
+  "quietplease.key.pause.paused": "Musik pausiert",
+  "quietplease.key.pause.resumed": "Musik läuft weiter",
+  "quietplease.key.pause.nothing": "Gerade läuft keine Hintergrundmusik",
   "quietplease.key.playlist_mode.changed": "Wiedergabelisten-Modus: %s",
   "quietplease.key.playlist_mode.empty": "Wiedergabelisten-Modus: %s – die Liste ist leer, füge Lieder mit ☆ hinzu"
 }
