@@ -462,7 +462,7 @@ section { padding: 96px 0; }
 .stage { margin: 0; background: #000000; border: 2px solid #0c0c0f; box-shadow: 0 0 0 2px var(--line-2); }
 .stage img { width: 100%; height: auto; aspect-ratio: 854 / 480; object-fit: contain; background: #000; }
 .stage figcaption { font-size: 18px; color: #d6d5dc; padding: 14px 20px; background: var(--surface); }
-.thumbs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.thumbs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .thumbs button { padding: 0; border: 2px solid var(--line-2); background: #000; cursor: pointer; }
 .thumbs button img { aspect-ratio: 854 / 480; width: 100%; height: auto; object-fit: contain; opacity: 0.6; transition: opacity 0.15s; }
 .thumbs button[aria-current="true"] { border-color: var(--gold); }
@@ -811,6 +811,8 @@ code {
         <button type="button" aria-current="false" data-src="img/popup-settings.png" data-cap="Popup settings: place, size, colors and text style. Drag the example card where you want it." data-alt="Song Popup Settings screen with a large framed example card in aqua and white"><img src="img/popup-settings.png" alt="Popup settings"></button>
         <button type="button" aria-current="false" data-src="img/music-behavior.png" data-cap="Music behavior: quieter near a jukebox, in the background or in a fight, soft fades, no repeats and more favorites." data-alt="Music Behavior screen with Jukebox, In background, In combat, Fade in and out, No repeats, Favorites and Fade on skip buttons"><img src="img/music-behavior.png" alt="Music behavior"></button>
         <button type="button" aria-current="false" data-src="img/settings.png" data-cap="The settings screen, including the pause between songs." data-alt="Quiet Please settings screen with toggles, the popup and music behavior buttons and music gap sliders"><img src="img/settings.png" alt="Settings"></button>
+        <button type="button" aria-current="false" data-src="img/your-music.png" data-cap="Your own .ogg files from the config/quietplease/music folder, in their own group at the top." data-alt="The panel with a Your music group holding a song from the player's own music folder"><img src="img/your-music.png" alt="Your music"></button>
+        <button type="button" aria-current="false" data-src="img/history.png" data-cap="History and stats: the last songs, the most played and the never played, each with play, star and on or off buttons." data-alt="History and stats screen with Recently played, Most played and Never played tabs and a list of songs with when they played"><img src="img/history.png" alt="History and stats"></button>
       </div>
     </div>
   </section>
@@ -818,7 +820,7 @@ code {
   <section id="download">
     <div class="sec-head">
       <h2 class="shadow">Versions</h2>
-      <p>Version 1.4.0, client side only.</p>
+      <p>Version 2.0.0, client side only.</p>
     </div>
     <div class="vgrid" id="vgrid"></div>
     <p class="vnote">Click a loader to open its download page on CurseForge. The Fabric files need Fabric API and also run on Quilt.</p>
@@ -840,7 +842,7 @@ code {
       <ul>
         <li><b>Options</b> and <b>Options, Music &amp; Sounds</b>: the same button, top right</li>
         <li><b>Mods, Quiet Please, Config</b> (on Fabric this needs Mod Menu)</li>
-        <li><b>A key you choose</b> under Options, Controls, Key Binds, Quiet Please. It starts unbound. The same list has keys to skip a song, pause and resume the music, favorite the song that is playing and turn playlist mode on or off.</li>
+        <li><b>A key you choose</b> under Options, Controls, Key Binds, Quiet Please. It starts unbound. The same list has keys to skip a song, go back to the previous song, pause and resume the music, favorite the song that is playing, never play it again and turn playlist mode on or off.</li>
         <li><code>/quietplease gui</code> in chat</li>
       </ul>
     </div>
@@ -852,14 +854,16 @@ code {
     </div>
     <div class="faq">
       <div class="qa"><h3>Do servers need it?</h3><p>No. It is client side only. Install it on your own game and join any server.</p></div>
-      <div class="qa"><h3>Does it work with modded music?</h3><p>Yes. It lists vanilla music, music discs and music from other mods, for example the boss themes of L_Ender's Cataclysm and Mowzie's Mobs.</p></div>
+      <div class="qa"><h3>Does it work with modded music?</h3><p>Yes. It lists vanilla music, music discs and music from other mods, for example the boss themes of L_Ender's Cataclysm and Mowzie's Mobs. Note block instruments are listed too, so each one can be turned down or off.</p></div>
+      <div class="qa"><h3>Can I add my own music?</h3><p>Yes. Put .ogg files in <code>config/quietplease/music</code> (Settings has a button that opens the folder). They show up at the top of the panel under Your music, can go in the playlist and, with Your music on in Music behavior, also play as background music.</p></div>
+      <div class="qa"><h3>What was that song a minute ago?</h3><p>Open History and stats in Settings, or type <code>/quietplease history</code>. It lists the last 20 songs and when they played, plus the most played songs and the ones that never played. The Previous song key plays the song before again.</p></div>
       <div class="qa"><h3>What happens when I switch a song off?</h3><p>The game simply picks another song instead. If the song is playing right now, it stops at once and the next one comes.</p></div>
       <div class="qa"><h3>Does a song stay in the playlist after it plays?</h3><p>No, it leaves the queue when it ends and the song after it starts. Turn on its loop button to keep it in its place. When the queue reaches the end it starts again from the top.</p></div>
       <div class="qa"><h3>Does the playlist stop boss music?</h3><p>No. Dragon, credits and boss music still play. The playlist only takes over the normal background music.</p></div>
       <div class="qa"><h3>Why do I hear a preview with Music at 0%?</h3><p>Previews play on the master channel, so you can check a song even when your music slider is all the way down.</p></div>
-      <div class="qa"><h3>Where are my settings saved?</h3><p>In <code>config/quietplease.json</code>. Modpack makers can ship a ready file, and <code>/quietplease export</code> and <code>import</code> save and load presets.</p></div>
+      <div class="qa"><h3>Where are my settings saved?</h3><p>In <code>config/quietplease.json</code>. Modpack makers can ship <code>config/quietplease-presets/default.json</code>: a new player starts with it, and their own changes are kept when the pack updates. <code>/quietplease export</code> and <code>import</code> save and load presets.</p></div>
       <div class="qa"><h3>Which languages are there?</h3><p>English, Turkish, German, Spanish, Russian, Brazilian Portuguese and Simplified Chinese. Other languages show the English text.</p></div>
-      <div class="qa"><h3>Can I skip or pause a song with a key?</h3><p>Yes. Open the panel, Skip the current song, Pause / resume the music, Favorite the current song and Toggle playlist mode all have key binds. They start unbound, so pick your own keys.</p></div>
+      <div class="qa"><h3>Can I skip or pause a song with a key?</h3><p>Yes. Open the panel, Skip the current song, Previous song, Pause / resume the music, Favorite the current song, Never play the current song and Toggle playlist mode all have key binds. They start unbound, so pick your own keys.</p></div>
       <div class="qa"><h3>Can the music get quieter by itself?</h3><p>Yes. In Settings, Music behavior, it can turn down or mute while a jukebox plays nearby, while the game is in the background or during a fight. Songs can also fade in and out.</p></div>
       <div class="qa"><h3>Some mod music is much louder than the rest. Can it match?</h3><p>Yes. Turn on Even out volume in Settings, Music behavior. Each song is measured once in the background, then every song plays at the level of Minecraft's own music.</p></div>
       <div class="qa"><h3>Can I turn off the song popup?</h3><p>Yes. Song popup in Settings turns it off. Popup settings changes its place, size, colors and text, and you can drag the example card where you want it.</p></div>
@@ -884,7 +888,9 @@ code {
           <tr><td><code>/quietplease reset &lt;track&gt;</code>, <code>resetall</code></td><td>Set one track, or everything, back to default.</td></tr>
           <tr><td><code>/quietplease gui</code>, <code>settings</code>, <code>playlist</code></td><td>Open the panel, the settings screen or the playlist.</td></tr>
           <tr><td><code>/quietplease skip</code></td><td>Skip the background song that is playing.</td></tr>
+          <tr><td><code>/quietplease previous</code></td><td>Play the song before again. Run it again to keep going back.</td></tr>
           <tr><td><code>/quietplease pause</code></td><td>Pause the background song, or play it again from where it stopped.</td></tr>
+          <tr><td><code>/quietplease history</code>, <code>stats</code></td><td>Open History and stats: recently played, most played and never played songs.</td></tr>
           <tr><td><code>/quietplease export &lt;name&gt;</code>, <code>import &lt;name&gt;</code></td><td>Save or load all your settings, playlist included, as a preset.</td></tr>
           <tr><td><code>/quietplease dump</code></td><td>Write the full track list to <code>quietplease-tracks.txt</code>.</td></tr>
         </tbody>
@@ -897,6 +903,17 @@ code {
       <h2 class="shadow">What's new</h2>
     </div>
     <div class="changes">
+      <div class="rel">
+        <div class="rel-h"><span class="tag">2.0.0</span><h3>Your own music, history and stats</h3></div>
+        <ul>
+          <li>Your own music: put .ogg files in <code>config/quietplease/music</code> and they show up at the top of the panel, no resource pack needed. They can go in the playlist and, on by default, play as background music</li>
+          <li>History and stats: the last 20 songs with when they played, the most played songs and the songs that never played, with play, star and on or off buttons</li>
+          <li>Previous song key and <code>/quietplease previous</code>, and a Never play the current song key</li>
+          <li>Note block instruments are listed in the panel, so each one can be turned down or off</li>
+          <li>Modpack default: <code>config/quietplease-presets/default.json</code> is used when a player starts without a settings file</li>
+          <li>No repeats now also works with fade in and out turned on</li>
+        </ul>
+      </div>
       <div class="rel">
         <div class="rel-h"><span class="tag">1.4.0</span><h3>Pause, even volume and smoother skips</h3></div>
         <ul>
@@ -1938,13 +1955,13 @@ code {
 
   var CF_FILES = "https://www.curseforge.com/minecraft/mc-mods/quiet-please/files/";
   var VERS = [
-    ["26.3", { f: 9646747, o: 9646699, n: 9646671 }],
-    ["26.2", { f: 9646758, o: 9646714, n: 9646683 }],
-    ["26.1.2", { f: 9646780, o: 9646715, n: 9646689 }],
-    ["1.21.1", { f: 9646787, o: 9646718, n: 9646694 }],
-    ["1.20.1", { f: 9650144, o: 9646720 }],
-    ["1.19.2", { f: 9650147, o: 9646723 }],
-    ["1.18.2", { f: 9650154, o: 9646730 }]
+    ["26.3", { f: 9651194, o: 9654747, n: 9654873 }],
+    ["26.2", { f: 9651233, o: 9654751, n: 9654886 }],
+    ["26.1.2", { f: 9651241, o: 9654755, n: 9654901 }],
+    ["1.21.1", { f: 9651249, o: 9654762, n: 9654913 }],
+    ["1.20.1", { f: 9654728, o: 9654831 }],
+    ["1.19.2", { f: 9654730, o: 9654842 }],
+    ["1.18.2", { f: 9654734, o: 9654855 }]
   ];
   var LOADERS = [["f", "lf", "Fabric"], ["o", "lo", "Forge"], ["n", "ln2", "NeoForge"], ["f", "lq", "Quilt"]];
   VERS.forEach(function (v) {
@@ -1954,7 +1971,7 @@ code {
     LOADERS.forEach(function (ld) {
       var id = v[1][ld[0]];
       if (!id) return;
-      l += '<a class="' + ld[1] + '" href="' + CF_FILES + id + '" title="Download Quiet Please 1.4.0 for ' + ld[2] + ' ' + v[0] + '">' + ld[2] + '</a>';
+      l += '<a class="' + ld[1] + '" href="' + CF_FILES + id + '" title="Download Quiet Please 2.0.0 for ' + ld[2] + ' ' + v[0] + '">' + ld[2] + '</a>';
     });
     el.innerHTML = '<div class="v">' + v[0] + '</div><div class="l">' + l + '</div>';
     $("vgrid").appendChild(el);
