@@ -94,6 +94,7 @@ final class DevSelfTest {
         }
 
         testSelection(menu, files, random, failures);
+        testDurations(menu, failures);
 
         // 4) Calma listesi ve sarki arasi (ayarlar test sonunda geri alinir)
         testPlaylist(files, failures);
@@ -164,6 +165,43 @@ final class DevSelfTest {
             ModOptions.favoriteWeight = favoriteBackup;
             MusicMixer.clearRecentForTest();
         }
+    }
+
+    /** Sure okuma: dosyanin sadece basini ve sonunu tutan okuma, tum dosyayi okuyan basit yontemle ayni sonucu vermeli. */
+    private static void testDurations(WeighedSoundEvents menu, List<String> failures) {
+        StringBuilder log = new StringBuilder();
+        for (Weighted<Sound> w : ((com.quietplease.mixin.WeighedSoundEventsAccessor) menu).quietplease$getList()) {
+            if (!(w instanceof Sound s)) continue;
+            int fast = Playlist.readOggSeconds(s.getPath());
+            int full = fullReadSeconds(s.getPath());
+            check(failures, fast > 0 && fast == full, "sure: " + s.getLocation() + " hizli=" + fast + " tam=" + full);
+            log.append(' ').append(s.getLocation().getPath()).append('=').append(fast);
+        }
+        QuietPlease.LOGGER.info("SELFTEST sureler (sn):{}", log);
+    }
+
+    private static int fullReadSeconds(ResourceLocation path) {
+        try (java.io.InputStream in = Minecraft.getInstance().getResourceManager().open(path)) {
+            byte[] b = in.readAllBytes();
+            long rate = 0;
+            for (int i = 0; i + 16 < b.length && i < 8192; i++) {
+                if (b[i] == 1 && b[i + 1] == 'v' && b[i + 2] == 'o' && b[i + 3] == 'r' && b[i + 4] == 'b'
+                        && b[i + 5] == 'i' && b[i + 6] == 's') {
+                    rate = (b[i + 12] & 0xFFL) | (b[i + 13] & 0xFFL) << 8 | (b[i + 14] & 0xFFL) << 16 | (b[i + 15] & 0xFFL) << 24;
+                    break;
+                }
+            }
+            for (int i = b.length - 14; i >= 0; i--) {
+                if (b[i] == 'O' && b[i + 1] == 'g' && b[i + 2] == 'g' && b[i + 3] == 'S') {
+                    long granule = 0;
+                    for (int k = 7; k >= 0; k--) granule = (granule << 8) | (b[i + 6 + k] & 0xFF);
+                    return rate > 0 && granule > 0 ? (int) (granule / rate) : -1;
+                }
+            }
+        } catch (Exception e) {
+            return -2;
+        }
+        return -1;
     }
 
     private static void check(List<String> failures, boolean ok, String what) {
