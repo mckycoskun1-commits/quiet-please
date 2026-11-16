@@ -88,7 +88,7 @@ public class QuietPleaseSettingsScreen extends Screen {
                 .build());
         addRenderableWidget(Button.builder(Lang.tr("settings.custom_folder"), b -> {
                     com.quietplease.music.CustomMusic.refresh();
-                    net.minecraft.util.Util.getPlatform().openPath(com.quietplease.music.CustomMusic.folder());
+                    com.mojang.blaze3d.Blaze3D.openPath(com.quietplease.music.CustomMusic.folder());
                 })
                 .bounds(right, y, BUTTON_W, 20)
                 .tooltip(Tooltip.create(Lang.tr("settings.custom_folder.tooltip")))
