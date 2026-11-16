@@ -57,6 +57,24 @@ Press **Playlist** and pick the songs and their order, like a music player.
 - **Shuffle** and **Clear** at the bottom
 - Boss, dragon and credits music still interrupt the playlist
 
+## Your own music
+![Your own songs in their own group at the top of the panel](https://mckycoskun1-commits.github.io/quiet-please/img/your-music.png)
+
+Put your own .ogg files in `config/quietplease/music` (Settings has a button that opens the folder). No resource pack needed.
+- They show up at the top of the panel under **Your music**: listen to them, set their volume or turn them off
+- Add them to the playlist like any other song
+- With **Your music** on (Music behavior screen, on by default) they also play as background music, each about as often as one game song
+
+## History and stats
+![The history screen with the last songs, when they played and buttons to play, star or turn them off](https://mckycoskun1-commits.github.io/quiet-please/img/history.png)
+
+- **Recently played** – the last 20 songs and when they played, so "what was that song?" has an answer
+- **Most played** – how many times each song played
+- **Never played** – songs that have not come up yet
+- Every row can play the song now, star it or turn it off
+- **Previous song** key and `/quietplease previous` play the song before again; press again to keep going back
+- **Never play this again** key turns the playing song off and moves on
+
 ## Always know what is playing
 ![The current song shown under the Quiet Please button in the pause menu](https://mckycoskun1-commits.github.io/quiet-please/img/pause-menu-now-playing.png)
 
@@ -100,8 +118,8 @@ When a new song starts, a small card slides in with the song name and the mod it
 - **Esc → ♪ Quiet Please** (top-right corner)
 - **Options → ♪ Quiet Please** or **Options → Music & Sounds → ♪ Quiet Please**
 - **Mods → Quiet Please → Config**
-- **Key bindings** (unbound by default) to open the panel, skip a song, pause and resume the music, favorite the current song and turn playlist mode on or off: Controls → Key Binds → Quiet Please
-- **Chat commands**: `/quietplease`, `/quietplease skip`, `/quietplease pause`, `/quietplease mod <mod> volume <0-100>`, and `/quietplease export <name>` / `import <name>` to share a setup
+- **Key bindings** (unbound by default) to open the panel, skip a song, go back to the previous song, pause and resume the music, favorite the current song, never play the current song again and turn playlist mode on or off: Controls → Key Binds → Quiet Please
+- **Chat commands**: `/quietplease`, `/quietplease skip`, `/quietplease previous`, `/quietplease pause`, `/quietplease history`, `/quietplease stats`, `/quietplease mod <mod> volume <0-100>`, and `/quietplease export <name>` / `import <name>` to share a setup
 
 ## Supported versions
 - **Minecraft 1.18.2** – Fabric, Forge
@@ -115,8 +133,8 @@ When a new song starts, a small card slides in with the song name and the mod it
 
 ## Good to know
 - **Client-side only.** Install it on your own game; servers don't need it, and you can join any server.
-- Works for vanilla music, music discs and modded boss and biome music – for example the boss themes of L_Ender's Cataclysm and Mowzie's Mobs.
-- Settings are stored in `config/quietplease.json`, so modpack makers can ship a pre-tuned file.
+- Works for vanilla music, music discs and modded boss and biome music – for example the boss themes of L_Ender's Cataclysm and Mowzie's Mobs. Note block instruments are listed too, so each one can be turned down or off.
+- Settings are stored in `config/quietplease.json`. Modpack makers can ship `config/quietplease-presets/default.json`: a new player starts with it, and their own changes are kept when the pack updates.
 - English, Turkish, German, Spanish, Russian, Brazilian Portuguese and Simplified Chinese.
 
 ## AI disclosure
@@ -140,8 +158,11 @@ Büyük mod paketleri bir sürü müzik getirir ve hepsi birbirine uymaz.
 - **Müzik davranışı** – yakında plak çalarken, oyun arka plandayken ya da savaşta müziği kıs; şarkıları yumuşak başlat ve bitir, son çalınanları tekrar etme, favorileri daha sık çal
 - Panelde **dinleyerek önizle** (dinlerken arka plan müziği susar)
 - **Arka plan çalma listesi** – şarkıları ve sırasını sen seç, bir müzik çalar gibi: ilerleme çubuklu sıra, yukarı/aşağı taşıma, karıştırma, tekrar. Boss, ejderha ve jenerik müzikleri yine araya girer
-- Çalan arka plan şarkısını **atla** (düğme, `/quietplease skip` ya da seçtiğin bir tuş)
-- Paneli açmak, şarkı atlamak, çalan şarkıyı favorilere eklemek ve çalma listesi modunu açıp kapatmak için **kısayol tuşları** (varsayılan olarak boş)
+- Çalan arka plan şarkısını **atla** (düğme, `/quietplease skip` ya da seçtiğin bir tuş), **önceki şarkıya dön** (`/quietplease previous` ya da tuş)
+- **Kendi müziğin** – `config/quietplease/music` klasörüne koyduğun .ogg dosyaları panelde kendi grubunda görünür, çalma listesine eklenir ve istersen arka plan müziğine karışır
+- **Geçmiş ve istatistik** – son çalan 20 şarkı, en çok çalanlar ve hiç çalmayanlar; her satırdan şarkıyı çal, favorile ya da kapat
+- **Nota blokları** enstrüman enstrüman listede; her birini kısabilir ya da kapatabilirsin
+- Paneli açmak, şarkı atlamak, önceki şarkıya dönmek, çalan şarkıyı favorilere eklemek ya da bir daha çalmamak ve çalma listesi modunu açıp kapatmak için **kısayol tuşları** (varsayılan olarak boş)
 - **Şarkı arası** – arka plan şarkıları arasındaki uzun sessizliği kısalt ya da kaldır
 - **Ayarlar ekranı** – menü düğmelerini ya da çalan şarkı yazısını gizle
 - **Hazır ayarlar** – `/quietplease export <ad>` / `import <ad>` ile ayarları paylaş
@@ -165,8 +186,12 @@ ya da **Modlar → Quiet Please → Yapılandırma**. Sohbette `/quietplease` ko
 
 ## Bilmen gerekenler
 - **Sadece istemci tarafı.** Sunucuya kurulması gerekmez, her sunucuya girebilirsin.
-- Ayarlar `config/quietplease.json` dosyasında; mod paketi yapanlar hazır ayarlı bir dosya ekleyebilir.
+- Ayarlar `config/quietplease.json` dosyasında. Mod paketi yapanlar `config/quietplease-presets/default.json` ekleyebilir: yeni oyuncu bu ayarla başlar, paket güncellenince oyuncunun değişiklikleri korunur.
 ```
+
+## 2.0.0 sürüm notu (16.11.2026, Release)
+
+Metni ana klasördeki `dist/changelog-2.0.0.md` dosyasındadır.
 
 ## 1.3.0 sürüm notu (14.11.2026'da 18 dosyayla yayınlandı)
 
