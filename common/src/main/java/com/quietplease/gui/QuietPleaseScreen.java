@@ -692,6 +692,7 @@ public class QuietPleaseScreen extends Screen {
                 yield stack(Items.MUSIC_DISC_13);
             }
             case MUSIC -> stack(Items.NOTE_BLOCK);
+            case NOTE -> stack(Items.BELL);
             case OTHER -> stack(Items.ECHO_SHARD);
         };
     }

@@ -69,8 +69,12 @@ public class MusicBehaviorScreen extends Screen {
                     ModOptions.normalize = v;
                     MusicSettings.applyToPlayingSounds();
                 }));
+        y += row;
+        addRenderableWidget(CycleButton.onOffBuilder(ModOptions.customInBackground)
+                .withTooltip(v -> Tooltip.create(Lang.tr("behavior.custom_music.tooltip")))
+                .create(left, y, BUTTON_W, 20, Lang.tr("behavior.custom_music"), (b, v) -> ModOptions.customInBackground = v));
         statusX = right + BUTTON_W / 2;
-        statusY = y + 24;
+        statusY = y + 6;
 
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> onClose())
                 .bounds(width / 2 - 100, height - 28, 200, 20).build());

@@ -94,6 +94,8 @@ public final class ModOptions {
     public static int favoriteWeight = 2;
     /** Ses seviyesi esitleme: her sarkinin yuksekligi bir kez olculur, hepsi Minecraft muziklerinin seviyesine cekilir. */
     public static boolean normalize = false;
+    /** Kendi muzik klasorundeki sarkilar oyunun arka plan muzigine karissin mi. */
+    public static boolean customInBackground = true;
 
     public enum PopupPosition {
         RIGHT_MIDDLE("right_middle", true, 1),
@@ -275,6 +277,7 @@ public final class ModOptions {
         noRepeat = 5;
         favoriteWeight = 2;
         normalize = false;
+        customInBackground = true;
         resetPopup();
     }
 
@@ -327,6 +330,7 @@ public final class ModOptions {
         noRepeat = choice(o, "noRepeat", noRepeat, NO_REPEAT_VALUES);
         favoriteWeight = choice(o, "favoriteWeight", favoriteWeight, FAVORITE_VALUES);
         normalize = bool(o, "normalize", normalize);
+        customInBackground = bool(o, "customInBackground", customInBackground);
         MusicMixer.optionsChanged();
     }
 
@@ -370,6 +374,7 @@ public final class ModOptions {
         o.addProperty("noRepeat", noRepeat);
         o.addProperty("favoriteWeight", favoriteWeight);
         o.addProperty("normalize", normalize);
+        o.addProperty("customInBackground", customInBackground);
         return o;
     }
 
