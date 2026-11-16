@@ -123,6 +123,8 @@ final class DevSelfTest {
             } catch (java.io.IOException ignored) {}
         }
 
+        testNewFeatures(files, failures);
+
         if (failures.isEmpty()) QuietPlease.LOGGER.info("SELFTEST BASARILI ({} menu parcasi ile)", files.size());
         else failures.forEach(f -> QuietPlease.LOGGER.error("SELFTEST HATA: {}", f));
     }
@@ -254,6 +256,97 @@ final class DevSelfTest {
             return -2;
         }
         return -1;
+    }
+
+    static final String TEST_SONG = "selftest_song.ogg";
+
+    /** Kendi muzik klasorune bir oyun sarkisinin kopyasini koyar; klasor yeniden taranir. */
+    static ResourceLocation installTestSong(ResourceLocation sourceFile) throws java.io.IOException {
+        java.nio.file.Path dir = com.quietplease.music.CustomMusic.folder();
+        java.nio.file.Files.createDirectories(dir);
+        ResourceLocation path = ResourceLocation.fromNamespaceAndPath(sourceFile.getNamespace(), "sounds/" + sourceFile.getPath() + ".ogg");
+        try (var in = Minecraft.getInstance().getResourceManager().open(path)) {
+            java.nio.file.Files.copy(in, dir.resolve(TEST_SONG), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        }
+        com.quietplease.music.CustomMusic.refresh();
+        return ResourceLocation.fromNamespaceAndPath(com.quietplease.music.CustomMusic.NAMESPACE, "selftest_song");
+    }
+
+    static void removeTestSong() {
+        try {
+            java.nio.file.Files.deleteIfExists(com.quietplease.music.CustomMusic.folder().resolve(TEST_SONG));
+        } catch (java.io.IOException ignored) {}
+        com.quietplease.music.CustomMusic.refresh();
+    }
+
+    /** 1.5.0: nota bloklari, kendi muzigin, dinleme gecmisi, bir kerelik calma. */
+    private static void testNewFeatures(List<ResourceLocation> menuFiles, List<String> failures) {
+        // Dosya adi -> kimlik
+        check(failures, com.quietplease.music.CustomMusic.slugForTest("Benim Sarkim (v2).ogg").equals("benim_sarkim_v2"),
+                "kendi muzigin: ad " + com.quietplease.music.CustomMusic.slugForTest("Benim Sarkim (v2).ogg"));
+        check(failures, com.quietplease.music.CustomMusic.slugForTest("Albüm\\01 - Giriş.OGG").equals("alb_m/01_-_giri"),
+                "kendi muzigin: alt klasor adi " + com.quietplease.music.CustomMusic.slugForTest("Albüm\\01 - Giriş.OGG"));
+
+        // Nota bloklari listede, kendi turleriyle
+        var library = com.quietplease.music.MusicLibrary.scan();
+        var harp = library.getOrDefault("minecraft", List.of()).stream()
+                .filter(t -> t.id().equals(ResourceLocation.withDefaultNamespace("note/bell"))).findFirst();
+        check(failures, harp.isPresent() && harp.get().kind() == com.quietplease.music.MusicTrack.Kind.NOTE,
+                "nota blogu: minecraft:note/bell NOTE olmali " + harp.map(t -> t.kind().toString()).orElse("yok"));
+
+        // Kendi muzigin: dosya listede, kaynak yoneticisinden okunuyor, calinabilir ses olusuyor
+        try {
+            ResourceLocation custom = installTestSong(menuFiles.get(0));
+            var scanned = com.quietplease.music.MusicLibrary.scan();
+            check(failures, scanned.containsKey(com.quietplease.music.CustomMusic.NAMESPACE)
+                            && scanned.keySet().iterator().next().equals(com.quietplease.music.CustomMusic.NAMESPACE),
+                    "kendi muzigin: grup en ustte olmali " + scanned.keySet());
+            int seconds = Playlist.readOggSeconds(com.quietplease.music.CustomMusic.sound(custom).getPath());
+            int original = Playlist.readOggSeconds(ResourceLocation.fromNamespaceAndPath(menuFiles.get(0).getNamespace(),
+                    "sounds/" + menuFiles.get(0).getPath() + ".ogg"));
+            check(failures, seconds > 0 && seconds == original, "kendi muzigin: sure " + seconds + " / " + original);
+            check(failures, Playlist.createSoundFor(custom) != null, "kendi muzigin: ses olusturulamadi");
+
+            boolean bg = ModOptions.customInBackground;
+            ModOptions.customInBackground = false;
+            check(failures, com.quietplease.music.CustomMusic.startInstead(Musics.MENU) == null, "kendi muzigin: ayar kapaliyken calmamali");
+            ModOptions.customInBackground = true;
+            int hits = 0;
+            for (int i = 0; i < 400; i++) {
+                if (com.quietplease.music.CustomMusic.startInstead(Musics.MENU) instanceof Playlist.PlaylistSound ps && ps.trackId.equals(custom)) hits++;
+            }
+            // 1 kendi sarkin + menunun havuzu: yaklasik 1/(1+n)
+            double expected = 1.0 / (1 + menuFiles.size());
+            check(failures, Math.abs(hits / 400.0 - expected) < 0.06, "kendi muzigin: karisma orani " + hits + "/400, beklenen ~" + expected);
+            ModOptions.customInBackground = bg;
+        } catch (Exception e) {
+            failures.add("kendi muzigin testi calistirilamadi: " + e);
+        } finally {
+            removeTestSong();
+        }
+
+        // Bir kerelik calma (Onceki tusu): siradaki arka plan sarkisi o parca, gecmise yeniden eklenmez
+        boolean modeBackup = ModOptions.playlistMode;
+        ModOptions.playlistMode = false;
+        ResourceLocation target = menuFiles.get(1);
+        Playlist.playOnce(target, true);
+        var once = Playlist.startInstead(Musics.MENU);
+        check(failures, once instanceof Playlist.PlaylistSound ps && ps.trackId.equals(target) && ps.replay && !Playlist.hasForced(),
+                "bir kerelik calma: " + once);
+        check(failures, Playlist.startInstead(Musics.MENU) == null, "bir kerelik calma: ikinci kez calmamali");
+        ModOptions.playlistMode = modeBackup;
+
+        // Gecmis ve sayac
+        ResourceLocation fake = ResourceLocation.fromNamespaceAndPath("selftest", "song");
+        com.quietplease.music.ListenStats.played(fake, true);
+        com.quietplease.music.ListenStats.played(fake, false);
+        check(failures, com.quietplease.music.ListenStats.plays(fake).count() == 2
+                        && fake.equals(com.quietplease.music.ListenStats.historyIds().get(0)),
+                "gecmis: sayac " + com.quietplease.music.ListenStats.plays(fake).count());
+        com.quietplease.music.ListenStats.forget(fake);
+        check(failures, com.quietplease.music.ListenStats.plays(fake).count() == 0
+                && !com.quietplease.music.ListenStats.historyIds().contains(fake), "gecmis: silinemedi");
+        QuietPlease.LOGGER.info("SELFTEST yeni ozellikler: {} hata", failures.size());
     }
 
     private static void check(List<String> failures, boolean ok, String what) {

@@ -235,6 +235,7 @@ public class QuietPlaylistScreen extends Screen {
                 if (!modFilter.isEmpty() && !modFilter.equals(mod)) return;
                 String modName = MusicLibrary.modName(mod);
                 List<MusicTrack> visible = tracks.stream()
+                        .filter(t -> t.kind() != MusicTrack.Kind.NOTE)
                         .filter(t -> ModOptions.showAmbient || t.kind() != MusicTrack.Kind.OTHER || Playlist.contains(t.id()))
                         .filter(t -> q.isEmpty()
                                 || t.id().toString().toLowerCase(Locale.ROOT).contains(q)

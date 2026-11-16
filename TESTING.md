@@ -29,6 +29,14 @@ Proje klasöründe:
 11. [ ] Creative'de bir **Jukebox** koy, *Music Disc - cat* tak:
     - `/quietplease volume minecraft:records/cat 20` → ses hemen kısılıyor.
     - `/quietplease off minecraft:records/cat` → plak hemen susuyor.
+13. [ ] Panelde **Minecraft** grubunda nota bloğu enstrümanları (bell, banjo...) **Nota bloğu** türüyle var; Creative'de bir nota
+    bloğuna vurup ilgili enstrümanı kısınca / kapatınca ses kısılıyor / susuyor.
+14. [ ] **Ayarlar → Kendi müzik klasörün** klasörü açıyor; içine bir `.ogg` koyup paneli yeniden açınca en üstte **Kendi müziğin**
+    grubunda görünüyor, ▶ ile dinlenebiliyor, çalma listesine eklenip çalıyor.
+15. [ ] **Ayarlar → Geçmiş ve istatistik**: üç sekme dolu; ▶ şarkıyı çalıyor, ★ ve Açık/Kapalı çalışıyor; **Geçmişi temizle** onay soruyor.
+16. [ ] **Önceki şarkı** ve **Çalan şarkıyı bir daha çalma** tuşlarını ata: Önceki geçmişte geri gidiyor, ikincisi şarkıyı kapatıp
+    sıradakine geçiyor.
+17. [ ] `config/quietplease.json` dosyasını sil, `config/quietplease-presets/default.json` koy, oyunu aç: ayarlar o hazır ayardan geliyor.
 12. [ ] **Options → Language → Türkçe** seç: panel ve komutlar Türkçe görünüyor; İngilizceye dönünce İngilizce.
 
 ## B. Gerçek oyunda (asıl test)

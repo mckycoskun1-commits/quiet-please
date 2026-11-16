@@ -59,6 +59,10 @@ public final class MusicLibrary {
             }
         });
 
+        CustomMusic.refresh();
+        List<MusicTrack> custom = CustomMusic.tracks();
+        if (!custom.isEmpty()) byMod.put(CustomMusic.NAMESPACE, new ArrayList<>(custom));
+
         Map<String, List<MusicTrack>> sorted = new LinkedHashMap<>();
         byMod.forEach((mod, tracks) -> {
             tracks.sort(Comparator.comparing(MusicTrack::kind).thenComparing(t -> t.id().getPath()));
@@ -71,14 +75,21 @@ public final class MusicLibrary {
     private static MusicTrack.Kind classify(ResourceLocation file, Set<ResourceLocation> events, boolean stream) {
         boolean disc = file.getPath().contains("records/");
         boolean music = file.getPath().startsWith("music/");
+        boolean note = false;
         for (ResourceLocation e : events) {
             String p = e.getPath().toLowerCase(Locale.ROOT);
+            // Nota blogu enstrumanlari: "block.note_block.harp" (vanilla ve ayni adi kullanan modlar)
+            if (p.startsWith("block.note_block.")) {
+                note = true;
+                continue;
+            }
             // Plak olaylari: "music_disc.cat" (vanilla), "ignis_music_disc" (Cataclysm), "..._record" vb.
             if (p.startsWith("music_disc") || p.endsWith("_disc") || p.endsWith(".disc") || p.contains("record")) disc = true;
             else if (p.contains("music") || p.contains("soundtrack") || p.contains("song")) music = true;
         }
         if (disc) return MusicTrack.Kind.DISC;
         if (music) return MusicTrack.Kind.MUSIC;
+        if (note) return MusicTrack.Kind.NOTE;
         if (stream) return MusicTrack.Kind.OTHER;
         return null;
     }
@@ -86,11 +97,14 @@ public final class MusicLibrary {
     /** Mod kimligini okunur ada cevirir: "twilightforest" -> "The Twilight Forest". */
     public static String modName(String namespace) {
         if (namespace.equals("minecraft")) return "Minecraft";
+        if (namespace.equals(CustomMusic.NAMESPACE)) return CustomMusic.groupName();
         return com.quietplease.platform.Services.PLATFORM.modName(namespace).orElse(namespace);
     }
 
     private static int compareNamespaces(String a, String b) {
         if (a.equals(b)) return 0;
+        if (a.equals(CustomMusic.NAMESPACE)) return -1;
+        if (b.equals(CustomMusic.NAMESPACE)) return 1;
         if (a.equals("minecraft")) return -1;
         if (b.equals("minecraft")) return 1;
         return a.compareTo(b);

@@ -98,6 +98,14 @@ public final class QuietPleaseCommands {
                 .then(lit("settings").executes(ctx -> open(new QuietPleaseSettingsScreen(null))))
                 .then(lit("playlist").executes(ctx -> open(new QuietPlaylistScreen(null))))
                 .then(lit("skip").executes(QuietPleaseCommands::skip))
+                .then(lit("previous").executes(ctx -> {
+                    say(ctx, QuietPleaseKeys.previous());
+                    return 1;
+                }))
+                .then(lit("history").executes(ctx -> open(new com.quietplease.gui.ListenHistoryScreen(null,
+                        com.quietplease.gui.ListenHistoryScreen.Tab.RECENT))))
+                .then(lit("stats").executes(ctx -> open(new com.quietplease.gui.ListenHistoryScreen(null,
+                        com.quietplease.gui.ListenHistoryScreen.Tab.TOP))))
                 .then(lit("pause").executes(ctx -> {
                     say(ctx, QuietPleaseKeys.togglePause());
                     return 1;
@@ -377,6 +385,7 @@ public final class QuietPleaseCommands {
         return switch (kind) {
             case MUSIC -> ChatFormatting.GREEN;
             case DISC -> ChatFormatting.LIGHT_PURPLE;
+            case NOTE -> ChatFormatting.GOLD;
             case OTHER -> ChatFormatting.DARK_AQUA;
         };
     }
