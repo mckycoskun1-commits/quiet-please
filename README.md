@@ -122,6 +122,39 @@ sevilen Minecraft şarkılarını karışık gösterir. Ana paneldeki **☆** ş
 parça yerine listedeki sıradakini çalar. Ejderha/jenerik müziği ve modların doğrudan çaldığı boss müzikleri yine araya girer.
 Liste boşsa ya da mod kapalıysa her şey vanilla gibidir. Sıra `config/quietplease.json` dosyasında saklanır.
 
+## Nota blokları ve plaklar
+
+Plaklar (vanilla ve modların plakları) panelde zaten listelenir. Nota bloğu enstrümanları da (`minecraft:note/harp`,
+`note/bass`...) **Nota bloğu** türüyle listede görünür: ses seviyesi ayarlanabilir ya da kapatılabilir. Çalma listesine
+eklenmezler, ses dengelemesine ve "şu an çalan" yazısına girmezler.
+
+## Geçmiş ve istatistik
+
+Ayarlar ekranındaki **Geçmiş ve istatistik** düğmesi, `/quietplease history` ya da `/quietplease stats`. Üç sekme:
+**Son çalanlar** (son 20 arka plan şarkısı, ne zaman çaldığıyla), **En çok çalanlar** (kaç kez çaldığı) ve **Hiç çalmayanlar**.
+Her satırda ▶ (şimdi çal), ☆/★ (favori) ve Açık/Kapalı düğmeleri var. **Geçmişi temizle** onay sorar.
+Kayıtlar `config/quietplease-stats.json` dosyasında; hazır ayarlara girmez.
+
+**Önceki şarkı** tuşu (ve `/quietplease previous`) geçmişteki bir önceki şarkıyı tekrar çalar; üst üste basınca geçmişte geri
+gitmeye devam eder. Tekrar çalınan şarkı geçmişteki yerinde kalır. **Çalan şarkıyı bir daha çalma** tuşu çalan arka plan şarkısını
+kapatır ve sıradakine geçer (panelden tekrar açılır).
+
+## Kendi müziğin
+
+`config/quietplease/music/` klasörüne konan `.ogg` dosyaları (alt klasörler dahil, en fazla 500) kaynak paketi gerekmeden
+panelde en üstte **Kendi müziğin** grubunda görünür: dinlenebilir, ses ayarı yapılabilir, çalma listesine eklenebilir.
+Ayarlar ekranındaki **Kendi müzik klasörün** düğmesi klasörü açar; yeni dosyalar paneli bir sonraki açışta görünür.
+Müzik davranışı ekranındaki **Kendi müziğin** ayarı açıkken (varsayılan) bu şarkılar oyunun arka plan müziğine de karışır:
+her biri yaklaşık bir oyun şarkısı kadar sık çalar. Dosya adları kimliğe çevrilir (`Benim Şarkım.ogg` → `quietplease_music:benim_ar_m`
+gibi: küçük harf, harf/rakam dışındakiler `_`). Dosyalar oyunun kaynak yöneticisinden okunur (`ReloadableResourceManagerMixin`).
+
+## Mod paketi varsayılanı
+
+`config/quietplease-presets/default.json` varsa ve oyuncunun kendi `config/quietplease.json` dosyası yoksa (ilk açılış), oyun
+bu hazır ayarla başlar ve hemen oyuncunun dosyasına yazar. Paket yapımcısı ayarlarını `/quietplease export default` ile
+hazırlayıp paketine koyar; paket güncellenince oyuncunun değişiklikleri ezilmez. `/quietplease import default` ile paketin
+ayarlarına geri dönülebilir.
+
 ## Dil desteği
 
 Tüm yazılar `common/src/main/resources/assets/quietplease/lang/` içindeki dosyalardadır: `en_us.json` (İngilizce, varsayılan),
@@ -142,9 +175,11 @@ dillerde İngilizce görünür. Yeni bir dil eklemek için `en_us.json` dosyası
 - `/quietplease dump` tam listeyi (ayarlarla birlikte) oyun klasöründeki `quietplease-tracks.txt` dosyasına yazar
 - `/quietplease gui` paneli açar
 - `/quietplease settings` / `/quietplease playlist` Ayarlar ekranını / çalma listesi panelini açar
-- `/quietplease skip` çalan arka plan şarkısını atlar
+- `/quietplease skip` çalan arka plan şarkısını atlar, `/quietplease previous` geçmişteki önceki şarkıyı çalar
+- `/quietplease history` / `/quietplease stats` geçmiş ve istatistik ekranını açar
 - Kısayol tuşları: **Options → Controls → Key Binds → Quiet Please** altında "Müzik panelini aç", "Çalan şarkıyı atla",
-  "Çalan şarkıyı favorilere ekle" (bir daha basınca çıkarır) ve "Çalma listesi modunu aç/kapat"
+  "Önceki şarkı", "Müziği duraklat / devam", "Çalan şarkıyı favorilere ekle" (bir daha basınca çıkarır),
+  "Çalan şarkıyı bir daha çalma" ve "Çalma listesi modunu aç/kapat"
   (varsayılan olarak boş; istediğin tuşu ata). Sonuç hotbar'ın üstünde kısa bir yazıyla görünür.
 - `/quietplease export <ad>` / `/quietplease import <ad>` tüm ayarları (çalma listesi dahil)
   `config/quietplease-presets/<ad>.json` olarak kaydeder / yükler
