@@ -94,12 +94,13 @@ public class MusicBehaviorScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
-        super.extractRenderState(g, mouseX, mouseY, partialTick);
-        g.centeredText(font, title, width / 2, 14, 0xFFFFC966);
+    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        renderBackground(g);
+        super.render(g, mouseX, mouseY, partialTick);
+        g.drawCenteredString(font, title, width / 2, 14, 0xFFFFC966);
         int pending = Loudness.pending();
         if (ModOptions.normalize && pending > 0) {
-            g.centeredText(font, Lang.tr("behavior.normalize.measuring", pending), statusX, statusY, 0xFFA0A0A0);
+            g.drawCenteredString(font, Lang.tr("behavior.normalize.measuring", pending), statusX, statusY, 0xFFA0A0A0);
         }
     }
 

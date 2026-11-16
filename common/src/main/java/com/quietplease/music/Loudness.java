@@ -7,6 +7,9 @@ import com.quietplease.QuietPlease;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.floats.FloatConsumer;
 import java.io.BufferedInputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import javax.sound.sampled.AudioFormat;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.sounds.JOrbisAudioStream;
+import com.mojang.blaze3d.audio.OggAudioStream;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
@@ -200,13 +203,18 @@ public final class Loudness {
 
     /** Bir muzik dosyasinin yuksekligi (LUFS); okunamazsa NaN. */
     public static float measure(ResourceLocation file) {
-        ResourceLocation path = ResourceLocation.fromNamespaceAndPath(file.getNamespace(), "sounds/" + file.getPath() + ".ogg");
+        ResourceLocation path = new ResourceLocation(file.getNamespace(), "sounds/" + file.getPath() + ".ogg");
         try (InputStream in = Minecraft.getInstance().getResourceManager().open(path);
-             JOrbisAudioStream stream = new JOrbisAudioStream(new BufferedInputStream(in))) {
+             OggAudioStream stream = new OggAudioStream(new BufferedInputStream(in))) {
             AudioFormat format = stream.getFormat();
             Meter meter = new Meter(format.getSampleRate(), format.getChannels());
-            while (stream.readChunk(meter)) {
-                // okumaya devam
+            ByteOrder order = format.isBigEndian() ? ByteOrder.BIG_ENDIAN : ByteOrder.LITTLE_ENDIAN;
+            while (true) {
+                // Bu surumun cozucusu sarkiyi 16 bitlik ornekler halinde verir
+                ByteBuffer chunk = stream.read(1 << 16);
+                if (chunk == null || !chunk.hasRemaining()) break;
+                ShortBuffer samples = chunk.order(order).asShortBuffer();
+                while (samples.hasRemaining()) meter.accept(samples.get() / 32768.0F);
             }
             return meter.loudness();
         } catch (Exception e) {
