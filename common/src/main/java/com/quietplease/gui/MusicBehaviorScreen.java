@@ -1,6 +1,7 @@
 package com.quietplease.gui;
 
 import com.quietplease.Lang;
+import com.quietplease.music.Loudness;
 import com.quietplease.music.ModOptions;
 import com.quietplease.music.MusicMixer;
 import com.quietplease.music.MusicSettings;
@@ -23,6 +24,8 @@ public class MusicBehaviorScreen extends Screen {
 
     @Nullable
     private final Screen parent;
+    private int statusX;
+    private int statusY;
 
     public MusicBehaviorScreen(@Nullable Screen parent) {
         super(Lang.tr("behavior.title"));
@@ -60,6 +63,14 @@ public class MusicBehaviorScreen extends Screen {
         addRenderableWidget(CycleButton.onOffBuilder(ModOptions.fadeOnSkip)
                 .withTooltip(v -> Tooltip.create(Lang.tr("settings.fade_skip.tooltip")))
                 .create(left, y, BUTTON_W, 20, Lang.tr("settings.fade_skip"), (b, v) -> ModOptions.fadeOnSkip = v));
+        addRenderableWidget(CycleButton.onOffBuilder(ModOptions.normalize)
+                .withTooltip(v -> Tooltip.create(Lang.tr("behavior.normalize.tooltip")))
+                .create(right, y, BUTTON_W, 20, Lang.tr("behavior.normalize"), (b, v) -> {
+                    ModOptions.normalize = v;
+                    MusicSettings.applyToPlayingSounds();
+                }));
+        statusX = right + BUTTON_W / 2;
+        statusY = y + 24;
 
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> onClose())
                 .bounds(width / 2 - 100, height - 28, 200, 20).build());
@@ -83,9 +94,13 @@ public class MusicBehaviorScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        super.render(g, mouseX, mouseY, partialTick);
-        g.drawCenteredString(font, title, width / 2, 14, 0xFFFFC966);
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(g, mouseX, mouseY, partialTick);
+        g.centeredText(font, title, width / 2, 14, 0xFFFFC966);
+        int pending = Loudness.pending();
+        if (ModOptions.normalize && pending > 0) {
+            g.centeredText(font, Lang.tr("behavior.normalize.measuring", pending), statusX, statusY, 0xFFA0A0A0);
+        }
     }
 
     @Override

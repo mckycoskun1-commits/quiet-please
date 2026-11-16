@@ -149,6 +149,7 @@
   "key.quietplease.skip": "Skip the current song",
   "key.quietplease.favorite": "Favorite the current song",
   "key.quietplease.playlist_mode": "Toggle playlist mode",
+  "key.quietplease.pause": "Pause / resume the music",
 
   "quietplease.screen.mod_volume": "Mod: %s%%",
   "quietplease.screen.mod_volume.tooltip": "Volume for every song from this mod. Each song's own volume is applied on top of it",
@@ -230,10 +231,16 @@
   "quietplease.behavior.favorites": "Favorites",
   "quietplease.behavior.favorites.tooltip": "Songs marked with ★ are picked this many times more often, even with playlist mode off",
   "quietplease.settings.fade_skip": "Fade on skip",
-  "quietplease.settings.fade_skip.tooltip": "Skip turns the song down over 1.5 seconds instead of cutting it off. Press Skip again to stop it right away",
+  "quietplease.settings.fade_skip.tooltip": "Skip turns the old song down over 1.5 seconds while the next one already starts, instead of cutting it off",
+  "quietplease.behavior.normalize": "Even out volume",
+  "quietplease.behavior.normalize.tooltip": "Measures each song's loudness once and brings every song to the level of Minecraft's own music, so very loud or quiet mod soundtracks fit in. The first measuring runs in the background",
+  "quietplease.behavior.normalize.measuring": "Measuring songs: %s left",
   "quietplease.key.favorite.added": "★ Added to favorites: %s",
   "quietplease.key.favorite.removed": "Removed from favorites: %s",
   "quietplease.key.favorite.nothing": "No background music is playing right now",
+  "quietplease.key.pause.paused": "Music paused",
+  "quietplease.key.pause.resumed": "Music resumed",
+  "quietplease.key.pause.nothing": "No background music is playing right now",
   "quietplease.key.playlist_mode.changed": "Playlist mode: %s",
   "quietplease.key.playlist_mode.empty": "Playlist mode: %s – the playlist is empty, add songs with ☆"
 }
