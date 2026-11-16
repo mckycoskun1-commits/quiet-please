@@ -11,6 +11,7 @@ import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
 import net.minecraft.client.sounds.SoundEngine;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.Music;
 import net.minecraft.util.Mth;
 import net.minecraft.Util;
@@ -65,7 +66,7 @@ public final class MusicControl {
     }
 
     private static void skipNow() {
-        if (Playlist.isActive()) {
+        if (Playlist.isActive() || Playlist.hasForced()) {
             Playlist.restartMusic(0);
             return;
         }
@@ -100,6 +101,51 @@ public final class MusicControl {
         skip();
         if (!playing) return "cmd.skip.nothing";
         return Playlist.isActive() ? "cmd.skip.next" : "cmd.skip.gap";
+    }
+
+    // ---------------------------------------------------------------- onceki sarki, gecmisten calma
+
+    /** Onceki tusuyla gecmiste ne kadar geri gidildi (gecmisteki sira; 0 = en son calan). */
+    private static int backIndex = 0;
+
+    /**
+     * Gecmisteki bir onceki sarkiyi calar (calani Atla'daki gibi bitirir). Ust uste basinca gecmiste geri gitmeye
+     * devam eder; tekrar calinan sarkilar gecmisteki yerinde kalir. Kapali ya da artik yuklu olmayan sarkilar atlanir.
+     *
+     * @return calinacak sarki; gecmiste baska sarki yoksa null
+     */
+    @Nullable
+    public static ResourceLocation previous() {
+        Minecraft mc = Minecraft.getInstance();
+        List<ResourceLocation> history = ListenStats.historyIds();
+        SoundInstance current = currentMusic(mc);
+        boolean active = current != null && mc.getSoundManager().isActive(current);
+        int pos = -1;
+        if (active && current instanceof Playlist.PlaylistSound ps && ps.replay) {
+            pos = backIndex;
+        } else if (active && !history.isEmpty()) {
+            Sound sound = current.getSound();
+            if (sound != null && sound.getLocation().equals(history.get(0))) pos = 0;
+        }
+        for (int target = pos + 1; target < history.size(); target++) {
+            ResourceLocation id = history.get(target);
+            if (MusicSettings.isDisabled(id) || Playlist.createSoundFor(id) == null) continue;
+            backIndex = target;
+            playFromHistory(id, true);
+            return id;
+        }
+        return null;
+    }
+
+    /** Gecmis ekraninda bir satir calinca Onceki tusu oradan geri gitmeye devam etsin. */
+    public static void setBackIndex(int index) {
+        backIndex = Math.max(0, index);
+    }
+
+    /** Bu sarkiyi hemen arka plan muzigi olarak calar (calani Atla'daki gibi bitirir). */
+    public static void playFromHistory(ResourceLocation id, boolean replay) {
+        Playlist.playOnce(id, replay);
+        skip();
     }
 
     /** Atladiktan sonra siradaki sarkiya kadar bekleme (tick). */

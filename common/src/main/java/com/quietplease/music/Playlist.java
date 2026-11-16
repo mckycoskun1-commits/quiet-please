@@ -50,6 +50,8 @@ public final class Playlist {
     public static final class PlaylistSound extends AbstractSoundInstance {
         private final Sound target;
         public final ResourceLocation trackId;
+        /** Onceki tusuyla gecmisten tekrar calinan sarki: gecmise yeniden eklenmez. */
+        public boolean replay;
 
         PlaylistSound(ResourceLocation eventId, Sound target, ResourceLocation trackId) {
             // SimpleSoundInstance.forMusic ile ayni ozellikler
@@ -83,6 +85,10 @@ public final class Playlist {
     private static ResourceLocation nextFrom;
     /** Bir sonraki baslatmada calma listesi modu kapali olsa bile listeden cal (▶ dugmesi). */
     private static boolean oneShot = false;
+    /** Bir sonraki arka plan sarkisi bu parca olsun (Onceki tusu, gecmis ekrani); null = yok. */
+    @Nullable
+    private static ResourceLocation forced;
+    private static boolean forcedReplay;
     /** Her degisiklikte artar; panel listesini ne zaman yenileyecegini buradan anlar. */
     private static int version = 0;
     private static final java.util.Random RANDOM = new java.util.Random();
@@ -331,6 +337,9 @@ public final class Playlist {
     /** Bir parcanin dosyasini iceren ses olayini ve dosyayi bulur. */
     @Nullable
     private static PlaylistSound createSound(ResourceLocation trackId) {
+        if (CustomMusic.isCustom(trackId)) {
+            return CustomMusic.exists(trackId) ? new PlaylistSound(CustomMusic.EVENT, CustomMusic.sound(trackId), trackId) : null;
+        }
         SoundManager sm = Minecraft.getInstance().getSoundManager();
         PlaylistSound fallback = null;
         for (ResourceLocation eventId : sm.getAvailableSounds()) {
@@ -353,6 +362,16 @@ public final class Playlist {
      */
     @Nullable
     public static SoundInstance startInstead(Music music) {
+        if (forced != null && ModOptions.isBackground(music)) {
+            ResourceLocation id = forced;
+            boolean replay = forcedReplay;
+            forced = null;
+            PlaylistSound sound = MusicSettings.isDisabled(id) ? null : createSound(id);
+            if (sound != null) {
+                sound.replay = replay;
+                return sound;
+            }
+        }
         boolean force = oneShot;
         oneShot = false;
         if ((!ModOptions.playlistMode && !force) || QUEUE.isEmpty() || !ModOptions.isBackground(music)) return null;
@@ -373,7 +392,28 @@ public final class Playlist {
 
     /** Onizleme calarken liste ilerlemesin diye mixin bunu sorar. */
     public static boolean wouldTakeOver(Music music) {
+        if (forced != null && ModOptions.isBackground(music)) return true;
         return (ModOptions.playlistMode || oneShot) && !QUEUE.isEmpty() && ModOptions.isBackground(music);
+    }
+
+    /** Rastgele secim yapmadan bu parcayi calan arka plan sesi (kendi muzigin, gecmis); bulunamazsa null. */
+    @Nullable
+    public static PlaylistSound createSoundFor(ResourceLocation trackId) {
+        return createSound(trackId);
+    }
+
+    /**
+     * Bir sonraki arka plan sarkisi bu parca olsun (calma listesine dokunmadan, bir kerelik).
+     *
+     * @param replay gecmisten tekrar caliniyor (gecmise yeniden eklenmesin)
+     */
+    public static void playOnce(ResourceLocation trackId, boolean replay) {
+        forced = trackId;
+        forcedReplay = replay;
+    }
+
+    public static boolean hasForced() {
+        return forced != null;
     }
 
     /** ▶: bu parcayi hemen cal (calma listesi modu kapali olsa bile, bir kerelik). */

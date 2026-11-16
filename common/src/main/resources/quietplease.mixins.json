@@ -6,6 +6,7 @@
   "client": [
     "MusicManagerAccessor",
     "PauseScreenAccessor",
+    "ReloadableResourceManagerMixin",
     "SoundEngineAccessor",
     "SoundManagerAccessor",
     "WeighedSoundEventsAccessor",

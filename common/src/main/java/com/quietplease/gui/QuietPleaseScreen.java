@@ -698,6 +698,7 @@ public class QuietPleaseScreen extends Screen {
             }
             case MUSIC -> new ItemStack(Items.NOTE_BLOCK);
             case OTHER -> new ItemStack(Items.AMETHYST_SHARD);
+            case NOTE -> new ItemStack(Items.BELL);
         };
     }
 

@@ -38,6 +38,11 @@ import net.minecraft.sounds.SoundSource;
 public final class MusicSettings {
 
     public static final int DEFAULT_VOLUME = 100;
+    /**
+     * Mod paketi varsayilani: config/quietplease-presets/default.json. config/quietplease.json yoksa (ilk acilis)
+     * oyun bununla baslar.
+     */
+    public static final String DEFAULT_PRESET = "default";
 
     /** Bir parcanin ayari. Varsayilan: %100, acik. */
     public record TrackSetting(int volume, boolean enabled) {
@@ -165,6 +170,7 @@ public final class MusicSettings {
     public static void load() {
         Path path = file();
         JsonObject root = null;
+        boolean fromDefault = false;
         if (Files.exists(path)) {
             try {
                 root = GSON.fromJson(Files.readString(path, StandardCharsets.UTF_8), JsonObject.class);
@@ -172,8 +178,21 @@ public final class MusicSettings {
                 QuietPlease.LOGGER.error("{} okunamadi, varsayilan ayarlar kullaniliyor", path, e);
                 backupBroken(path);
             }
+        } else if (Files.exists(presetFile(DEFAULT_PRESET))) {
+            // Mod paketi varsayilani: oyuncunun kendi ayar dosyasi yoksa (ilk acilis) paketin hazir ayariyla baslar.
+            // Oyuncunun sonraki degisiklikleri kendi dosyasina yazilir; paket guncellenince ezilmez.
+            try {
+                root = GSON.fromJson(Files.readString(presetFile(DEFAULT_PRESET), StandardCharsets.UTF_8), JsonObject.class);
+                fromDefault = root != null;
+            } catch (Exception e) {
+                QuietPlease.LOGGER.error("Varsayilan hazir ayar okunamadi: {}", presetFile(DEFAULT_PRESET), e);
+            }
         }
         readRoot(root);
+        if (fromDefault) {
+            QuietPlease.LOGGER.info("Ilk acilis: mod paketinin varsayilan hazir ayari yuklendi ({})", presetFile(DEFAULT_PRESET));
+            save();
+        }
         QuietPlease.LOGGER.info("Quiet Please ayarlari yuklendi: {} parca ozel ayarli, {} kapali", SETTINGS.size(), disabledCount);
     }
 
