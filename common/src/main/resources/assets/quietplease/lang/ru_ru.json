@@ -150,6 +150,7 @@
   "key.quietplease.skip": "Пропустить текущую песню",
   "key.quietplease.favorite": "Текущую песню в избранное",
   "key.quietplease.playlist_mode": "Вкл/выкл режим плейлиста",
+  "key.quietplease.pause": "Пауза / продолжить музыку",
 
   "quietplease.screen.mod_volume": "Мод: %s%%",
   "quietplease.screen.mod_volume.tooltip": "Громкость всех песен этого мода. Собственная громкость каждой песни применяется поверх",
@@ -231,10 +232,16 @@
   "quietplease.behavior.favorites": "Избранное",
   "quietplease.behavior.favorites.tooltip": "Песни, отмеченные ★, выбираются во столько раз чаще, даже без режима плейлиста",
   "quietplease.settings.fade_skip": "Плавный пропуск",
-  "quietplease.settings.fade_skip.tooltip": "При пропуске песня затихает за 1,5 секунды, а не обрывается. Нажмите «Пропустить» ещё раз, чтобы остановить сразу",
+  "quietplease.settings.fade_skip.tooltip": "При пропуске старая песня затихает за 1,5 секунды, а следующая уже начинается, вместо того чтобы обрываться",
+  "quietplease.behavior.normalize": "Выровнять громкость",
+  "quietplease.behavior.normalize.tooltip": "Один раз измеряет громкость каждой песни и приводит все песни к уровню музыки Minecraft, чтобы слишком громкая или тихая музыка модов не выделялась. Первое измерение идёт в фоне",
+  "quietplease.behavior.normalize.measuring": "Измерение песен: осталось %s",
   "quietplease.key.favorite.added": "★ Добавлено в избранное: %s",
   "quietplease.key.favorite.removed": "Убрано из избранного: %s",
   "quietplease.key.favorite.nothing": "Сейчас фоновая музыка не играет",
+  "quietplease.key.pause.paused": "Музыка на паузе",
+  "quietplease.key.pause.resumed": "Музыка продолжается",
+  "quietplease.key.pause.nothing": "Сейчас фоновая музыка не играет",
   "quietplease.key.playlist_mode.changed": "Режим плейлиста: %s",
   "quietplease.key.playlist_mode.empty": "Режим плейлиста: %s – плейлист пуст, добавьте песни кнопкой ☆"
 }
