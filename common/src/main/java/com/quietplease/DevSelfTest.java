@@ -150,7 +150,7 @@ final class DevSelfTest {
 
             // Kucuk havuz (Nether, 5 parca): hepsi son calinanlardaysa bile en son calan 2 parca disarida, 3 aday kalir
             WeighedSoundEvents nether = Minecraft.getInstance().getSoundManager()
-                    .getSoundEvent(ResourceLocation.withDefaultNamespace("music.nether.basalt_deltas"));
+                    .getSoundEvent(new ResourceLocation("music.nether.basalt_deltas"));
             if (nether != null) {
                 List<ResourceLocation> netherFiles = new ArrayList<>();
                 for (Weighted<Sound> w : ((com.quietplease.mixin.WeighedSoundEventsAccessor) nether).quietplease$getList()) {

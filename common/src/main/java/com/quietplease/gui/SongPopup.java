@@ -65,7 +65,7 @@ public final class SongPopup {
         if (sound == null) return;
         KNOWN.add(instance);
         ResourceLocation file = sound.getLocation();
-        if (file.equals(SoundManager.EMPTY_SOUND_LOCATION) || file.equals(SoundManager.INTENTIONALLY_EMPTY_SOUND_LOCATION)) return;
+        if (file.equals(SoundManager.EMPTY_SOUND.getLocation())) return;
         started = file;
         startedEvent = instance.getLocation();
     }

@@ -83,7 +83,7 @@ public abstract class WeighedSoundEventsMixin {
             if (weights[i] > 0) total += weights[i];
         }
         if (allowed == 0 || total <= 0) {
-            cir.setReturnValue(SoundManager.INTENTIONALLY_EMPTY_SOUND);
+            cir.setReturnValue(SoundManager.EMPTY_SOUND);
             return;
         }
 
