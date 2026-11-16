@@ -139,9 +139,35 @@ final class DevSelfTest {
             MusicMixer.clearRecentForTest();
             List<ResourceLocation> recent = files.subList(0, Math.min(5, files.size() - 1));
             recent.forEach(MusicMixer::remember);
+            // Havuzun en fazla yarisi disarida kalir: 9 menu parcasinda son 4 calinan
+            int excludedCount = Math.min(5, Math.max(1, files.size() / 2));
+            List<ResourceLocation> excluded = recent.subList(Math.max(0, recent.size() - excludedCount), recent.size());
             Set<ResourceLocation> picked = new HashSet<>();
             for (int i = 0; i < 300; i++) picked.add(menu.getSound(random).getLocation());
-            check(failures, picked.stream().noneMatch(recent::contains), "tekrar etmeme: son calinan parca yine secildi " + picked);
+            check(failures, picked.stream().noneMatch(excluded::contains), "tekrar etmeme: son calinan parca yine secildi " + picked);
+            check(failures, picked.size() == files.size() - excluded.size(),
+                    "tekrar etmeme: " + (files.size() - excluded.size()) + " aday beklenirdi, gelen " + picked.size());
+
+            // Kucuk havuz (Nether, 5 parca): hepsi son calinanlardaysa bile en son calan 2 parca disarida, 3 aday kalir
+            WeighedSoundEvents nether = Minecraft.getInstance().getSoundManager()
+                    .getSoundEvent(ResourceLocation.withDefaultNamespace("music.nether.basalt_deltas"));
+            if (nether != null) {
+                List<ResourceLocation> netherFiles = new ArrayList<>();
+                for (Weighted<Sound> w : ((com.quietplease.mixin.WeighedSoundEventsAccessor) nether).quietplease$getList()) {
+                    if (w instanceof Sound s) netherFiles.add(s.getLocation());
+                }
+                MusicMixer.clearRecentForTest();
+                netherFiles.forEach(MusicMixer::remember);
+                int skip = Math.min(5, Math.max(1, netherFiles.size() / 2));
+                Set<ResourceLocation> lastPlayed = new HashSet<>(netherFiles.subList(netherFiles.size() - skip, netherFiles.size()));
+                Set<ResourceLocation> netherPicked = new HashSet<>();
+                for (int i = 0; i < 300; i++) netherPicked.add(nether.getSound(random).getLocation());
+                check(failures, netherPicked.stream().noneMatch(lastPlayed::contains)
+                        && netherPicked.size() == netherFiles.size() - skip,
+                        "kucuk havuz: " + (netherFiles.size() - skip) + " aday beklenirdi, gelen " + netherPicked);
+                QuietPlease.LOGGER.info("SELFTEST kucuk havuz: {} parcadan {} aday", netherFiles.size(), netherPicked.size());
+                MusicMixer.clearRecentForTest();
+            }
 
             ModOptions.noRepeat = 0;
             MusicMixer.optionsChanged();
