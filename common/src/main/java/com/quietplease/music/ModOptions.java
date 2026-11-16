@@ -92,6 +92,8 @@ public final class ModOptions {
     public static int fadeSeconds = 2;
     public static int noRepeat = 5;
     public static int favoriteWeight = 2;
+    /** Ses seviyesi esitleme: her sarkinin yuksekligi bir kez olculur, hepsi Minecraft muziklerinin seviyesine cekilir. */
+    public static boolean normalize = false;
 
     public enum PopupPosition {
         RIGHT_MIDDLE("right_middle", true, 1),
@@ -272,6 +274,7 @@ public final class ModOptions {
         fadeSeconds = 2;
         noRepeat = 5;
         favoriteWeight = 2;
+        normalize = false;
         resetPopup();
     }
 
@@ -323,6 +326,7 @@ public final class ModOptions {
         fadeSeconds = choice(o, "fadeSeconds", fadeSeconds, FADE_VALUES);
         noRepeat = choice(o, "noRepeat", noRepeat, NO_REPEAT_VALUES);
         favoriteWeight = choice(o, "favoriteWeight", favoriteWeight, FAVORITE_VALUES);
+        normalize = bool(o, "normalize", normalize);
         MusicMixer.optionsChanged();
     }
 
@@ -365,6 +369,7 @@ public final class ModOptions {
         o.addProperty("fadeSeconds", fadeSeconds);
         o.addProperty("noRepeat", noRepeat);
         o.addProperty("favoriteWeight", favoriteWeight);
+        o.addProperty("normalize", normalize);
         return o;
     }
 
