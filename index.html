@@ -818,7 +818,7 @@ code {
   <section id="download">
     <div class="sec-head">
       <h2 class="shadow">Versions</h2>
-      <p>Version 1.3.0, client side only.</p>
+      <p>Version 1.4.0, client side only.</p>
     </div>
     <div class="vgrid" id="vgrid"></div>
     <p class="vnote">Click a loader to open its download page on CurseForge. The Fabric files need Fabric API and also run on Quilt.</p>
@@ -840,7 +840,7 @@ code {
       <ul>
         <li><b>Options</b> and <b>Options, Music &amp; Sounds</b>: the same button, top right</li>
         <li><b>Mods, Quiet Please, Config</b> (on Fabric this needs Mod Menu)</li>
-        <li><b>A key you choose</b> under Options, Controls, Key Binds, Quiet Please. It starts unbound. The same list has keys to skip a song, favorite the song that is playing and turn playlist mode on or off.</li>
+        <li><b>A key you choose</b> under Options, Controls, Key Binds, Quiet Please. It starts unbound. The same list has keys to skip a song, pause and resume the music, favorite the song that is playing and turn playlist mode on or off.</li>
         <li><code>/quietplease gui</code> in chat</li>
       </ul>
     </div>
@@ -853,14 +853,15 @@ code {
     <div class="faq">
       <div class="qa"><h3>Do servers need it?</h3><p>No. It is client side only. Install it on your own game and join any server.</p></div>
       <div class="qa"><h3>Does it work with modded music?</h3><p>Yes. It lists vanilla music, music discs and music from other mods, for example the boss themes of L_Ender's Cataclysm and Mowzie's Mobs.</p></div>
-      <div class="qa"><h3>What happens when I switch a song off?</h3><p>The game simply picks another song instead.</p></div>
+      <div class="qa"><h3>What happens when I switch a song off?</h3><p>The game simply picks another song instead. If the song is playing right now, it stops at once and the next one comes.</p></div>
       <div class="qa"><h3>Does a song stay in the playlist after it plays?</h3><p>No, it leaves the queue when it ends and the song after it starts. Turn on its loop button to keep it in its place. When the queue reaches the end it starts again from the top.</p></div>
       <div class="qa"><h3>Does the playlist stop boss music?</h3><p>No. Dragon, credits and boss music still play. The playlist only takes over the normal background music.</p></div>
       <div class="qa"><h3>Why do I hear a preview with Music at 0%?</h3><p>Previews play on the master channel, so you can check a song even when your music slider is all the way down.</p></div>
       <div class="qa"><h3>Where are my settings saved?</h3><p>In <code>config/quietplease.json</code>. Modpack makers can ship a ready file, and <code>/quietplease export</code> and <code>import</code> save and load presets.</p></div>
       <div class="qa"><h3>Which languages are there?</h3><p>English, Turkish, German, Spanish, Russian, Brazilian Portuguese and Simplified Chinese. Other languages show the English text.</p></div>
-      <div class="qa"><h3>Can I skip a song with a key?</h3><p>Yes. Open the panel, Skip the current song, Favorite the current song and Toggle playlist mode all have key binds. They start unbound, so pick your own keys.</p></div>
+      <div class="qa"><h3>Can I skip or pause a song with a key?</h3><p>Yes. Open the panel, Skip the current song, Pause / resume the music, Favorite the current song and Toggle playlist mode all have key binds. They start unbound, so pick your own keys.</p></div>
       <div class="qa"><h3>Can the music get quieter by itself?</h3><p>Yes. In Settings, Music behavior, it can turn down or mute while a jukebox plays nearby, while the game is in the background or during a fight. Songs can also fade in and out.</p></div>
+      <div class="qa"><h3>Some mod music is much louder than the rest. Can it match?</h3><p>Yes. Turn on Even out volume in Settings, Music behavior. Each song is measured once in the background, then every song plays at the level of Minecraft's own music.</p></div>
       <div class="qa"><h3>Can I turn off the song popup?</h3><p>Yes. Song popup in Settings turns it off. Popup settings changes its place, size, colors and text, and you can drag the example card where you want it.</p></div>
     </div>
   </section>
@@ -883,6 +884,7 @@ code {
           <tr><td><code>/quietplease reset &lt;track&gt;</code>, <code>resetall</code></td><td>Set one track, or everything, back to default.</td></tr>
           <tr><td><code>/quietplease gui</code>, <code>settings</code>, <code>playlist</code></td><td>Open the panel, the settings screen or the playlist.</td></tr>
           <tr><td><code>/quietplease skip</code></td><td>Skip the background song that is playing.</td></tr>
+          <tr><td><code>/quietplease pause</code></td><td>Pause the background song, or play it again from where it stopped.</td></tr>
           <tr><td><code>/quietplease export &lt;name&gt;</code>, <code>import &lt;name&gt;</code></td><td>Save or load all your settings, playlist included, as a preset.</td></tr>
           <tr><td><code>/quietplease dump</code></td><td>Write the full track list to <code>quietplease-tracks.txt</code>.</td></tr>
         </tbody>
@@ -895,6 +897,17 @@ code {
       <h2 class="shadow">What's new</h2>
     </div>
     <div class="changes">
+      <div class="rel">
+        <div class="rel-h"><span class="tag">1.4.0</span><h3>Pause, even volume and smoother skips</h3></div>
+        <ul>
+          <li>Pause and resume the background song with a new key or <code>/quietplease pause</code>. While a song is paused, no other song starts</li>
+          <li>Even out volume in Music behavior: each song is measured once in the background, then every song is brought to the level of Minecraft's own music. Off by default</li>
+          <li>Skip crossfades: the next song starts right away while the old one fades out underneath</li>
+          <li>Turning off the song that is playing now stops it and the next song comes. Turned-off music discs stop too</li>
+          <li>No repeats works with small song pools like the main menu or the Nether: the order stays random and the song that just played never comes right back</li>
+          <li>Settings are saved in the background and the game does less work for every sound it plays</li>
+        </ul>
+      </div>
       <div class="rel">
         <div class="rel-h"><span class="tag">1.3.0</span><h3>Song popup and music behavior</h3></div>
         <ul>
@@ -1925,13 +1938,13 @@ code {
 
   var CF_FILES = "https://www.curseforge.com/minecraft/mc-mods/quiet-please/files/";
   var VERS = [
-    ["26.3", { f: 9614087, o: 9614237, n: 9614331 }],
-    ["26.2", { f: 9614080, o: 9614247, n: 9614326 }],
-    ["26.1.2", { f: 9614070, o: 9614255, n: 9614323 }],
-    ["1.21.1", { f: 9614058, o: 9614267, n: 9614316 }],
-    ["1.20.1", { f: 9614050, o: 9614278 }],
-    ["1.19.2", { f: 9614038, o: 9614282 }],
-    ["1.18.2", { f: 9614012, o: 9614291 }]
+    ["26.3", { f: 9646747, o: 9646699, n: 9646671 }],
+    ["26.2", { f: 9646758, o: 9646714, n: 9646683 }],
+    ["26.1.2", { f: 9646780, o: 9646715, n: 9646689 }],
+    ["1.21.1", { f: 9646787, o: 9646718, n: 9646694 }],
+    ["1.20.1", { f: 9650144, o: 9646720 }],
+    ["1.19.2", { f: 9650147, o: 9646723 }],
+    ["1.18.2", { f: 9650154, o: 9646730 }]
   ];
   var LOADERS = [["f", "lf", "Fabric"], ["o", "lo", "Forge"], ["n", "ln2", "NeoForge"], ["f", "lq", "Quilt"]];
   VERS.forEach(function (v) {
@@ -1941,7 +1954,7 @@ code {
     LOADERS.forEach(function (ld) {
       var id = v[1][ld[0]];
       if (!id) return;
-      l += '<a class="' + ld[1] + '" href="' + CF_FILES + id + '" title="Download Quiet Please 1.3.0 for ' + ld[2] + ' ' + v[0] + '">' + ld[2] + '</a>';
+      l += '<a class="' + ld[1] + '" href="' + CF_FILES + id + '" title="Download Quiet Please 1.4.0 for ' + ld[2] + ' ' + v[0] + '">' + ld[2] + '</a>';
     });
     el.innerHTML = '<div class="v">' + v[0] + '</div><div class="l">' + l + '</div>';
     $("vgrid").appendChild(el);
