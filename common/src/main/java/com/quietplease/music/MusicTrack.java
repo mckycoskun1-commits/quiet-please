@@ -20,6 +20,8 @@ public record MusicTrack(ResourceLocation id, Set<ResourceLocation> events, Kind
         MUSIC("music"),
         /** Jukebox plagi. */
         DISC("disc"),
+        /** Nota blogu enstrumani (minecraft:note/harp...); ses seviyesi ayarlanabilir, calma listesine girmez. */
+        NOTE("note"),
         /** Adi muzik gibi degil ama uzun/akisli calinan bir ses (bazi modlar muzigi boyle kaydeder). */
         OTHER("other");
 
@@ -28,6 +30,11 @@ public record MusicTrack(ResourceLocation id, Set<ResourceLocation> events, Kind
 
         Kind(String id) {
             this.id = id;
+        }
+
+        /** Sarki mi (muzik ya da plak)? Nota bloklari ve ortam sesleri degil. */
+        public boolean isSong() {
+            return this == MUSIC || this == DISC;
         }
 
         /** Oyunun diline gore ad: "Music" / "Müzik". */

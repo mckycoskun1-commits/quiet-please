@@ -33,13 +33,17 @@ public final class QuietPleaseKeys {
             new KeyMapping("key.quietplease.favorite", InputConstants.UNKNOWN.getValue(), CATEGORY);
     public static final KeyMapping PLAYLIST_MODE =
             new KeyMapping("key.quietplease.playlist_mode", InputConstants.UNKNOWN.getValue(), CATEGORY);
+    public static final KeyMapping PREVIOUS =
+            new KeyMapping("key.quietplease.previous", InputConstants.UNKNOWN.getValue(), CATEGORY);
+    public static final KeyMapping DISABLE =
+            new KeyMapping("key.quietplease.disable", InputConstants.UNKNOWN.getValue(), CATEGORY);
     public static final KeyMapping PAUSE =
             new KeyMapping("key.quietplease.pause", InputConstants.UNKNOWN.getValue(), CATEGORY);
 
     private QuietPleaseKeys() {}
 
     public static java.util.List<KeyMapping> all() {
-        return java.util.List.of(OPEN_PANEL, SKIP, PAUSE, FAVORITE, PLAYLIST_MODE);
+        return java.util.List.of(OPEN_PANEL, SKIP, PREVIOUS, PAUSE, FAVORITE, DISABLE, PLAYLIST_MODE);
     }
 
     /** Duraklat / devam: ne oldugunu anlatan kisa mesaj. */
@@ -60,6 +64,12 @@ public final class QuietPleaseKeys {
             mc.gui.setOverlayMessage(Lang.tr(result).withStyle(
                     result.equals("cmd.skip.nothing") ? ChatFormatting.GRAY : ChatFormatting.GREEN), false);
         }
+        while (PREVIOUS.consumeClick()) {
+            mc.gui.setOverlayMessage(previous(), false);
+        }
+        while (DISABLE.consumeClick()) {
+            mc.gui.setOverlayMessage(disablePlaying(mc), false);
+        }
         while (PAUSE.consumeClick()) {
             mc.gui.setOverlayMessage(togglePause(), false);
         }
@@ -76,6 +86,27 @@ public final class QuietPleaseKeys {
         }
     }
 
+    /** Gecmisteki bir onceki sarkiyi calar; ne oldugunu anlatan kisa mesaji dondurur. */
+    public static Component previous() {
+        ResourceLocation id = MusicControl.previous();
+        if (id == null) return Lang.tr("key.previous.nothing").withStyle(ChatFormatting.GRAY);
+        return Lang.tr("key.previous.playing", shortName(id)).withStyle(ChatFormatting.GREEN);
+    }
+
+    /** "Bir daha calma": calan arka plan sarkisini kapatir (siradakine gecilir). */
+    public static Component disablePlaying(Minecraft mc) {
+        ResourceLocation id = playingTrack(mc);
+        if (id == null) return Lang.tr("key.favorite.nothing").withStyle(ChatFormatting.GRAY);
+        MusicSettings.setEnabled(id, false);
+        MusicSettings.save();
+        MusicSettings.applyToPlayingSounds();
+        return Lang.tr("key.disable.done", shortName(id)).withStyle(ChatFormatting.RED);
+    }
+
+    private static String shortName(ResourceLocation id) {
+        return id.getPath().substring(id.getPath().lastIndexOf('/') + 1);
+    }
+
     /** Calan arka plan sarkisini favorilere ekler ya da cikarir; ne oldugunu anlatan kisa mesaji dondurur. */
     public static Component toggleFavoriteOfPlaying(Minecraft mc) {
         ResourceLocation id = playingTrack(mc);
@@ -89,11 +120,13 @@ public final class QuietPleaseKeys {
 
     @Nullable
     private static ResourceLocation playingTrack(Minecraft mc) {
-        Playlist.PlaylistSound fromList = Playlist.playing();
-        if (fromList != null) return fromList.trackId;
         SoundInstance current = ((com.quietplease.mixin.MusicManagerAccessor) mc.getMusicManager()).quietplease$getCurrentMusic();
-        if (current == null || !mc.getSoundManager().isActive(current)) return null;
-        Sound sound = current.getSound();
-        return sound == null ? null : sound.getLocation();
+        if (current != null && mc.getSoundManager().isActive(current)) {
+            if (current instanceof Playlist.PlaylistSound ps) return ps.trackId;
+            Sound sound = current.getSound();
+            if (sound != null) return sound.getLocation();
+        }
+        Playlist.PlaylistSound fromList = Playlist.playing();
+        return fromList == null ? null : fromList.trackId;
     }
 }

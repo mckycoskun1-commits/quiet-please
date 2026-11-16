@@ -78,6 +78,21 @@ public class QuietPleaseSettingsScreen extends Screen {
                 .bounds(right, y, BUTTON_W, 20)
                 .tooltip(Tooltip.create(Lang.tr("playlist.open.tooltip")))
                 .build());
+        y += row;
+
+        // Gecmis ve kendi muzigin
+        addRenderableWidget(Button.builder(Lang.tr("settings.history"),
+                        b -> minecraft.setScreen(new ListenHistoryScreen(this, ListenHistoryScreen.Tab.RECENT)))
+                .bounds(left, y, BUTTON_W, 20)
+                .tooltip(Tooltip.create(Lang.tr("settings.history.tooltip")))
+                .build());
+        addRenderableWidget(Button.builder(Lang.tr("settings.custom_folder"), b -> {
+                    com.quietplease.music.CustomMusic.refresh();
+                    net.minecraft.Util.getPlatform().openFile(com.quietplease.music.CustomMusic.folder().toFile());
+                })
+                .bounds(right, y, BUTTON_W, 20)
+                .tooltip(Tooltip.create(Lang.tr("settings.custom_folder.tooltip")))
+                .build());
         y += row + groupGap;
 
         // Sarki arasi

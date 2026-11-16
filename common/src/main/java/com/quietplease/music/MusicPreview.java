@@ -51,6 +51,13 @@ public final class MusicPreview {
     public static boolean play(MusicTrack track) {
         stop();
         SoundManager sm = Minecraft.getInstance().getSoundManager();
+        if (CustomMusic.isCustom(track.id())) {
+            if (!CustomMusic.exists(track.id())) return false;
+            current = new PreviewSound(CustomMusic.EVENT, CustomMusic.sound(track.id()), track.id());
+            MusicSettings.applyToPlayingSounds();
+            sm.play(current);
+            return true;
+        }
         for (ResourceLocation eventId : track.events()) {
             WeighedSoundEvents event = sm.getSoundEvent(eventId);
             if (event == null) continue;

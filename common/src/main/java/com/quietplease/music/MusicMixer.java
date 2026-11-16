@@ -28,6 +28,9 @@ public final class MusicMixer {
     private static final long HURT_MEMORY_MS = 6000;
 
     private static final Map<SoundInstance, Long> STARTED = Collections.synchronizedMap(new IdentityHashMap<>());
+    /** Karistiricinin gordugu sesler; ilk goruldugu tick sarki "basladi" sayilir (STARTED, sesin ilk ses seviyesi
+     *  hesabinda yumusak giris icin daha once dolabildigi icin bu is icin kullanilamaz). */
+    private static final java.util.Set<SoundInstance> SEEN = Collections.newSetFromMap(new IdentityHashMap<>());
     private static final Deque<ResourceLocation> RECENT = new ArrayDeque<>();
     /** Son calinan dosyalar (ayardaki sayi kadar) -> sirasi (0 = en son calan). */
     private static volatile Map<ResourceLocation, Integer> recentRanks = Map.of();
@@ -92,6 +95,7 @@ public final class MusicMixer {
         LocalPlayer player = mc.player;
         synchronized (STARTED) {
             STARTED.keySet().retainAll(channels.keySet());
+            SEEN.retainAll(channels.keySet());
         }
         SongPopup.beginTick(channels.keySet());
         // Calan seslerin tek taramasi: hem karistirici hem sarki bildirimi (SongPopup) icin
@@ -104,11 +108,17 @@ public final class MusicMixer {
             }
             if (!applies(instance)) continue;
             SongPopup.observe(instance, entry.getValue());
-            if (!STARTED.containsKey(instance)) {
-                STARTED.put(instance, Util.getMillis());
+            if (SEEN.add(instance)) {
+                STARTED.putIfAbsent(instance, Util.getMillis());
                 Sound started = resolved(instance);
                 remember(started);
-                if (started != null) Loudness.prioritize(started.getLocation());
+                if (started != null) {
+                    Loudness.prioritize(started.getLocation());
+                    ResourceLocation file = started.getLocation();
+                    if (!file.equals(SoundManager.EMPTY_SOUND.getLocation()) && !file.equals(SoundManager.INTENTIONALLY_EMPTY_SOUND_LOCATION)) {
+                        ListenStats.played(file, !(instance instanceof Playlist.PlaylistSound ps && ps.replay));
+                    }
+                }
             }
             if (ModOptions.fadeSeconds > 0 && !MusicControl.isPaused(instance) && fade(instance) < 1.0F) fading = true;
         }
