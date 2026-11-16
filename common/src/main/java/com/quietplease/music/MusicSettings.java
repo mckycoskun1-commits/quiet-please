@@ -13,6 +13,9 @@ import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -280,11 +283,45 @@ public final class MusicSettings {
         }
     }
 
+    /** Yazilmayi bekleyen son dosya icerigi; null = bekleyen yok. */
+    private static final AtomicReference<String> PENDING = new AtomicReference<>();
+    private static final Object WRITE_LOCK = new Object();
+    private static final ExecutorService WRITER = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "QuietPlease-Save");
+        t.setDaemon(true);
+        return t;
+    });
+
+    static {
+        // Oyun kapanirken yazilmayi bekleyen bir kayit varsa kaybolmasin
+        Runtime.getRuntime().addShutdownHook(new Thread(MusicSettings::flush, "QuietPlease-SaveFlush"));
+    }
+
+    /**
+     * Ayarlari kaydeder. Icerik hemen (oyunun kendi thread'inde) hazirlanir, diske yazma arka planda olur;
+     * boylece oyun disk icin beklemez. Ust uste gelen kayitlarda sadece en sonuncusu yazilir.
+     */
     public static void save() {
+        String content;
         try {
-            writeAtomically(file(), GSON.toJson(writeRoot()));
-        } catch (IOException e) {
-            QuietPlease.LOGGER.error("{} yazilamadi", file(), e);
+            content = GSON.toJson(writeRoot());
+        } catch (RuntimeException e) {
+            QuietPlease.LOGGER.error("Ayarlar kaydedilemedi", e);
+            return;
+        }
+        if (PENDING.getAndSet(content) == null) WRITER.execute(MusicSettings::flush);
+    }
+
+    /** Bekleyen kaydi hemen yazar (arka plan thread'i ve oyun kapanisi). */
+    public static void flush() {
+        synchronized (WRITE_LOCK) {
+            String content = PENDING.getAndSet(null);
+            if (content == null) return;
+            try {
+                writeAtomically(file(), content);
+            } catch (IOException e) {
+                QuietPlease.LOGGER.error("{} yazilamadi", file(), e);
+            }
         }
     }
 
