@@ -78,7 +78,7 @@ public final class MusicSettings {
 
     /** Ses seviyesi carpani: kapaliysa 0, degilse parcanin ve modunun ses seviyesi carpimi. */
     public static float factor(Identifier track) {
-        float mod = modFactor(track);
+        float mod = modFactor(track) * Loudness.factor(track);
         TrackSetting s = SETTINGS.get(track);
         if (s == null) return mod;
         return s.enabled() ? s.volume() / 100.0F * mod : 0.0F;
@@ -105,11 +105,11 @@ public final class MusicSettings {
     public static float factor(SoundInstance instance) {
         // Onizleme: kapali olsa bile dinlenebilsin, ama ayarlanan ses seviyesiyle.
         if (instance instanceof MusicPreview.PreviewSound preview) {
-            return get(preview.trackId).volume() / 100.0F * modFactor(preview.trackId);
+            return get(preview.trackId).volume() / 100.0F * modFactor(preview.trackId) * Loudness.factor(preview.trackId);
         }
         // Onizleme calarken oyunun kendi arka plan muzigi susar.
         if (MusicPreview.hasPreview() && instance.getSource() == SoundSource.MUSIC) return 0.0F;
-        if (SETTINGS.isEmpty() && MOD_VOLUME.isEmpty()) return 1.0F;
+        if (SETTINGS.isEmpty() && MOD_VOLUME.isEmpty() && !Loudness.active()) return 1.0F;
         Sound sound;
         try {
             sound = instance.getSound();
@@ -152,11 +152,12 @@ public final class MusicSettings {
 
     /**
      * Degisiklikleri calmakta olan seslere hemen uygular: ses seviyeleri yeniden hesaplanir,
-     * kapatilan (carpani 0 olan) parcalar durdurulur.
+     * kapatilan parcalar durdurulur (arka plan sarkisiysa siradakine gecilir).
      */
     public static void applyToPlayingSounds() {
         Minecraft mc = Minecraft.getInstance();
         mc.getSoundManager().updateCategoryVolume(SoundSource.MUSIC, mc.options.getSoundSourceVolume(SoundSource.MUSIC));
+        MusicControl.stopDisabled(mc);
     }
 
     // ---------------------------------------------------------------- dosya

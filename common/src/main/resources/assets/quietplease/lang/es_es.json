@@ -150,6 +150,7 @@
   "key.quietplease.skip": "Saltar la canción actual",
   "key.quietplease.favorite": "Marcar la canción actual como favorita",
   "key.quietplease.playlist_mode": "Activar/desactivar modo lista",
+  "key.quietplease.pause": "Pausar / reanudar la música",
 
   "quietplease.screen.mod_volume": "Mod: %s%%",
   "quietplease.screen.mod_volume.tooltip": "Volumen de todas las canciones de este mod. El volumen propio de cada canción se aplica encima",
@@ -231,10 +232,16 @@
   "quietplease.behavior.favorites": "Favoritas",
   "quietplease.behavior.favorites.tooltip": "Las canciones marcadas con ★ se eligen tantas veces más a menudo, incluso sin el modo lista",
   "quietplease.settings.fade_skip": "Salto suave",
-  "quietplease.settings.fade_skip.tooltip": "Al saltar, la canción baja de volumen en 1,5 segundos en vez de cortarse. Pulsa Saltar otra vez para detenerla al instante",
+  "quietplease.settings.fade_skip.tooltip": "Al saltar, la canción anterior baja de volumen en 1,5 segundos mientras la siguiente ya empieza, en vez de cortarse",
+  "quietplease.behavior.normalize": "Igualar volumen",
+  "quietplease.behavior.normalize.tooltip": "Mide una vez el volumen de cada canción y lleva todas al nivel de la música de Minecraft, para que la música de mods muy alta o muy baja no destaque. La primera medición se hace en segundo plano",
+  "quietplease.behavior.normalize.measuring": "Midiendo canciones: faltan %s",
   "quietplease.key.favorite.added": "★ Añadida a favoritas: %s",
   "quietplease.key.favorite.removed": "Quitada de favoritas: %s",
   "quietplease.key.favorite.nothing": "Ahora no suena música de fondo",
+  "quietplease.key.pause.paused": "Música en pausa",
+  "quietplease.key.pause.resumed": "Música reanudada",
+  "quietplease.key.pause.nothing": "Ahora no suena música de fondo",
   "quietplease.key.playlist_mode.changed": "Modo lista: %s",
   "quietplease.key.playlist_mode.empty": "Modo lista: %s – la lista está vacía, añade canciones con ☆"
 }

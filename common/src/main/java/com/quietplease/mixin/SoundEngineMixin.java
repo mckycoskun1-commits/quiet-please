@@ -8,6 +8,7 @@ import net.minecraft.client.sounds.SoundEngine;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
@@ -35,5 +36,11 @@ public abstract class SoundEngineMixin {
         float factor = MusicSettings.factor(sound) * com.quietplease.music.MusicControl.fadeFactor(sound)
                 * com.quietplease.music.MusicMixer.factor(sound);
         if (factor != 1.0F) cir.setReturnValue(cir.getReturnValueF() * factor);
+    }
+
+    /** Oyun duraklatma menusunden donunce butun sesleri devam ettirir; oyuncunun duraklattigi sarki duraklatilmis kalsin. */
+    @Inject(method = "resume", at = @At("TAIL"))
+    private void quietplease$keepPaused(CallbackInfo ci) {
+        com.quietplease.music.MusicControl.keepPaused();
     }
 }

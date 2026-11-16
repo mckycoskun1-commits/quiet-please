@@ -34,11 +34,20 @@ public final class QuietPleaseKeys {
             new KeyMapping("key.quietplease.favorite", InputConstants.UNKNOWN.getValue(), CATEGORY);
     public static final KeyMapping PLAYLIST_MODE =
             new KeyMapping("key.quietplease.playlist_mode", InputConstants.UNKNOWN.getValue(), CATEGORY);
+    public static final KeyMapping PAUSE =
+            new KeyMapping("key.quietplease.pause", InputConstants.UNKNOWN.getValue(), CATEGORY);
 
     private QuietPleaseKeys() {}
 
     public static java.util.List<KeyMapping> all() {
-        return java.util.List.of(OPEN_PANEL, SKIP, FAVORITE, PLAYLIST_MODE);
+        return java.util.List.of(OPEN_PANEL, SKIP, PAUSE, FAVORITE, PLAYLIST_MODE);
+    }
+
+    /** Duraklat / devam: ne oldugunu anlatan kisa mesaj. */
+    public static Component togglePause() {
+        String result = MusicControl.togglePause();
+        return Lang.tr(result).withStyle(result.equals("key.pause.nothing") ? ChatFormatting.GRAY
+                : result.equals("key.pause.paused") ? ChatFormatting.YELLOW : ChatFormatting.GREEN);
     }
 
     /** Her istemci tick'inde: basilan tuslari isle. */
@@ -51,6 +60,9 @@ public final class QuietPleaseKeys {
             // Sohbeti doldurmasin: kisa mesaj, hotbar'in ustunde birkac saniye
             mc.gui.setOverlayMessage(Lang.tr(result).withStyle(
                     result.equals("cmd.skip.nothing") ? ChatFormatting.GRAY : ChatFormatting.GREEN), false);
+        }
+        while (PAUSE.consumeClick()) {
+            mc.gui.setOverlayMessage(togglePause(), false);
         }
         while (FAVORITE.consumeClick()) {
             mc.gui.setOverlayMessage(toggleFavoriteOfPlaying(mc), false);
