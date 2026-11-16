@@ -2,12 +2,12 @@ package com.quietplease.mixin;
 
 import com.quietplease.music.MusicMixer;
 import com.quietplease.music.MusicSettings;
-import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.client.sounds.Weighted;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,6 +19,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /**
  * Bir ses olayi (ornegin minecraft:music.game) calinacagi zaman oyun icindeki dosyalardan birini rastgele secer.
  * Kapali parcalar secimden cikar, son calinan parcalar (baska secenek varsa) atlanir, favoriler daha agir basar.
+ *
+ * Bu yontem oyundaki her seste (ayak sesi, blok kirma...) cagrilir. Cogunda hicbir sey degismez; o yuzden once
+ * bellek ayirmadan bakilir, sadece gercekten degisen bir olayda secim yeniden yapilir.
  */
 @Mixin(WeighedSoundEvents.class)
 public abstract class WeighedSoundEventsMixin {
@@ -35,52 +38,62 @@ public abstract class WeighedSoundEventsMixin {
         if (!disabled && !extras) return;
 
         List<Weighted<Sound>> all = list;
-        List<Weighted<Sound>> allowed = new ArrayList<>(all.size());
-        List<Integer> weights = new ArrayList<>(all.size());
-        List<Boolean> recent = new ArrayList<>(all.size());
-        boolean changed = false;
+        int n = all.size();
+        if (!quietplease$anyAffected(all, n, disabled, extras)) return;
+
+        // Agirlik -1: secimden cikti (kapali). recent: son calinanlardan.
+        int[] weights = new int[n];
+        boolean[] recent = new boolean[n];
+        int allowed = 0;
         boolean anyFresh = false;
-        for (Weighted<Sound> entry : all) {
+        for (int i = 0; i < n; i++) {
+            Weighted<Sound> entry = all.get(i);
             int weight = entry.getWeight();
-            boolean isRecent = false;
             if (entry instanceof Sound sound) {
-                if (disabled && MusicSettings.isDisabled(sound.getLocation())) {
-                    changed = true;
+                Identifier file = sound.getLocation();
+                if (disabled && MusicSettings.isDisabled(file)) {
+                    weights[i] = -1;
                     continue;
                 }
                 if (extras) {
-                    int w = MusicMixer.weight(sound.getLocation(), weight);
-                    if (w != weight) changed = true;
-                    weight = w;
-                    isRecent = MusicMixer.isRecent(sound.getLocation());
-                    if (isRecent) changed = true;
+                    weight = MusicMixer.weight(file, weight);
+                    recent[i] = MusicMixer.isRecent(file);
                 }
             }
-            if (!isRecent) anyFresh = true;
-            allowed.add(entry);
-            weights.add(weight);
-            recent.add(isRecent);
+            weights[i] = weight;
+            allowed++;
+            if (!recent[i]) anyFresh = true;
         }
-        if (!changed) return;
 
         int total = 0;
-        for (int i = 0; i < allowed.size(); i++) {
-            if (anyFresh && recent.get(i)) continue;
-            total += weights.get(i);
+        for (int i = 0; i < n; i++) {
+            if (weights[i] < 0 || (anyFresh && recent[i])) continue;
+            total += weights[i];
         }
-        if (allowed.isEmpty() || total <= 0) {
+        if (allowed == 0 || total <= 0) {
             cir.setReturnValue(SoundManager.INTENTIONALLY_EMPTY_SOUND);
             return;
         }
 
         int r = random.nextInt(total);
-        for (int i = 0; i < allowed.size(); i++) {
-            if (anyFresh && recent.get(i)) continue;
-            r -= weights.get(i);
+        for (int i = 0; i < n; i++) {
+            if (weights[i] < 0 || (anyFresh && recent[i])) continue;
+            r -= weights[i];
             if (r < 0) {
-                cir.setReturnValue(allowed.get(i).getSound(random));
+                cir.setReturnValue(all.get(i).getSound(random));
                 return;
             }
         }
+    }
+
+    /** Bu olayda kapali, favori ya da son calinan bir dosya var mi? Yoksa oyunun kendi secimi aynen kalir. */
+    private static boolean quietplease$anyAffected(List<Weighted<Sound>> all, int n, boolean disabled, boolean extras) {
+        for (int i = 0; i < n; i++) {
+            if (!(all.get(i) instanceof Sound sound)) continue;
+            Identifier file = sound.getLocation();
+            if (disabled && MusicSettings.isDisabled(file)) return true;
+            if (extras && (MusicMixer.isRecent(file) || MusicMixer.weight(file, 1) != 1)) return true;
+        }
+        return false;
     }
 }
