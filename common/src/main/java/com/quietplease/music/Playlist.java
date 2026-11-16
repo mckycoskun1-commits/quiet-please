@@ -451,7 +451,7 @@ public final class Playlist {
      * Dosyanin tamami bellege alinmaz: sadece basi ve son ~72 KB'i tutulur (bir sarki birkac MB olabilir).
      */
     public static int readOggSeconds(ResourceLocation path) {
-        try (InputStream in = Minecraft.getInstance().getResourceManager().open(path)) {
+        try (InputStream in = Minecraft.getInstance().getResourceManager().getResource(path).getInputStream()) {
             byte[] head = in.readNBytes(OGG_HEAD);
             long rate = 0;
             for (int i = 0; i + 16 < head.length; i++) {

@@ -63,7 +63,7 @@ public class MusicBehaviorScreen extends Screen {
                 .withTooltip(v -> Tooltip.lines(Lang.tr("settings.fade_skip.tooltip")))
                 .create(left, y, BUTTON_W, 20, Lang.tr("settings.fade_skip"), (b, v) -> ModOptions.fadeOnSkip = v));
         addRenderableWidget(CycleButton.onOffBuilder(ModOptions.normalize)
-                .withTooltip(v -> Tooltip.create(Lang.tr("behavior.normalize.tooltip")))
+                .withTooltip(v -> Tooltip.lines(Lang.tr("behavior.normalize.tooltip")))
                 .create(right, y, BUTTON_W, 20, Lang.tr("behavior.normalize"), (b, v) -> {
                     ModOptions.normalize = v;
                     MusicSettings.applyToPlayingSounds();
@@ -93,13 +93,16 @@ public class MusicBehaviorScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
-        super.extractRenderState(g, mouseX, mouseY, partialTick);
-        g.centeredText(font, title, width / 2, 14, 0xFFFFC966);
+    public void render(PoseStack pose, int mouseX, int mouseY, float partialTick) {
+        GuiGraphics g = new GuiGraphics(pose);
+        renderBackground(pose);
+        super.render(pose, mouseX, mouseY, partialTick);
+        g.drawCenteredString(font, title, width / 2, 14, 0xFFFFC966);
         int pending = Loudness.pending();
         if (ModOptions.normalize && pending > 0) {
-            g.centeredText(font, Lang.tr("behavior.normalize.measuring", pending), statusX, statusY, 0xFFA0A0A0);
+            g.drawCenteredString(font, Lang.tr("behavior.normalize.measuring", pending), statusX, statusY, 0xFFA0A0A0);
         }
+        Tooltip.renderPending(this, pose, mouseX, mouseY);
     }
 
     @Override

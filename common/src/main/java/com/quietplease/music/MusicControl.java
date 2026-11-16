@@ -106,8 +106,8 @@ public final class MusicControl {
     static int delayAfterSkip(@Nullable Music music) {
         if (music == null) return 100;
         Music adjusted = ModOptions.adjustGap(music);
-        int min = adjusted.minDelay();
-        int max = Math.max(min, adjusted.maxDelay());
+        int min = adjusted.getMinDelay();
+        int max = Math.max(min, adjusted.getMaxDelay());
         return Math.max(20, Mth.nextInt(RANDOM, min, max));
     }
 

@@ -8,7 +8,6 @@ import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.client.sounds.Weighted;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.RandomSource;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -86,16 +85,16 @@ public abstract class WeighedSoundEventsMixin {
             if (weights[i] > 0) total += weights[i];
         }
         if (allowed == 0 || total <= 0) {
-            cir.setReturnValue(SoundManager.INTENTIONALLY_EMPTY_SOUND);
+            cir.setReturnValue(SoundManager.EMPTY_SOUND);
             return;
         }
 
-        int r = random.nextInt(total);
+        int r = quietplease$random.nextInt(total);
         for (int i = 0; i < n; i++) {
             if (weights[i] <= 0) continue;
             r -= weights[i];
             if (r < 0) {
-                cir.setReturnValue(all.get(i).getSound(random));
+                cir.setReturnValue(all.get(i).getSound());
                 return;
             }
         }

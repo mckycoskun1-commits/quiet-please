@@ -156,7 +156,7 @@ public final class MusicSettings {
      */
     public static void applyToPlayingSounds() {
         Minecraft mc = Minecraft.getInstance();
-        mc.getSoundManager().updateCategoryVolume(SoundSource.MUSIC, mc.options.getSoundSourceVolume(SoundSource.MUSIC));
+        mc.getSoundManager().updateSourceVolume(SoundSource.MUSIC, mc.options.getSoundSourceVolume(SoundSource.MUSIC));
         MusicControl.stopDisabled(mc);
     }
 
