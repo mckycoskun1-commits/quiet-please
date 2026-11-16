@@ -30,7 +30,6 @@ public class QuietPlease {
         com.quietplease.music.Playlist.clientTick(mc);
         com.quietplease.music.MusicControl.clientTick(mc);
         com.quietplease.music.MusicMixer.clientTick(mc);
-        com.quietplease.gui.SongPopup.tick(mc);
         QuietPleaseKeys.tick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
         if (!autoDumpDone && mc.gui.screen() instanceof TitleScreen && mc.gui.overlay() == null) onScreenInit(mc.gui.screen());
@@ -166,6 +165,9 @@ public class QuietPlease {
                     mc.getMusicManager().stopPlaying();
                     mc.getMusicManager().startPlaying(net.minecraft.sounds.Musics.GAME);
                 } else if (t == 69) {
+                    String shown = com.quietplease.gui.SongPopup.visibleTitle();
+                    boolean ok = shown != null && expectedTrack != null && expectedTrack.getPath().endsWith(shown);
+                    LOGGER.info("GUITEST sarki bildirimi: {} (kart: {})", ok ? "BASARILI" : "HATA", shown);
                     shot(mc, "quietplease-popup.png");
                 } else if (t == 70 || t == 115) {
                     var playing = com.quietplease.music.Playlist.playing();

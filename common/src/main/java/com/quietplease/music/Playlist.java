@@ -428,25 +428,46 @@ public final class Playlist {
         return -1;
     }
 
+    /** Ornekleme hizinin arandigi bas kisim. */
+    private static final int OGG_HEAD = 8192;
+    /** Son Ogg sayfasinin bulundugu son kisim; bir Ogg sayfasi en fazla 65307 bayttir. */
+    private static final int OGG_TAIL = 72 * 1024;
+
     /**
      * Ogg Vorbis dosyasinin suresi: son Ogg sayfasinin "granul konumu" (toplam ornek sayisi) / ornekleme hizi.
      * Ornekleme hizi ilk sayfadaki Vorbis tanitim basligindadir.
+     *
+     * Dosyanin tamami bellege alinmaz: sadece basi ve son ~72 KB'i tutulur (bir sarki birkac MB olabilir).
      */
-    static int readOggSeconds(Identifier path) {
+    public static int readOggSeconds(Identifier path) {
         try (InputStream in = Minecraft.getInstance().getResourceManager().open(path)) {
-            byte[] b = in.readAllBytes();
+            byte[] head = in.readNBytes(OGG_HEAD);
             long rate = 0;
-            for (int i = 0; i + 16 < b.length && i < 8192; i++) {
-                if (b[i] == 1 && b[i + 1] == 'v' && b[i + 2] == 'o' && b[i + 3] == 'r' && b[i + 4] == 'b'
-                        && b[i + 5] == 'i' && b[i + 6] == 's') {
-                    rate = le(b, i + 12, 4);
+            for (int i = 0; i + 16 < head.length; i++) {
+                if (head[i] == 1 && head[i + 1] == 'v' && head[i + 2] == 'o' && head[i + 3] == 'r' && head[i + 4] == 'b'
+                        && head[i + 5] == 'i' && head[i + 6] == 's') {
+                    rate = le(head, i + 12, 4);
                     break;
                 }
             }
-            for (int i = b.length - 14; i >= 0; i--) {
+            if (rate <= 0) return -1;
+
+            // Kayan pencere: tampon dolunca son OGG_TAIL bayt basa tasinir.
+            byte[] b = new byte[OGG_TAIL * 2];
+            System.arraycopy(head, 0, b, 0, head.length);
+            int len = head.length;
+            int read;
+            while ((read = in.read(b, len, b.length - len)) != -1) {
+                len += read;
+                if (len == b.length) {
+                    System.arraycopy(b, len - OGG_TAIL, b, 0, OGG_TAIL);
+                    len = OGG_TAIL;
+                }
+            }
+            for (int i = len - 14; i >= 0; i--) {
                 if (b[i] == 'O' && b[i + 1] == 'g' && b[i + 2] == 'g' && b[i + 3] == 'S') {
                     long granule = le(b, i + 6, 8);
-                    return rate > 0 && granule > 0 ? (int) (granule / rate) : -1;
+                    return granule > 0 ? (int) (granule / rate) : -1;
                 }
             }
         } catch (Exception e) {
