@@ -98,6 +98,10 @@ public final class QuietPleaseCommands {
                 .then(lit("settings").executes(ctx -> open(new QuietPleaseSettingsScreen(null))))
                 .then(lit("playlist").executes(ctx -> open(new QuietPlaylistScreen(null))))
                 .then(lit("skip").executes(QuietPleaseCommands::skip))
+                .then(lit("pause").executes(ctx -> {
+                    say(ctx, QuietPleaseKeys.togglePause());
+                    return 1;
+                }))
                 .then(lit("export")
                         .then(arg("name", StringArgumentType.word())
                                 .executes(ctx -> exportPreset(ctx, StringArgumentType.getString(ctx, "name")))))

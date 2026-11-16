@@ -295,6 +295,18 @@ public final class Playlist {
     }
 
     /**
+     * Calan parca listeden cikmadan biter (ornegin kapatildigi icin durduruldu); sira ardindaki parcadan devam eder.
+     */
+    static void releaseCurrent() {
+        ResourceLocation id = currentId;
+        if (id == null) return;
+        currentId = null;
+        int i = QUEUE.indexOf(id);
+        if (i >= 0) nextFrom = QUEUE.get((i + 1) % QUEUE.size());
+        version++;
+    }
+
+    /**
      * Calan parcayi bitirir, sonra siradaki ilk calinabilir parcayi secer (ardindan baslayip basa donerek).
      * Calinamayanlari (kapali, yuklu degil) atlar ama listede birakir.
      *
@@ -404,7 +416,7 @@ public final class Playlist {
     public static void clientTick(Minecraft mc) {
         if (current == null) return;
         boolean active = mc.getSoundManager().isActive(current);
-        if (active && !mc.isPaused()) elapsedTicks++;
+        if (active && !mc.isPaused() && !MusicControl.isPaused(current)) elapsedTicks++;
         if (!active && current.trackId.equals(currentId) && finishCurrent()) MusicSettings.save();
     }
 

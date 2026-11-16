@@ -94,6 +94,7 @@ final class DevSelfTest {
 
         testSelection(menu, files, random, failures);
         testDurations(menu, failures);
+        testLoudness(menu, failures);
 
         // 4) Calma listesi ve sarki arasi (ayarlar test sonunda geri alinir)
         testPlaylist(files, failures);
@@ -177,6 +178,31 @@ final class DevSelfTest {
             log.append(' ').append(s.getLocation().getPath()).append('=').append(fast);
         }
         QuietPlease.LOGGER.info("SELFTEST sureler (sn):{}", log);
+    }
+
+    /** Ses esitleme: olcum makul bir LUFS degeri vermeli; sessiz bir sinyal NaN, 1 kHz tam sinus yaklasik -3 LUFS olmali. */
+    private static void testLoudness(WeighedSoundEvents menu, List<String> failures) {
+        StringBuilder log = new StringBuilder();
+        long start = System.nanoTime();
+        int n = 0;
+        for (Weighted<Sound> w : ((com.quietplease.mixin.WeighedSoundEventsAccessor) menu).quietplease$getList()) {
+            if (!(w instanceof Sound s) || n >= 3) continue;
+            float level = com.quietplease.music.Loudness.measure(s.getLocation());
+            check(failures, level > -45 && level < -5, "ses esitleme: " + s.getLocation() + " = " + level + " LUFS");
+            log.append(' ').append(s.getLocation().getPath()).append('=').append(Math.round(level * 10) / 10.0);
+            n++;
+        }
+        QuietPlease.LOGGER.info("SELFTEST yukseklik (LUFS):{} ({} ms)", log, (System.nanoTime() - start) / 1_000_000);
+
+        com.quietplease.music.Loudness.Meter silent = new com.quietplease.music.Loudness.Meter(48000, 2);
+        for (int i = 0; i < 48000 * 2 * 2; i++) silent.accept(0.0F);
+        check(failures, Float.isNaN(silent.loudness()), "ses esitleme: sessizlik NaN olmali");
+        com.quietplease.music.Loudness.Meter sine = new com.quietplease.music.Loudness.Meter(48000, 1);
+        for (int i = 0; i < 48000 * 3; i++) sine.accept((float) Math.sin(2 * Math.PI * 1000 * i / 48000.0));
+        float sineLevel = sine.loudness();
+        // EBU: 1 kHz, 0 dBFS tepe sinus tek kanalda -3,01 LUFS
+        check(failures, Math.abs(sineLevel + 3.0F) < 0.5F, "ses esitleme: 1 kHz sinus -3 LUFS beklenirdi, gelen " + sineLevel);
+        QuietPlease.LOGGER.info("SELFTEST sinus 1 kHz: {} LUFS", sineLevel);
     }
 
     private static int fullReadSeconds(ResourceLocation path) {

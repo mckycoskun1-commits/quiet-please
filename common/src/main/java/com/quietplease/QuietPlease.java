@@ -28,6 +28,7 @@ public class QuietPlease {
         Minecraft mc = Minecraft.getInstance();
         com.quietplease.music.Playlist.clientTick(mc);
         com.quietplease.music.MusicControl.clientTick(mc);
+        com.quietplease.music.Loudness.clientTick(mc);
         com.quietplease.music.MusicMixer.clientTick(mc);
         QuietPleaseKeys.tick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
@@ -45,6 +46,8 @@ public class QuietPlease {
         var tracks = guiTestTicks <= 180 ? com.quietplease.music.MusicLibrary.scan().get("minecraft") : null;
         switch (guiTestTicks) {
             case 100 -> {
+                normalizeBackup = com.quietplease.music.ModOptions.normalize;
+                com.quietplease.music.ModOptions.normalize = true; // olcum arka planda test boyunca surer
                 MusicSettings.setEnabled(tracks.get(2).id(), false);
                 MusicSettings.setVolume(tracks.get(3).id(), 40);
                 mc.setScreen(new QuietPleaseScreen(new TitleScreen()));
@@ -181,7 +184,36 @@ public class QuietPlease {
                     boolean ok = com.quietplease.music.MusicControl.isFading() && f > 0 && f < 1
                             && mc.getSoundManager().isActive(fadingSound);
                     LOGGER.info("GUITEST yumusak atlama: {} (carpan {})", ok ? "BASARILI" : "HATA", f);
+                } else if (t == 116) {
+                    // Duraklat: sarki "calan" kalir, oyun yeni sarki baslatmaz
+                    pausedSound = ((com.quietplease.mixin.MusicManagerAccessor) mc.getMusicManager()).quietplease$getCurrentMusic();
+                    String r = com.quietplease.music.MusicControl.togglePause();
+                    LOGGER.info("GUITEST duraklat: {} ({})", r.equals("key.pause.paused")
+                            && com.quietplease.music.MusicControl.isPaused(pausedSound) ? "BASARILI" : "HATA", r);
+                } else if (t == 119) {
+                    var now = ((com.quietplease.mixin.MusicManagerAccessor) mc.getMusicManager()).quietplease$getCurrentMusic();
+                    boolean held = now == pausedSound && mc.getSoundManager().isActive(pausedSound)
+                            && com.quietplease.music.MusicControl.isPaused();
+                    String r = com.quietplease.music.MusicControl.togglePause();
+                    LOGGER.info("GUITEST devam: {} (bekledi {}, {})", held && r.equals("key.pause.resumed")
+                            && !com.quietplease.music.MusicControl.isPaused() ? "BASARILI" : "HATA", held, r);
+                } else if (t == 120) {
+                    // Calan sarkiyi kapat: hemen durmali, siradaki baslamali, sarki listeden cikmamali
+                    var playing = com.quietplease.music.Playlist.playing();
+                    disabledTrack = playing == null ? null : playing.trackId;
+                    disabledSound = playing;
+                    if (disabledTrack != null) {
+                        MusicSettings.setEnabled(disabledTrack, false);
+                        MusicSettings.applyToPlayingSounds();
+                    }
                 } else if (t == 123) {
+                    var playing = com.quietplease.music.Playlist.playing();
+                    boolean ok = disabledTrack != null && disabledSound != null && !mc.getSoundManager().isActive(disabledSound)
+                            && playing != null && !playing.trackId.equals(disabledTrack)
+                            && com.quietplease.music.Playlist.contains(disabledTrack);
+                    LOGGER.info("GUITEST kapatilan sarki durdu: {} (kapatilan {}, simdi {})", ok ? "BASARILI" : "HATA",
+                            disabledTrack, playing == null ? "yok" : playing.trackId);
+                    if (disabledTrack != null) MusicSettings.reset(disabledTrack);
                     shot(mc, "quietplease-popup-left.png");
                 } else if (t == 125) {
                     com.quietplease.music.ModOptions.popupPosition = popupPositionBackup;
@@ -235,6 +267,15 @@ public class QuietPlease {
                     mc.setScreen(new com.quietplease.gui.MusicBehaviorScreen(null));
                 } else if (t == 204) {
                     shot(mc, "quietplease-behavior.png");
+                    var current = ((com.quietplease.mixin.MusicManagerAccessor) mc.getMusicManager()).quietplease$getCurrentMusic();
+                    var file = current == null || current.getSound() == null ? null : current.getSound().getLocation();
+                    float target = com.quietplease.music.Loudness.target();
+                    Float level = file == null ? null : com.quietplease.music.Loudness.level(file);
+                    float factor = file == null ? 1 : com.quietplease.music.Loudness.factor(file);
+                    boolean ok = !Float.isNaN(target) && (level == null || level.isNaN() || Math.abs(factor - 1) > 0.0001F
+                            || Math.abs(level - target) < 0.01F);
+                    LOGGER.info("GUITEST ses esitleme: {} (hedef {} LUFS, bekleyen {}, calan {} = {} LUFS, carpan {})",
+                            ok ? "BASARILI" : "HATA", target, com.quietplease.music.Loudness.pending(), file, level, factor);
                     LOGGER.info("GUITEST karistirici: kisma {}, plak yakinda {}, savasta {}", com.quietplease.music.MusicMixer.duck(),
                             com.quietplease.music.MusicMixer.jukeboxNear(), com.quietplease.music.MusicMixer.inCombat());
                 } else if (t == 206) {
@@ -243,6 +284,7 @@ public class QuietPlease {
                     // Ornek calma listesini geri al
                     if (playlistBackup != null) com.quietplease.music.Playlist.restore(playlistBackup);
                     com.quietplease.music.ModOptions.playlistMode = playlistModeBackup;
+                    com.quietplease.music.ModOptions.normalize = normalizeBackup;
                     MusicSettings.save();
                     LOGGER.info("GUITEST bitti");
                     guiTestTicks = -1;
@@ -254,6 +296,9 @@ public class QuietPlease {
     private static int worldJoinTick = -1;
     private static com.quietplease.music.ModOptions.PopupPosition popupPositionBackup = com.quietplease.music.ModOptions.PopupPosition.RIGHT_MIDDLE;
     private static net.minecraft.client.resources.sounds.SoundInstance fadingSound;
+    private static net.minecraft.client.resources.sounds.SoundInstance pausedSound;
+    private static net.minecraft.client.resources.sounds.SoundInstance disabledSound;
+    private static net.minecraft.resources.ResourceLocation disabledTrack;
     private static net.minecraft.resources.ResourceLocation expectedTrack;
     private static net.minecraft.resources.ResourceLocation skippedTrack;
 
@@ -263,6 +308,7 @@ public class QuietPlease {
     }
     private static com.google.gson.JsonObject playlistBackup;
     private static boolean playlistModeBackup;
+    private static boolean normalizeBackup;
 
     /**
      * Gelistirme testi: imleci bir GUI noktasina tasir ve istenirse oyunun kendi fare kodundan (MouseHandler.onPress)
