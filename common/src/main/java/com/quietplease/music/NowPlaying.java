@@ -24,7 +24,8 @@ public final class NowPlaying {
         SoundEngine engine = ((com.quietplease.mixin.SoundManagerAccessor) Minecraft.getInstance().getSoundManager()).quietplease$getSoundEngine();
         for (Map.Entry<SoundInstance, ChannelAccess.ChannelHandle> entry : ((com.quietplease.mixin.SoundEngineAccessor) engine).quietplease$getInstanceToChannel().entrySet()) {
             SoundInstance instance = entry.getKey();
-            if (instance instanceof MusicPreview.PreviewSound || entry.getValue().isStopped()) continue;
+            if (instance instanceof MusicPreview.PreviewSound || entry.getValue().isStopped()
+                    || MusicControl.isFadingOut(instance)) continue;
             Sound sound;
             try {
                 sound = instance.getSound();
