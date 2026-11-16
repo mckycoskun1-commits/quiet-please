@@ -114,3 +114,17 @@ Bu dalın jar'ı `dist/quietplease-1.1.0.jar` olur (1.0.0 jar'ına dokunmaz).
         çıkarıyor; müzik yokken "çalan müzik yok" diyor. "Toggle playlist mode" tuşu modu açıp kapatıyor, liste boşsa uyarıyor.
 30. [ ] Oyun dilini Deutsch, Español (España), Русский, Português (Brasil) ve 简体中文 yap: panel, Ayarlar ve çalma listesi o dilde,
         yazılar düğmelerden taşmıyor.
+
+### 1.4.0: çapraz geçiş, duraklat, kapatınca durma, ses eşitleme, rastgelelik
+31. [ ] **Atla** (yumuşak geçiş açık): yeni şarkı hemen başlıyor, eski şarkı onun altında 1,5 saniyede kısılarak bitiyor.
+        Kısılırken Atla'ya tekrar basınca eski şarkı hemen susuyor ve yeni başlayan şarkı da atlanıyor.
+32. [ ] Key Binds'te **Pause / resume the music** tuşu var. Basınca şarkı duruyor ("Music paused"), tekrar basınca kaldığı
+        yerden devam ediyor. Duraklatılmışken yeni şarkı başlamıyor; ESC menüsünden dönünce şarkı duraklatılmış kalıyor.
+        `/quietplease pause` aynısını yapıyor.
+33. [ ] Panelde **çalan** şarkıyı **Kapalı** yap: şarkı hemen duruyor, sıradaki geliyor (şarkı arası ayarına göre).
+        Çalma listesindeyse listeden silinmiyor, üstü çizili kalıyor. Jukebox'ta çalan plağı kapatınca plak susuyor.
+34. [ ] Müzik davranışı ekranında **Even out volume: ON**: altında "Measuring songs: N left" yazısı çıkıp azalıyor,
+        bitince kayboluyor. `run/config/quietplease-loudness.json` oluşuyor. Sesi çok yüksek bir mod müziği
+        (ör. bir boss ya da biyom müziği) vanilla müziklerle aynı seviyeye iniyor. OFF yapınca eski haline dönüyor.
+35. [ ] Ana menüde (9 şarkı) şarkı arası **None** ile birkaç şarkı dinle: sıra her seferinde farklı, az önce çalan şarkı
+        hemen tekrar gelmiyor. Nether'de de aynısı.
