@@ -3,22 +3,18 @@ package com.quietplease.gui;
 import com.quietplease.Lang;
 import com.quietplease.music.ModOptions;
 import com.quietplease.music.MusicLibrary;
-import com.quietplease.music.MusicPreview;
 import com.quietplease.music.MusicTrack;
 import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
-import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.Util;
 import net.minecraft.world.item.ItemStack;
@@ -43,31 +39,48 @@ public final class SongPopup {
 
     private SongPopup() {}
 
-    public static void tick(Minecraft mc) {
-        SoundEngine engine = ((com.quietplease.mixin.SoundManagerAccessor) mc.getSoundManager()).quietplease$getSoundEngine();
-        Map<SoundInstance, ChannelAccess.ChannelHandle> channels =
-                ((com.quietplease.mixin.SoundEngineAccessor) engine).quietplease$getInstanceToChannel();
-        ResourceLocation started = null;
-        ResourceLocation startedEvent = null;
-        KNOWN.retainAll(channels.keySet());
-        for (Map.Entry<SoundInstance, ChannelAccess.ChannelHandle> entry : channels.entrySet()) {
-            SoundInstance instance = entry.getKey();
-            if (KNOWN.contains(instance) || entry.getValue().isStopped()) continue;
-            if (instance instanceof MusicPreview.PreviewSound || instance.getSource() != SoundSource.MUSIC) continue;
-            Sound sound;
-            try {
-                sound = instance.getSound();
-            } catch (RuntimeException e) {
-                continue;
-            }
-            if (sound == null) continue;
-            KNOWN.add(instance);
-            ResourceLocation file = sound.getLocation();
-            if (file.equals(SoundManager.EMPTY_SOUND.getLocation())) continue;
-            started = file;
-            startedEvent = instance.getLocation();
+    private static ResourceLocation started;
+    private static ResourceLocation startedEvent;
+
+    /*
+     * Her tick'te MusicMixer calan sesleri bir kez tarar ve muzikleri buraya da verir (ayri bir tarama yapilmaz):
+     * beginTick -> her muzik icin observe -> endTick.
+     */
+
+    public static void beginTick(Set<SoundInstance> live) {
+        KNOWN.retainAll(live);
+        started = null;
+        startedEvent = null;
+    }
+
+    /** Calan bir MUSIC sesi (onizleme degil). Yeni baslamissa bildirim icin aklinda tutar. */
+    public static void observe(SoundInstance instance, ChannelAccess.ChannelHandle channel) {
+        if (KNOWN.contains(instance) || channel.isStopped()) return;
+        Sound sound;
+        try {
+            sound = instance.getSound();
+        } catch (RuntimeException e) {
+            return;
         }
+        if (sound == null) return;
+        KNOWN.add(instance);
+        ResourceLocation file = sound.getLocation();
+        if (file.equals(SoundManager.EMPTY_SOUND_LOCATION) || file.equals(SoundManager.INTENTIONALLY_EMPTY_SOUND_LOCATION)) return;
+        started = file;
+        startedEvent = instance.getLocation();
+    }
+
+    /** Gelistirme testi icin: kart su an ekrandaysa gosterdigi sarki adi, degilse null. */
+    public static String visibleTitle() {
+        if (shownAt < 0) return null;
+        long age = Util.getMillis() - shownAt;
+        return age < SLIDE_IN_MS + holdMs() + SLIDE_OUT_MS ? title : null;
+    }
+
+    public static void endTick(Minecraft mc) {
         if (started != null && mc.level != null && ModOptions.songPopup) show(started, startedEvent);
+        started = null;
+        startedEvent = null;
     }
 
     public static void show(ResourceLocation file, ResourceLocation event) {

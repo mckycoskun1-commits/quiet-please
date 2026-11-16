@@ -1,5 +1,6 @@
 package com.quietplease.music;
 
+import com.quietplease.gui.SongPopup;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
@@ -87,13 +88,17 @@ public final class MusicMixer {
         synchronized (STARTED) {
             STARTED.keySet().retainAll(channels.keySet());
         }
-        for (SoundInstance instance : channels.keySet()) {
+        SongPopup.beginTick(channels.keySet());
+        // Calan seslerin tek taramasi: hem karistirici hem sarki bildirimi (SongPopup) icin
+        for (Map.Entry<SoundInstance, ChannelAccess.ChannelHandle> entry : channels.entrySet()) {
+            SoundInstance instance = entry.getKey();
             if (instance instanceof MusicPreview.PreviewSound) continue;
             if (instance.getSource() == SoundSource.RECORDS && player != null && !instance.isRelative()
                     && player.distanceToSqr(instance.getX(), instance.getY(), instance.getZ()) <= JUKEBOX_RANGE * JUKEBOX_RANGE) {
                 jukebox = true;
             }
             if (!applies(instance)) continue;
+            SongPopup.observe(instance, entry.getValue());
             if (!STARTED.containsKey(instance)) {
                 STARTED.put(instance, Util.getMillis());
                 remember(resolved(instance));
@@ -101,6 +106,7 @@ public final class MusicMixer {
             if (ModOptions.fadeSeconds > 0 && fade(instance) < 1.0F) fading = true;
         }
         jukeboxNear = jukebox;
+        SongPopup.endTick(mc);
 
         if (player != null) {
             if (player.hurtTime > 0) lastHurt = Util.getMillis();

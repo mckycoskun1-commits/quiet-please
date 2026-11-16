@@ -12,7 +12,7 @@ import net.minecraft.Util;
  * Arka plan muzigini atlama (panel, calma listesi paneli, kisayol tusu ve /quietplease skip).
  *
  * Sadece MusicManager'in caldigi muzik atlanir; plaklar ve modlarin dogrudan caldigi sesler (cogu boss muzigi) atlanmaz.
- * Yumusak gecis aciksa calan sarki FADE_MS boyunca kisilarak biter, sonra atlanir.
+ * Yumusak gecis aciksa calan sarki FADE_MS boyunca kisilarak biterken siradaki hemen baslar (capraz gecis).
  */
 public final class MusicControl {
 
@@ -29,19 +29,19 @@ public final class MusicControl {
     /**
      * Calan arka plan sarkisini durdurur. Calma listesi aciksa siradaki parca hemen baslar; degilse sarki arasi
      * ayarina gore bekler (Yok: 1 sn, Kisa: 30-60 sn, Ozel: kaydiricilar, Vanilla: oyunun kendi arasi).
-     * Kisilma surerken tekrar basilirsa hemen atlar.
+     *
+     * Yumusak gecis aciksa capraz gecis yapilir: calan sarki MusicManager'dan ayrilir ve kendi kendine kisilarak
+     * biter, siradaki sarki beklemeden onun altinda baslar. Kisilma surerken tekrar basilirsa kisilan sarki hemen
+     * susar ve yeni baslayan sarki atlanir.
      */
     public static void skip() {
-        if (fading != null) {
-            finishFade();
-            return;
-        }
         Minecraft mc = Minecraft.getInstance();
+        if (fading != null) stopFading(mc);
         SoundInstance current = currentMusic(mc);
         if (ModOptions.fadeOnSkip && current != null && mc.getSoundManager().isActive(current)) {
+            ((MusicManagerAccessor) mc.getMusicManager()).quietplease$setCurrentMusic(null);
             fading = current;
             fadeStart = Util.getMillis();
-            return;
         }
         skipNow();
     }
@@ -56,9 +56,15 @@ public final class MusicControl {
         Playlist.restartMusic(delayAfterSkip(music));
     }
 
-    private static void finishFade() {
+    private static void stopFading(Minecraft mc) {
+        SoundInstance sound = fading;
         fading = null;
-        skipNow();
+        if (sound != null) mc.getSoundManager().stop(sound);
+    }
+
+    /** Bu ses, atlandigi icin kisilarak biten eski sarki mi? ("Su an calan" listesinde gosterilmez.) */
+    public static boolean isFadingOut(SoundInstance sound) {
+        return fading != null && sound == fading;
     }
 
     /** Su an kisilarak biten bir sarki var mi? */
@@ -70,7 +76,7 @@ public final class MusicControl {
     public static void clientTick(Minecraft mc) {
         if (fading == null) return;
         if (Util.getMillis() - fadeStart >= FADE_MS || !mc.getSoundManager().isActive(fading)) {
-            finishFade();
+            stopFading(mc);
             return;
         }
         MusicSettings.applyToPlayingSounds();

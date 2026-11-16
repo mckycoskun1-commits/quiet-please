@@ -19,4 +19,7 @@ public interface MusicManagerAccessor {
     @Nullable
     @Accessor("currentMusic")
     SoundInstance quietplease$getCurrentMusic();
+
+    @Accessor("currentMusic")
+    void quietplease$setCurrentMusic(@Nullable SoundInstance sound);
 }
