@@ -62,7 +62,7 @@ public final class QuietPleaseKeys {
                     result.equals("cmd.skip.nothing") ? ChatFormatting.GRAY : ChatFormatting.GREEN), false);
         }
         while (PAUSE.consumeClick()) {
-            mc.gui.setOverlayMessage(togglePause(), false);
+            mc.gui.hud.setOverlayMessage(togglePause(), false);
         }
         while (FAVORITE.consumeClick()) {
             mc.gui.hud.setOverlayMessage(toggleFavoriteOfPlaying(mc), false);
