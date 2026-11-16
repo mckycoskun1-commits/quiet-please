@@ -1,6 +1,5 @@
 package com.quietplease;
 
-import com.quietplease.gui.MusicBehaviorScreen;
 import com.quietplease.gui.QuietPleaseScreen;
 import com.quietplease.music.ModOptions;
 import com.quietplease.music.MusicControl;
@@ -9,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -106,9 +106,12 @@ public final class PromoDirector {
                     var found = level.findClosestBiome3d(h -> h.is(Biomes.CHERRY_GROVE), mc.player.blockPosition(), 6400, 32, 64);
                     BlockPos p = found == null ? mc.player.blockPosition() : found.getFirst();
                     int top = p.getY();
-                    for (int dx = -24; dx <= 24; dx += 8) {
-                        for (int dz = -24; dz <= 24; dz += 8) {
-                            top = Math.max(top, level.getHeight(Heightmap.Types.MOTION_BLOCKING, p.getX() + dx, p.getZ() + dz));
+                    for (int dx = -32; dx <= 32; dx += 4) {
+                        for (int dz = -32; dz <= 32; dz += 4) {
+                            int x = p.getX() + dx;
+                            int z = p.getZ() + dz;
+                            top = Math.max(top, level.getChunk(x >> 4, z >> 4)
+                                    .getHeight(Heightmap.Types.MOTION_BLOCKING, x & 15, z & 15) + 1);
                         }
                     }
                     camX = p.getX() + 0.5;
@@ -126,7 +129,7 @@ public final class PromoDirector {
                         } catch (Exception ignored) {
                         }
                     }
-                    QuietPlease.LOGGER.info("PROMO location {} found={}", p, found != null);
+                    QuietPlease.LOGGER.info("PROMO location {} found={} camera y={}", p, found != null, camY);
                 });
                 phase = 2;
                 phaseStart = now();
@@ -200,6 +203,7 @@ public final class PromoDirector {
         ModOptions.normalize = false;
         ModOptions.popupPosition = ModOptions.PopupPosition.RIGHT_MIDDLE;
         com.quietplease.music.MusicSettings.resetAll();
+        com.quietplease.music.ListenStats.clear();
         for (Identifier fav : new ArrayList<>(Playlist.favorites())) Playlist.toggleFavorite(fav);
         Playlist.clear();
         for (String s : List.of("nether/nether_wastes/rubedo", "left_to_bloom", "featherfall", "sweden")) {
@@ -267,60 +271,88 @@ public final class PromoDirector {
 
         at(22500, () -> {
             mark("scene4");
-            glideTo(mc, findText(mc, "Playlist"), 700);
+            glideTo(mc, find(mc, w -> w instanceof EditBox), 500);
         });
-        at(23300, () -> clickHere(mc));
-        at(24600, () -> glideTo(mc, findText(mc, "Add songs"), 700));
-        at(25400, () -> clickHere(mc));
-        at(26000, () -> glideTo(mc, find(mc, w -> w instanceof EditBox), 600));
-        at(26700, () -> clickHere(mc));
-        typeAt(26900, mc, "komorebi", 110);
-        at(28100, () -> glideTo(mc, findText(mc, "+ Add"), 700));
-        at(28900, () -> clickHere(mc));
-        at(29600, () -> {
+        at(23100, () -> {
+            clickHere(mc);
             EditBox box = (EditBox) find(mc, w -> w instanceof EditBox);
             if (box != null) box.setValue("");
         });
-        typeAt(29700, mc, "aria", 120);
-        at(30500, () -> glideTo(mc, findText(mc, "+ Add"), 600));
-        at(31200, () -> clickHere(mc));
-        at(31900, () -> glideTo(mc, findText(mc, "Queue"), 700));
-        at(32700, () -> clickHere(mc));
+        at(23600, () -> glideTo(mc, find(mc, w -> w instanceof CycleButton<?> && w.getMessage().getString().startsWith("Mod")), 600));
+        at(24300, () -> clickHere(mc));
+        at(24900, () -> clickHere(mc));
+        at(25600, () -> {
+            AbstractWidget play = findText(mc, "▶");
+            if (play != null) glidePoint(mc, play.getX() + 70, play.getY() + 10, 800);
+        });
+        at(27000, () -> {
+            AbstractWidget play = findText(mc, "▶");
+            if (play != null) glidePoint(mc, play.getX() + 70, play.getY() + 58, 1600);
+        });
 
-        at(36500, () -> {
+        long b = 30500;
+        at(b, () -> {
             mark("scene5");
+            glideTo(mc, findText(mc, "Playlist"), 700);
+        });
+        at(b + 800, () -> clickHere(mc));
+        at(b + 2000, () -> glideTo(mc, findText(mc, "Add songs"), 700));
+        at(b + 2800, () -> clickHere(mc));
+        at(b + 3400, () -> glideTo(mc, find(mc, w -> w instanceof EditBox), 600));
+        at(b + 4100, () -> clickHere(mc));
+        typeAt(b + 4300, mc, "komorebi", 110);
+        at(b + 5400, () -> glideTo(mc, findText(mc, "+ Add"), 700));
+        at(b + 6200, () -> clickHere(mc));
+        at(b + 6900, () -> {
+            EditBox box = (EditBox) find(mc, w -> w instanceof EditBox);
+            if (box != null) box.setValue("");
+        });
+        typeAt(b + 7000, mc, "aria", 120);
+        at(b + 7700, () -> glideTo(mc, findText(mc, "+ Add"), 600));
+        at(b + 8400, () -> clickHere(mc));
+        at(b + 9100, () -> glideTo(mc, findText(mc, "Queue"), 700));
+        at(b + 9900, () -> clickHere(mc));
+
+        at(43000, () -> {
+            mark("scene6");
             mc.setScreen(null);
             camera = true;
             camStart = now();
             baseYaw = 60;
         });
-        at(38000, () -> {
+        at(44500, () -> {
             String result = MusicControl.skipAndDescribe();
             mc.gui.setOverlayMessage(Lang.tr(result).withStyle(net.minecraft.ChatFormatting.GREEN), false);
         });
 
-        at(44000, () -> mark("scene6"));
-        at(44500, () -> mc.gui.setOverlayMessage(QuietPleaseKeys.togglePause(), false));
-        at(47500, () -> mc.gui.setOverlayMessage(QuietPleaseKeys.togglePause(), false));
+        at(49500, () -> mark("scene7"));
+        at(50000, () -> mc.gui.setOverlayMessage(QuietPleaseKeys.previous(), false));
+        at(53500, () -> mc.gui.setOverlayMessage(QuietPleaseKeys.disablePlaying(mc), false));
 
-        at(51000, () -> {
-            mark("scene7");
-            camera = false;
-            mc.setScreen(new MusicBehaviorScreen(null));
-            warp(mc, 320, 300);
-        });
-        at(52000, () -> glideTo(mc, findText(mc, "Even out volume"), 800));
-        at(53000, () -> clickHere(mc));
-
-        at(57500, () -> {
+        at(57000, () -> {
             mark("scene8");
+            camera = false;
+            mc.setScreen(new QuietPleaseScreen(null));
+            warp(mc, 320, 200);
+        });
+        at(57800, () -> glideTo(mc, findText(mc, "Settings"), 700));
+        at(58600, () -> clickHere(mc));
+        at(59300, () -> glideTo(mc, findText(mc, "History & stats"), 800));
+        at(60200, () -> clickHere(mc));
+        at(62700, () -> glideTo(mc, findText(mc, "Most played"), 700));
+        at(63500, () -> clickHere(mc));
+        at(65500, () -> glideTo(mc, findText(mc, "Never played"), 700));
+        at(66300, () -> clickHere(mc));
+
+        at(68500, () -> {
+            mark("scene9");
             mc.setScreen(null);
             mc.options.hideGui = true;
             camera = true;
             camStart = now();
             baseYaw = 150;
         });
-        at(67500, () -> {
+        at(78500, () -> {
             mark("end");
             mc.options.hideGui = false;
         });
