@@ -41,14 +41,14 @@ public abstract class WeighedSoundEventsMixin {
         int n = all.size();
         if (!quietplease$anyAffected(all, n, disabled, extras)) return;
 
-        // Agirlik -1: secimden cikti (kapali). recent: son calinanlardan.
+        // Agirlik -1: secimden cikti (kapali ya da az once caldi). rank: son calinanlar arasindaki sirasi, -1 = degil.
         int[] weights = new int[n];
-        boolean[] recent = new boolean[n];
+        int[] rank = new int[n];
         int allowed = 0;
-        boolean anyFresh = false;
         for (int i = 0; i < n; i++) {
             Weighted<Sound> entry = all.get(i);
             int weight = entry.getWeight();
+            rank[i] = -1;
             if (entry instanceof Sound sound) {
                 Identifier file = sound.getLocation();
                 if (disabled && MusicSettings.isDisabled(file)) {
@@ -57,18 +57,30 @@ public abstract class WeighedSoundEventsMixin {
                 }
                 if (extras) {
                     weight = MusicMixer.weight(file, weight);
-                    recent[i] = MusicMixer.isRecent(file);
+                    rank[i] = MusicMixer.recentRank(file);
                 }
             }
             weights[i] = weight;
             allowed++;
-            if (!recent[i]) anyFresh = true;
+        }
+
+        // Tekrar etmeme: bu olayin son calinan parcalarindan en fazla yarisi disarida kalir. Boylece kucuk
+        // havuzlarda (menu 9, Nether 5 sarki) secim hep ayni siraya donmez; en son calan parca ise (baska secenek
+        // varsa) hic hemen tekrar gelmez.
+        int skip = Math.min(com.quietplease.music.ModOptions.noRepeat, allowed > 1 ? Math.max(1, allowed / 2) : 0);
+        for (int r = 0; skip > 0 && r < 10; r++) {
+            for (int i = 0; i < n; i++) {
+                if (rank[i] == r && weights[i] >= 0) {
+                    weights[i] = -1;
+                    skip--;
+                    break;
+                }
+            }
         }
 
         int total = 0;
         for (int i = 0; i < n; i++) {
-            if (weights[i] < 0 || (anyFresh && recent[i])) continue;
-            total += weights[i];
+            if (weights[i] > 0) total += weights[i];
         }
         if (allowed == 0 || total <= 0) {
             cir.setReturnValue(SoundManager.INTENTIONALLY_EMPTY_SOUND);
@@ -77,7 +89,7 @@ public abstract class WeighedSoundEventsMixin {
 
         int r = random.nextInt(total);
         for (int i = 0; i < n; i++) {
-            if (weights[i] < 0 || (anyFresh && recent[i])) continue;
+            if (weights[i] <= 0) continue;
             r -= weights[i];
             if (r < 0) {
                 cir.setReturnValue(all.get(i).getSound(random));

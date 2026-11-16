@@ -4,10 +4,9 @@ import com.quietplease.gui.SongPopup;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.Sound;
@@ -30,7 +29,8 @@ public final class MusicMixer {
 
     private static final Map<SoundInstance, Long> STARTED = Collections.synchronizedMap(new IdentityHashMap<>());
     private static final Deque<Identifier> RECENT = new ArrayDeque<>();
-    private static volatile Set<Identifier> recentSet = Set.of();
+    /** Son calinan dosyalar (ayardaki sayi kadar) -> sirasi (0 = en son calan). */
+    private static volatile Map<Identifier, Integer> recentRanks = Map.of();
 
     private static float duck = 1.0F;
     private static boolean jukeboxNear;
@@ -164,15 +164,16 @@ public final class MusicMixer {
 
     private static void refreshRecent() {
         int keep = ModOptions.noRepeat;
-        Set<Identifier> set = new HashSet<>();
+        Map<Identifier, Integer> ranks = new HashMap<>();
         if (keep > 0) {
-            int skip = Math.max(0, RECENT.size() - keep);
+            // RECENT: en eskisi basta, en yenisi sonda. Sira: 0 = en son calan.
+            int rank = RECENT.size() - 1;
             for (Identifier id : RECENT) {
-                if (skip-- > 0) continue;
-                set.add(id);
+                if (rank < keep) ranks.put(id, rank);
+                rank--;
             }
         }
-        recentSet = set.isEmpty() ? Set.of() : set;
+        recentRanks = ranks.isEmpty() ? Map.of() : ranks;
     }
 
     public static void optionsChanged() {
@@ -182,11 +183,17 @@ public final class MusicMixer {
     }
 
     public static boolean isRecent(Identifier file) {
-        return recentSet.contains(file);
+        return recentRanks.containsKey(file);
+    }
+
+    /** Son calinanlar arasindaki sirasi: 0 = en son calan, 1 = ondan onceki...; son calinanlardan degilse -1. */
+    public static int recentRank(Identifier file) {
+        Integer rank = recentRanks.get(file);
+        return rank == null ? -1 : rank;
     }
 
     public static boolean affectsSelection() {
-        return !recentSet.isEmpty() || (ModOptions.favoriteWeight > 1 && Playlist.hasFavorites());
+        return !recentRanks.isEmpty() || (ModOptions.favoriteWeight > 1 && Playlist.hasFavorites());
     }
 
     public static int weight(Identifier file, int base) {
