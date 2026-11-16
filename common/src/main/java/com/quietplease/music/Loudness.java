@@ -108,7 +108,7 @@ public final class Loudness {
             cacheLoaded = true;
             loadCache();
         }
-        if (mc.getOverlay() != null) return; // kaynaklar yukleniyor
+        if (mc.gui.overlay() != null) return; // kaynaklar yukleniyor
         int count = mc.getSoundManager().getAvailableSounds().size();
         if (count != knownSoundCount) {
             knownSoundCount = count; // ilk acilis ya da kaynak paketi degisti (F3+T)
