@@ -21,6 +21,7 @@ public class QuietPlease {
 
     public static void init() {
         MusicSettings.load();
+        com.quietplease.music.ListenStats.load();
         LOGGER.info("Quiet Please loaded.");
     }
 
@@ -30,6 +31,7 @@ public class QuietPlease {
         com.quietplease.music.MusicControl.clientTick(mc);
         com.quietplease.music.Loudness.clientTick(mc);
         com.quietplease.music.MusicMixer.clientTick(mc);
+        com.quietplease.music.ListenStats.clientTick();
         QuietPleaseKeys.tick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
         if (!autoDumpDone && mc.screen instanceof TitleScreen && mc.getOverlay() == null) onScreenInit(mc.screen);
@@ -280,7 +282,72 @@ public class QuietPlease {
                             com.quietplease.music.MusicMixer.jukeboxNear(), com.quietplease.music.MusicMixer.inCombat());
                 } else if (t == 206) {
                     mc.setScreen(null);
-                } else if (t == 210) {
+                    // Kendi muzigin: klasordeki dosya gercekten calmali (kaynak yoneticisi uzerinden akis)
+                    try {
+                        customTrack = DevSelfTest.installTestSong(com.quietplease.music.MusicLibrary.scan().get("minecraft").stream()
+                                .filter(tr -> tr.id().getPath().startsWith("music/menu/")).findFirst().orElseThrow().id());
+                        com.quietplease.music.MusicControl.playFromHistory(customTrack, false);
+                    } catch (Exception e) {
+                        LOGGER.error("GUITEST kendi muzigin kurulamadi", e);
+                    }
+                } else if (t == 216) {
+                    var current = ((com.quietplease.mixin.MusicManagerAccessor) mc.getMusicManager()).quietplease$getCurrentMusic();
+                    var channels = ((com.quietplease.mixin.SoundEngineAccessor) ((com.quietplease.mixin.SoundManagerAccessor)
+                            mc.getSoundManager()).quietplease$getSoundEngine()).quietplease$getInstanceToChannel();
+                    var channel = current == null ? null : channels.get(current);
+                    boolean ok = current instanceof com.quietplease.music.Playlist.PlaylistSound ps && ps.trackId.equals(customTrack)
+                            && channel != null && !channel.isStopped()
+                            && com.quietplease.music.ListenStats.historyIds().indexOf(customTrack) == 0;
+                    LOGGER.info("GUITEST kendi muzigin caliyor: {} (calan {})", ok ? "BASARILI" : "HATA",
+                            current == null || current.getSound() == null ? "yok" : current.getSound().getLocation());
+                    // Onceki: gecmisteki bir onceki sarki tekrar calmali
+                    var history = com.quietplease.music.ListenStats.historyIds();
+                    previousExpected = history.size() > 1 ? history.get(1) : null;
+                    LOGGER.info("GUITEST onceki tusu mesaji: {}", QuietPleaseKeys.previous().getString());
+                } else if (t == 226) {
+                    var current = ((com.quietplease.mixin.MusicManagerAccessor) mc.getMusicManager()).quietplease$getCurrentMusic();
+                    var history = com.quietplease.music.ListenStats.historyIds();
+                    boolean ok = previousExpected != null && current instanceof com.quietplease.music.Playlist.PlaylistSound ps
+                            && ps.replay && ps.trackId.equals(previousExpected) && customTrack.equals(history.get(0));
+                    LOGGER.info("GUITEST onceki sarki: {} (beklenen {}, calan {}, gecmis basi {})", ok ? "BASARILI" : "HATA",
+                            previousExpected, current instanceof com.quietplease.music.Playlist.PlaylistSound ps2 ? ps2.trackId : "yok",
+                            history.isEmpty() ? "bos" : history.get(0));
+                    // Bir daha calma: calan sarki kapanmali ve durmali
+                    previousSound = current;
+                    LOGGER.info("GUITEST bir daha calma mesaji: {}", QuietPleaseKeys.disablePlaying(mc).getString());
+                } else if (t == 230) {
+                    // Oyun, durdurulan bir sesi baslangicindan sonraki 20 tick boyunca "aktif" sayar; kanalin durduguna bak
+                    var oldChannel = previousSound == null ? null : ((com.quietplease.mixin.SoundEngineAccessor)
+                            ((com.quietplease.mixin.SoundManagerAccessor) mc.getSoundManager()).quietplease$getSoundEngine())
+                            .quietplease$getInstanceToChannel().get(previousSound);
+                    boolean ok = previousExpected != null && MusicSettings.isDisabled(previousExpected)
+                            && previousSound != null && (oldChannel == null || oldChannel.isStopped());
+                    var nowMusic = ((com.quietplease.mixin.MusicManagerAccessor) mc.getMusicManager()).quietplease$getCurrentMusic();
+                    LOGGER.info("GUITEST bir daha calma: {} (kapali {}, eski ses hala caliyor {}, ayni nesne {}, simdi {})", ok ? "BASARILI" : "HATA",
+                            previousExpected != null && MusicSettings.isDisabled(previousExpected),
+                            oldChannel != null && !oldChannel.isStopped(), nowMusic == previousSound,
+                            nowMusic == null || nowMusic.getSound() == null ? "yok" : nowMusic.getSound().getLocation());
+                    if (previousExpected != null) MusicSettings.reset(previousExpected);
+                    MusicSettings.save();
+                    mc.setScreen(new com.quietplease.gui.ListenHistoryScreen(null, com.quietplease.gui.ListenHistoryScreen.Tab.RECENT));
+                } else if (t == 236) {
+                    shot(mc, "quietplease-history.png");
+                    mc.setScreen(new com.quietplease.gui.ListenHistoryScreen(null, com.quietplease.gui.ListenHistoryScreen.Tab.TOP));
+                } else if (t == 240) {
+                    shot(mc, "quietplease-stats.png");
+                    mc.setScreen(new com.quietplease.gui.ListenHistoryScreen(null, com.quietplease.gui.ListenHistoryScreen.Tab.NEVER));
+                } else if (t == 244) {
+                    shot(mc, "quietplease-never.png");
+                    mc.setScreen(new QuietPleaseScreen(null));
+                } else if (t == 250) {
+                    shot(mc, "quietplease-custom-group.png");
+                    mc.setScreen(new com.quietplease.gui.QuietPleaseSettingsScreen(null));
+                } else if (t == 254) {
+                    shot(mc, "quietplease-settings-ingame.png");
+                    mc.setScreen(null);
+                    DevSelfTest.removeTestSong();
+                    if (customTrack != null) com.quietplease.music.ListenStats.forget(customTrack);
+                } else if (t == 260) {
                     // Ornek calma listesini geri al
                     if (playlistBackup != null) com.quietplease.music.Playlist.restore(playlistBackup);
                     com.quietplease.music.ModOptions.playlistMode = playlistModeBackup;
@@ -294,6 +361,9 @@ public class QuietPlease {
     }
 
     private static int worldJoinTick = -1;
+    private static net.minecraft.resources.ResourceLocation customTrack;
+    private static net.minecraft.resources.ResourceLocation previousExpected;
+    private static net.minecraft.client.resources.sounds.SoundInstance previousSound;
     private static com.quietplease.music.ModOptions.PopupPosition popupPositionBackup = com.quietplease.music.ModOptions.PopupPosition.RIGHT_MIDDLE;
     private static net.minecraft.client.resources.sounds.SoundInstance fadingSound;
     private static net.minecraft.client.resources.sounds.SoundInstance pausedSound;
