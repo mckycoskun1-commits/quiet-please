@@ -126,7 +126,7 @@ public final class Loudness {
         List<Identifier> others = new ArrayList<>();
         for (List<MusicTrack> tracks : MusicLibrary.scan().values()) {
             for (MusicTrack track : tracks) {
-                if (track.kind() == MusicTrack.Kind.OTHER) continue;
+                if (!track.kind().isSong()) continue;
                 Identifier id = track.id();
                 if (MEASURED.containsKey(id) || !PENDING.add(id)) continue;
                 (isReference(id) ? reference : others).add(id);

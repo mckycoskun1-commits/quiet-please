@@ -58,15 +58,19 @@ public abstract class MusicManagerMixin {
     /** Arka plan muzigi baslayacakken: calma listesi aciksa oyunun rastgele secimi yerine listedeki siradaki parca. */
     @Inject(method = "startPlaying", at = @At("HEAD"), cancellable = true)
     private void quietplease$playlist(Music selector, CallbackInfo ci) {
-        if (!Playlist.wouldTakeOver(selector)) return;
-        if (MusicPreview.hasPreview()) {
-            // Onizleme calarken arka plan muzigi sessizdir; liste bosuna ilerlemesin, 1 sn sonra tekrar dene.
-            currentMusic = null;
-            nextSongDelay = 20;
-            ci.cancel();
-            return;
+        SoundInstance sound = null;
+        if (Playlist.wouldTakeOver(selector)) {
+            if (MusicPreview.hasPreview()) {
+                // Onizleme calarken arka plan muzigi sessizdir; liste bosuna ilerlemesin, 1 sn sonra tekrar dene.
+                currentMusic = null;
+                nextSongDelay = 20;
+                ci.cancel();
+                return;
+            }
+            sound = Playlist.startInstead(selector);
         }
-        SoundInstance sound = Playlist.startInstead(selector);
+        // Kendi muzigin: ayar aciksa oyunun sectigi sarkinin yerine bazen kendi muziklerinden biri
+        if (sound == null && !MusicPreview.hasPreview()) sound = com.quietplease.music.CustomMusic.startInstead(selector);
         if (sound == null) return; // calinabilecek parca yok: oyun kendi sectigini calsin
         currentMusic = sound;
         minecraft.getSoundManager().play(sound);

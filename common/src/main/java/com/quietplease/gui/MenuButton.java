@@ -68,7 +68,7 @@ public final class MenuButton {
         if (button == null || screen != buttonScreen || !ModOptions.nowPlayingText) return;
         // Sadece muzik ve plaklar; Nether ortam sesi gibi uzun dongu sesleri burada gosterilmez
         List<MusicTrack> playing = NowPlaying.find(tracksById).stream()
-                .filter(t -> t.kind() != MusicTrack.Kind.OTHER).toList();
+                .filter(t -> t.kind().isSong()).toList();
         if (playing.isEmpty()) return;
 
         MusicTrack track = playing.get(0);
