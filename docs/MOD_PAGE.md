@@ -35,7 +35,7 @@ Big modpacks bring a lot of music – and not all of it fits together.
 ![The Quiet Please panel with every music track grouped by mod](https://mckycoskun1-commits.github.io/quiet-please/img/panel-en.png)
 
 All the music in your game, vanilla and modded, grouped by the mod it comes from. On every row:
-- **On / Off** – turn a track off and the game simply picks another one instead
+- **On / Off** – turn a track off and the game simply picks another one instead; if it is playing right now, it stops and the next song comes
 - **Volume** – set each track anywhere from 0 to 100 %
 - **Mod volume** – one slider in each mod header turns all songs of that mod up or down at once
 - **Play button** – preview the track right in the panel (background music pauses while you listen)
@@ -81,9 +81,10 @@ When a new song starts, a small card slides in with the song name and the mod it
 - **In background** – turn the music down when you Alt+Tab out of the game
 - **In combat** – turn the music down when you take damage or a hostile mob is close, so you can hear the fight
 - **Fade in/out** – songs start and end softly instead of cutting in and out
-- **No repeats** – the last 5 or 10 songs are skipped when the game picks the next one
+- **No repeats** – the last 5 or 10 songs are skipped when the game picks the next one. In small song pools like the main menu or the Nether, at most half of the songs are held back, so the order stays random and the song that just played never comes right back
 - **Favorites** – songs with a star come up 2, 3 or 5 times as often, even without the playlist
-- **Fade on skip** – Skip turns the song down smoothly; press it again to stop it at once
+- **Fade on skip** – Skip fades the old song out while the next one already starts
+- **Even out volume** – every song's loudness is measured once in the background, then all songs are brought to the level of Minecraft's own music, so very loud or very quiet mod soundtracks fit in (off by default)
 
 ## Shorter silence between songs
 ![The Quiet Please settings screen](https://mckycoskun1-commits.github.io/quiet-please/img/settings.png)
@@ -99,8 +100,8 @@ When a new song starts, a small card slides in with the song name and the mod it
 - **Esc → ♪ Quiet Please** (top-right corner)
 - **Options → ♪ Quiet Please** or **Options → Music & Sounds → ♪ Quiet Please**
 - **Mods → Quiet Please → Config**
-- **Key bindings** (unbound by default) to open the panel, skip a song, favorite the current song and turn playlist mode on or off: Controls → Key Binds → Quiet Please
-- **Chat commands**: `/quietplease`, `/quietplease skip`, `/quietplease mod <mod> volume <0-100>`, and `/quietplease export <name>` / `import <name>` to share a setup
+- **Key bindings** (unbound by default) to open the panel, skip a song, pause and resume the music, favorite the current song and turn playlist mode on or off: Controls → Key Binds → Quiet Please
+- **Chat commands**: `/quietplease`, `/quietplease skip`, `/quietplease pause`, `/quietplease mod <mod> volume <0-100>`, and `/quietplease export <name>` / `import <name>` to share a setup
 
 ## Supported versions
 - **Minecraft 1.18.2** – Fabric, Forge
