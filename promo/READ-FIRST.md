@@ -22,6 +22,7 @@ This file is for whoever records the next promo cut (2.0.1). Read it fully, then
   - Scene 1: the playlist starts a song by itself right after `preparePlaylist`, and the timeline cuts it at 1.5 s with `Playlist.playNow(0)` (Play now stops the current song at once, by design). The old cut started at 0.6 s, so the video opened with that song and then went silent. Scene 1 now starts at 1.8 s, just before rubedo comes in.
   - Scene 4 ended at 30.0 s, before the stop click on the demo song at 30.2 s, so the song vanished without a click. It now ends at 30.45 s.
   - Every cut faded the sound out and in over about 0.2 s, a short hole in the music. The scenes are now joined with a 0.25 s equal-power crossfade centred on the cut, which keeps the sync.
+- The user found the button clicks too loud next to the music. A fixed cut did not help: the per-scene gain and loudnorm push every click into the limiter, so all clicks ended up at the same level. `edit.ps1` now finds every click in the synced sound (above -30 dB after a 3 kHz high-pass, music stays below -55 dB there) and turns the sound down for about 50 ms so the click ends 4 dB above the music in the 0.4 s before it (cuts of 7 to 29 dB, listed in `sync.txt`). Result: clicks 4 to 7 dB above the music instead of 8 to 19 dB.
 - Skip, previous and "never play again" in scenes 6 and 7 are pressed as keys, so nothing moves on screen; only the action bar message and the captions explain them. That is how the features work, not a fault.
 
 ## What the user said about the first cut
@@ -30,7 +31,7 @@ The reference cut from 2026-11-17 is in `promo/videos/raw-2026-11-17-0149/` (`pr
 
 Keep:
 
-- The story, the 9 scenes, the captions and the yellow NEW tags. The user said the video explains the mod very well.
+- The story, the 9 scenes and the captions. The user said the video explains the mod very well. The yellow NEW tags were removed on 2026-11-18 at the user's request; all captions are plain white.
 - The closing end card. The user liked it a lot. Do not redesign it.
 - Length about 65 to 70 seconds, both formats (16:9 and 9:16), loudness -16 LUFS.
 

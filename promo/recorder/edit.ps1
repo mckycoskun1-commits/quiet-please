@@ -136,15 +136,51 @@ try {
         -map 0:v -map '[aout]' -fps_mode cfr -r 60 -c:v h264_nvenc -preset p5 -cq 16 -pix_fmt yuv420p -c:a pcm_s16le -shortest synced.mkv
     if ($LASTEXITCODE -ne 0) { throw 'Sync step failed' }
 
+    function Levels([string]$pre, [string]$key) {
+        $log = & cmd /c "`"$ffmpeg`" -hide_banner -i synced.mkv -vn -af $pre,asetnsamples=240,astats=metadata=1:reset=1:measure_perchannel=none:measure_overall=$key,ametadata=print:key=lavfi.astats.Overall.$key -f null - 2>&1"
+        $list = New-Object System.Collections.Generic.List[double]
+        foreach ($line in $log) {
+            if ($line -match "$key=(\S+)") {
+                $v = $Matches[1]
+                $list.Add($(if ($v -match '^-?[0-9.]+$') { P $v } else { -120.0 }))
+            }
+        }
+        , $list
+    }
+    function PowerMean($list, [int]$from, [int]$to) {
+        $sum = 0.0
+        $cnt = 0
+        for ($k = [Math]::Max(0, $from); $k -le [Math]::Min($list.Count - 1, $to); $k++) { $sum += [Math]::Pow(10, $list[$k] / 10); $cnt++ }
+        if ($cnt -eq 0 -or $sum -le 0) { return -120.0 }
+        10 * [Math]::Log10($sum / $cnt)
+    }
+    $clickOver = 4.0
+    $hf = Levels 'highpass=f=3000,highpass=f=3000' 'Peak_level'
+    $bb = Levels 'anull' 'RMS_level'
+    $shape = '0'
+    $clickReport = New-Object System.Collections.Generic.List[string]
+    $lastClick = -1000
+    for ($k = 0; $k -lt $hf.Count; $k++) {
+        if ($hf[$k] -le -30 -or $k - $lastClick -lt 60) { continue }
+        $lastClick = $k
+        $c = $k * 0.005
+        $depth = [Math]::Min(30.0, [Math]::Max(0.0, (PowerMean $bb ($k - 1) ($k + 8)) - (PowerMean $bb ($k - 100) ($k - 20)) - $clickOver))
+        $clickReport.Add("$(F $c)/$([Math]::Round($depth))")
+        if ($depth -gt 0) { $shape = "max($shape,$(F $depth)*clip(min((t-$(F ($c - 0.01)))/0.005,($(F ($c + 0.05))-t)/0.02),0,1))" }
+    }
+    $duck = if ($shape -ne '0') { "asetnsamples=n=48,volume='pow(10,-($shape)/20)':eval=frame," } else { '' }
+    Add-Content -Encoding ascii 'sync.txt' "clicks (time s/cut dB, each click ends $(F $clickOver) dB above the music before it): $($clickReport -join ' ')"
+    Write-Host "clicks: $($clickReport -join ' ')"
+
     $segs = @(
         @{ S = 1.8; E = 6.0; Kind = 'world'; Cap = @(@{ T = 0.3; D = 3.7; Text = 'That one song again?' }) },
         @{ S = 8.0; E = 14.6; Kind = 'panel'; Cap = @(@{ T = 0.3; D = 6.0; Text = 'Turn it off. It stops right away.' }) },
         @{ S = 15.5; E = 21.2; Kind = 'panel'; Zoom = @{ Rect = 'zoom3'; In = 17.7; Out = 20.9 }; Cap = @(@{ T = 0.3; D = 5.1; Text = 'Too loud? Turn down just that song.' }) },
-        @{ S = 22.5; E = 30.45; Kind = 'panel'; Cap = @(@{ T = 0.3; D = 7.3; Text = 'Your own .ogg songs, right in the panel'; New = $true }) },
+        @{ S = 22.5; E = 30.45; Kind = 'panel'; Cap = @(@{ T = 0.3; D = 7.3; Text = 'Your own .ogg songs, right in the panel' }) },
         @{ S = 30.5; E = 41.6; Kind = 'panel'; Cap = @(@{ T = 0.3; D = 10.5; Text = 'Build your own playlist' }) },
         @{ S = 43.0; E = 48.8; Kind = 'world'; Cap = @(@{ T = 1.2; D = 4.3; Text = 'Skip with a smooth crossfade' }) },
-        @{ S = 49.5; E = 56.6; Kind = 'world'; Cap = @(@{ T = 0.4; D = 3.4; Text = 'Go back a song'; New = $true }, @{ T = 3.9; D = 2.9; Text = 'or never hear it again'; New = $true }) },
-        @{ S = 57.0; E = 68.0; Kind = 'panel'; Zoom = @{ Rect = 'zoom8'; In = 63.2; Out = 66.1 }; Cap = @(@{ T = 0.3; D = 10.4; Text = 'History and stats'; New = $true }) },
+        @{ S = 49.5; E = 56.6; Kind = 'world'; Cap = @(@{ T = 0.4; D = 3.4; Text = 'Go back a song' }, @{ T = 3.9; D = 2.9; Text = 'or never hear it again' }) },
+        @{ S = 57.0; E = 68.0; Kind = 'panel'; Zoom = @{ Rect = 'zoom8'; In = 63.2; Out = 66.1 }; Cap = @(@{ T = 0.3; D = 10.4; Text = 'History and stats' }) },
         @{ S = 68.5; E = 76.5; Kind = 'end'; Cap = @() }
     )
 
@@ -167,7 +203,7 @@ try {
         $g = New-Object System.Collections.Generic.List[string]
         $n = $segs.Count
         $g.Add("[0:v]split=$n" + (-join (0..($n - 1) | ForEach-Object { "[v$_]" })))
-        $g.Add("[0:a]asplit=$n" + (-join (0..($n - 1) | ForEach-Object { "[a$_]" })))
+        $g.Add("[0:a]$($duck)asplit=$n" +(-join (0..($n - 1) | ForEach-Object { "[a$_]" })))
         $events = New-Object System.Collections.Generic.List[string]
         $pos = 0.0
         for ($i = 0; $i -lt $n; $i++) {
@@ -223,8 +259,7 @@ try {
                 $style = if ($s.Kind -eq 'world') { 'Top' } else { 'Bottom' }
                 $mv = ''
                 if ($vertical) { $style = 'Top'; $mv = if ($s.Kind -eq 'world') { '0,0,330' } else { '0,0,1360' } } else { $mv = '0,0,0' }
-                $text = if ($c.New) { '{\c&H00D7FF&}NEW  {\c&HFFFFFF&}' + $c.Text } else { $c.Text }
-                $events.Add("Dialogue: 0,$(AssTime ($pos + $c.T)),$(AssTime ($pos + $c.T + $c.D)),$style,,$mv,,{\fad(200,250)}$text")
+                $events.Add("Dialogue: 0,$(AssTime ($pos + $c.T)),$(AssTime ($pos + $c.T + $c.D)),$style,,$mv,,{\fad(200,250)}$($c.Text)")
             }
             $pos += $len
         }
