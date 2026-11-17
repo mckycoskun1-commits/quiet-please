@@ -49,35 +49,45 @@ public final class MusicPreview {
 
     /** Parcayi calar. Baska bir onizleme caliyorsa once onu durdurur. */
     public static boolean play(MusicTrack track) {
-        stop();
+        boolean hadPreview = stopSound(); // arka plan muzigi bir onizlemeden digerine gecerken susuk kalsin
         SoundManager sm = Minecraft.getInstance().getSoundManager();
+        PreviewSound sound = create(sm, track);
+        if (sound == null) {
+            if (hadPreview) MusicSettings.applyToPlayingSounds();
+            return false;
+        }
+        current = sound;
+        MusicSettings.applyToPlayingSounds(); // calan arka plan muzigini sustur
+        sm.play(current);
+        return true;
+    }
+
+    @Nullable
+    private static PreviewSound create(SoundManager sm, MusicTrack track) {
         if (CustomMusic.isCustom(track.id())) {
-            if (!CustomMusic.exists(track.id())) return false;
-            current = new PreviewSound(CustomMusic.EVENT, CustomMusic.sound(track.id()), track.id());
-            MusicSettings.applyToPlayingSounds();
-            sm.play(current);
-            return true;
+            return CustomMusic.exists(track.id()) ? new PreviewSound(CustomMusic.EVENT, CustomMusic.sound(track.id()), track.id()) : null;
         }
         for (ResourceLocation eventId : track.events()) {
             WeighedSoundEvents event = sm.getSoundEvent(eventId);
             if (event == null) continue;
             for (Weighted<Sound> w : ((com.quietplease.mixin.WeighedSoundEventsAccessor) event).quietplease$getList()) {
-                if (w instanceof Sound s && s.getLocation().equals(track.id())) {
-                    current = new PreviewSound(eventId, s, track.id());
-                    MusicSettings.applyToPlayingSounds(); // calan arka plan muzigini sustur
-                    sm.play(current);
-                    return true;
-                }
+                if (w instanceof Sound s && s.getLocation().equals(track.id())) return new PreviewSound(eventId, s, track.id());
             }
         }
-        return false;
+        return null;
     }
 
+    /** Onizlemeyi durdurur; susturulan arka plan muzigi hemen eski sesine doner. */
     public static void stop() {
-        if (current != null) {
-            Minecraft.getInstance().getSoundManager().stop(current);
-            current = null;
-        }
+        if (stopSound()) MusicSettings.applyToPlayingSounds();
+    }
+
+    /** Onizleme sesini durdurur; durduracak bir onizleme varsa true. */
+    private static boolean stopSound() {
+        if (current == null) return false;
+        Minecraft.getInstance().getSoundManager().stop(current);
+        current = null;
+        return true;
     }
 
     /**
