@@ -1,0 +1,83 @@
+# Promo video: read this first
+
+This file is for whoever records the next promo cut (2.0.1). Read it fully, then `promo/recorder/README.md`, `promo/video-script-2.0.0.md`, `promo/recorder/PromoDirector.java`, `promo/recorder/record.ps1` and `promo/recorder/edit.ps1` before changing anything.
+
+## What the user said about the first cut
+
+The reference cut from 2026-11-17 is in `promo/videos/raw-2026-11-17-0149/` (`promo-16x9.mp4`, `promo-9x16.mp4`).
+
+Keep:
+
+- The story, the 9 scenes, the captions and the yellow NEW tags. The user said the video explains the mod very well.
+- The closing end card. The user liked it a lot. Do not redesign it.
+- Length about 65 to 70 seconds, both formats (16:9 and 9:16), loudness -16 LUFS.
+
+Fix:
+
+1. The sound is slightly out of sync in some places.
+2. The camera turning all the time in the background felt odd. It must stand still.
+
+## Decisions made with the user
+
+- Camera: completely still. No turning, no moving forward, in the world scenes and behind the panels. One fixed shot for the whole video. The closing shot may use a second fixed framing at the same place if it looks better, joined by a cut, never by a pan.
+- Place: a cherry grove on the coast. Pink cherry trees in the foreground (left and right thirds), the sea and the horizon behind them, the sun setting over the water.
+- Time: sunset, frozen (no daylight or weather cycle, clear sky).
+- Shaders: Solas Shader V3.2 with the user's own settings, through Iris and Sodium.
+- Zoom in on the interface only at two moments, nowhere else:
+  - Scene 3: the volume slider being dragged down to about 30%.
+  - Scene 8: History & stats, when the Most played list opens.
+- Scene 4: the "Your music" bug is fixed in 2.0.1 (mc/26.1.2 is on 2.0.1), so now click play on one demo song ("Campfire Lofi") and let it be heard for a few seconds. Check in `audio.wav` that the song is really audible there.
+
+## Shaders: tested and working (2026-11-17)
+
+- `promo/recorder/mods/` holds `iris-fabric-1.11.4+mc26.1.2.jar` and `sodium-fabric-0.9.2+mc26.1.2.jar`, downloaded from Modrinth with the user's approval (sha512 checked). The folder is gitignored; never commit the jars.
+- Solas is the user's own file: `%APPDATA%\.minecraft\shaderpacks\Solas Shader V3.2.zip` plus its settings `Solas Shader V3.2.zip.txt`. Only copy them; never change, move or commit the user's files.
+- Smoke test: with both jars in `fabric/run/mods`, the pack and its `.txt` in `fabric/run/shaderpacks`, and `fabric/run/config/iris.properties` set to `enableShaders=true`, `shaderPack=Solas Shader V3.2.zip`, `disableUpdateMessage=true`, `:fabric:runClient` loads Iris and Sodium (26.1 is not obfuscated, so the "refmap could not be read" warnings and "Unrecognized clouds setting" are harmless). Iris logged "Using shaderpack: Solas Shader V3.2.zip", "Profile: ULTRA (+22 options changed by user)", created the overworld pipeline, and the world rendered with Solas.
+- PC: NVIDIA RTX 4070 SUPER, Ryzen 5 7500F, 1920x1080 screen. On mains power the display and sleep timeouts are off and there is no screen saver, so the screen stays on while nobody is there.
+- Side effects that `record.ps1` must clean up after every run (add this to the script, like the songs and stats):
+  - `fabric/run/mods/` jars, `fabric/run/shaderpacks/`, and in `fabric/run/config/`: `iris.properties`, `iris-excluded.json`, `sodium-options.json`, `sodium-mixins.properties`, `sodium-fingerprint.json`.
+  - Sodium sets `exclusiveFullscreen:true` in `options.txt` on its first start and Iris adds key bindings there. `options.txt` is already restored from the backup, but exclusive fullscreen must also be off during the recording (the recorder uses a borderless always-on-top window for Desktop Duplication). Force `mc.options.exclusiveFullscreen()` off in the director setup, or write `exclusiveFullscreen:false` before launch.
+- The noon test view was quite hazy. If the sea or the sun is hard to see at sunset, adjust a copy of the settings file in `fabric/run/shaderpacks`, never the user's original.
+
+## Finding the shot
+
+- The director makes a fresh creative world with seed 1234 and looks for the nearest cherry grove (`findClosestBiome3d`). That spot is inland. Find a cherry grove whose west side opens to the sea within roughly 30 to 150 blocks: sample biomes west of each candidate for `BiomeTags.IS_OCEAN` or `IS_BEACH`, try further candidates or other seeds if needed.
+- The sun sets in the west. Yaw 90 looks west (yaw 0 is south, 180 north). Start with a pitch of about 3 to 8 degrees down so the horizon sits in the upper third.
+- Sunset in ticks: the sky turns orange from about 12000, the sun touches the horizon around 12500 to 12800. Try a few values (for example 11800, 12200, 12500) and pick the best one.
+- Put the camera low, 2 to 4 blocks above the ground at the edge of the grove, so trees frame the picture, not 7 blocks above the tree tops like before.
+- Scout before recording: a short dev-only scouting pass that teleports to each candidate, waits until chunks are built and the shader is warm, and saves a screenshot per candidate and time. Look at the images, choose one, then hardcode seed, position, yaw, pitch and time in `PromoDirector`. Keep the screenshots in the raw folder, not in git.
+- Wait long enough before the cue so all chunks are built with the shader (phase 3 waits 15 s today; raise it if the picture still pops in).
+
+## Audio sync
+
+What the first cut shows:
+
+- `raw.mp4` is variable frame rate: 4834 frames in 81.5 s (59.16 fps on average), so frames were dropped under load. The timestamps follow the wall clock (gaps, not compression).
+- There is only one sync point, the cue at the start. Everything after it relies on the screen capture clock and the OpenAL wave writer clock staying together for about 80 seconds.
+- Shaders will make the load heavier, so this gets worse unless it is handled.
+
+Do all of these:
+
+1. Add a second cue at the end: master volume to 0 for about 1.5 s, then the white frame and the pling again, then stop ffmpeg. `edit.ps1` finds both cues in both files and compares the two intervals. If they differ by more than 15 ms, stretch the audio linearly to match the video before cutting.
+2. Convert the synced video to constant 60 fps before trimming, so cut points are frame exact.
+3. Make the capture lighter: today ffmpeg runs `ddagrab` then `hwdownload,format=bgra` then NVENC, a copy to the CPU and back for every frame. NVENC can take the Desktop Duplication frames directly. Check `ffmpeg.log` for dropped or duplicated frames.
+4. Check sync at three or more points in the middle of the video, for example a button click sound against the frame where the button reacts, and the moment a song stops against the click on its switch. Write the offsets in milliseconds in your report. Aim for at most 40 ms everywhere.
+
+## Zoom (edit only)
+
+- Do the zoom in `edit.ps1`, not in the game, before the captions are burned in, so captions never get bigger.
+- About 1.6x to 1.8x, centered on the slider row (scene 3) or the Most played list (scene 8). Ease in over about 0.5 s, hold, ease out over about 0.5 s. Smooth, no jumps, no other zooms.
+- Let the director log the screen rectangle of the zoom target into `marks.txt` (GUI coordinates times the GUI scale), so the edit script does not guess.
+- For 9:16 the panel is already enlarged; apply the same zoom to the source before the vertical crop and check that nothing important leaves the frame.
+
+## How to work
+
+- The user is away while this runs and cannot answer questions. Make sensible choices, note them, and keep going.
+- Reply to the user in Turkish. No emoji, no comment lines in code or texts. Commit messages in English.
+- Recording takes over the screen for about 2 minutes; nobody will touch the PC.
+- At most three full recordings. If the shaders make the recording unusable and you cannot fix it, record the static sunset shot without shaders and say so clearly.
+- After every Minecraft run: make sure the game is closed, then check that no java process and no Gradle daemon is left (`gradlew --stop`).
+- Check the result yourself before reporting: look at frames from every scene, measure loudness, check the sync numbers.
+- Make 720p previews (about 15 MB) and send both to the user with SendUserFile, together with a short Turkish summary of what changed.
+- Commit and push the recorder and edit script changes to `mc/26.1.2` without asking. Never commit videos, jars or the shader pack. Do not upload the video anywhere.
+- Update the promo memory note (promo-video-progress) with the result.
