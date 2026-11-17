@@ -189,6 +189,11 @@ ya da **Modlar → Quiet Please → Yapılandırma**. Sohbette `/quietplease` ko
 - Ayarlar `config/quietplease.json` dosyasında. Mod paketi yapanlar `config/quietplease-presets/default.json` ekleyebilir: yeni oyuncu bu ayarla başlar, paket güncellenince oyuncunun değişiklikleri korunur.
 ```
 
+## 2.0.1 sürüm notu (17.11.2026, henüz yüklenmedi)
+
+Metni ana klasördeki `dist/changelog-2.0.1.md` dosyasındadır: kendi müziğin yeniden sesli çalıyor (1.20.1 ve sonrası),
+panelde dinledikten sonra arka plan müziği hemen geri geliyor, Forge 1.21.1 dosyasına eksik MixinExtras kütüphanesi eklendi.
+
 ## 2.0.0 sürüm notu (16.11.2026, Release)
 
 Metni ana klasördeki `dist/changelog-2.0.0.md` dosyasındadır.
