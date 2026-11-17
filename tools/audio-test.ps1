@@ -1,15 +1,7 @@
 param(
     [string]$Loader = 'fabric',
-    # Var olan bir kaydi yeniden olc (oyun acilmaz)
     [string]$Recording
 )
-# Ses testi: kendi muzigin onizlemede ve arka planda gercekten duyuluyor mu, onizleme durunca arka plan muzigi
-# hemen geri geliyor mu. Oyunun sesi OpenAL Soft'un wave cikisiyla dosyaya yazilir (hoparlorden bir sey duyulmaz),
-# oyun icindeki zaman cizelgesi DevAudioTest'te. Oyun test bitince kendini kapatir.
-#
-#   powershell -ExecutionPolicy Bypass -File tools\audio-test.ps1 [-Loader fabric|forge|neoforge] [-Recording <folder>]
-#
-# Kayit, oyunun logu ve olcumler build\audio-test\<loader>-<tarih>\ klasorune yazilir.
 
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -66,7 +58,6 @@ file = $wavPath
     try {
         $env:QUIETPLEASE_AUTODUMP = 'audio'
         $env:ALSOFT_CONF = Join-Path $out 'alsoft.ini'
-        # --no-daemon: test bitince arkada Gradle sureci kalmasin (-Wait de onu beklerdi)
         $gradle = Start-Process -FilePath (Join-Path $repo 'gradlew.bat') -ArgumentList ":${Loader}:runClient", '--console=plain', '--no-daemon' `
             -WorkingDirectory $repo -RedirectStandardOutput (Join-Path $out 'gradle.log') -RedirectStandardError (Join-Path $out 'gradle-err.log') `
             -NoNewWindow -PassThru
@@ -88,14 +79,12 @@ foreach ($line in Get-Content $log) {
 }
 if (-not $marks.ContainsKey('end') -or -not (Test-Path $wav)) { throw "Test did not finish, see $out" }
 
-# Dosya gercek zamanla yazilir: son yazma ani - sure = kaydin basladigi an
 $item = Get-Item $wav
 $durText = (Invoke-Tool $ffprobe @('-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', $wav)).Trim()
 $duration = 0.0
 if (-not [double]::TryParse($durText, [Globalization.NumberStyles]::Float, $inv, [ref]$duration)) { $duration = ($item.Length - 68) / 192000.0 }
 $startMs = [DateTimeOffset]::new($item.LastWriteTimeUtc).ToUnixTimeMilliseconds() - $duration * 1000.0
 
-# Isaret sesinin (tik) gercek baslangicina gore ince ayar
 $offset = 0.0
 $cueGuess = ($marks['cue'] - $startMs) / 1000.0
 $from = [Math]::Max(0, $cueGuess - 1.5)
@@ -131,7 +120,6 @@ $checks = @(
 )
 $failed = 0
 $report = @()
-# Oyun yavas acilinca tick'ler yetismek icin hizli kosar; pencere hicbir zaman sonraki isarete tasmasin
 $times = $marks.Values | Sort-Object
 foreach ($c in $checks) {
     $mark = $marks[$c.Mark]
