@@ -3,6 +3,14 @@
 Otomatik testlerin göremediği şeyler. Her maddeyi deneyip yanına ✅ / ❌ koyman yeterli;
 ❌ olanları neyin olduğunu bir cümleyle yaz.
 
+Ses testi otomatik: kendi müziğin önizlemede ve arka planda gerçekten duyuluyor mu, önizleme durunca arka plan
+müziği hemen geri geliyor mu. Oyunun sesini dosyaya yazar (hoparlörden bir şey çıkmaz), ffmpeg ile ölçer ve oyunu
+kendisi kapatır:
+
+```
+powershell -ExecutionPolicy Bypass -File tools\audio-test.ps1 [-Loader fabric|forge|neoforge]
+```
+
 ## A. Geliştirme oyununda (hızlı)
 
 Proje klasöründe:
