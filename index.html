@@ -820,7 +820,7 @@ code {
   <section id="download">
     <div class="sec-head">
       <h2 class="shadow">Versions</h2>
-      <p>Version 2.0.0, client side only.</p>
+      <p>Version 2.0.1, client side only.</p>
     </div>
     <div class="vgrid" id="vgrid"></div>
     <p class="vnote">Click a loader to open its download page on CurseForge. The Fabric files need Fabric API and also run on Quilt.</p>
@@ -903,6 +903,14 @@ code {
       <h2 class="shadow">What's new</h2>
     </div>
     <div class="changes">
+      <div class="rel">
+        <div class="rel-h"><span class="tag">2.0.1</span><h3>Sound fixes</h3></div>
+        <ul>
+          <li>Your own music plays with sound again: on Minecraft 1.20.1 and newer the songs from <code>config/quietplease/music</code> showed as playing but made no sound</li>
+          <li>Background music comes back right after you listen to a song in the panel, instead of staying silent until the next song</li>
+          <li>Forge 1.21.1: a playlist or history song is no longer cut off by the menu music on the title screen</li>
+        </ul>
+      </div>
       <div class="rel">
         <div class="rel-h"><span class="tag">2.0.0</span><h3>Your own music, history and stats</h3></div>
         <ul>
@@ -1955,13 +1963,13 @@ code {
 
   var CF_FILES = "https://www.curseforge.com/minecraft/mc-mods/quiet-please/files/";
   var VERS = [
-    ["26.3", { f: 9651194, o: 9654747, n: 9654873 }],
-    ["26.2", { f: 9651233, o: 9654751, n: 9654886 }],
-    ["26.1.2", { f: 9651241, o: 9654755, n: 9654901 }],
-    ["1.21.1", { f: 9651249, o: 9654762, n: 9654913 }],
-    ["1.20.1", { f: 9654728, o: 9654831 }],
-    ["1.19.2", { f: 9654730, o: 9654842 }],
-    ["1.18.2", { f: 9654734, o: 9654855 }]
+    ["26.3", { f: 9663647, o: 9663566, n: 9663564 }],
+    ["26.2", { f: 9663641, o: 9663572, n: 9663561 }],
+    ["26.1.2", { f: 9663633, o: 9663574, n: 9663552 }],
+    ["1.21.1", { f: 9663623, o: 9663575, n: 9663547 }],
+    ["1.20.1", { f: 9663613, o: 9663578 }],
+    ["1.19.2", { f: 9663607, o: 9663583 }],
+    ["1.18.2", { f: 9663598, o: 9663587 }]
   ];
   var LOADERS = [["f", "lf", "Fabric"], ["o", "lo", "Forge"], ["n", "ln2", "NeoForge"], ["f", "lq", "Quilt"]];
   VERS.forEach(function (v) {
@@ -1971,7 +1979,7 @@ code {
     LOADERS.forEach(function (ld) {
       var id = v[1][ld[0]];
       if (!id) return;
-      l += '<a class="' + ld[1] + '" href="' + CF_FILES + id + '" title="Download Quiet Please 2.0.0 for ' + ld[2] + ' ' + v[0] + '">' + ld[2] + '</a>';
+      l += '<a class="' + ld[1] + '" href="' + CF_FILES + id + '" title="Download Quiet Please 2.0.1 for ' + ld[2] + ' ' + v[0] + '">' + ld[2] + '</a>';
     });
     el.innerHTML = '<div class="v">' + v[0] + '</div><div class="l">' + l + '</div>';
     $("vgrid").appendChild(el);
