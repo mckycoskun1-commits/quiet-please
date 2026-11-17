@@ -28,7 +28,9 @@ A reference cut of every scene is made by the recorder in `promo/recorder` (see 
 | 8 | 39-46 s | Panel > Settings > History & stats. Recently played, then Most played, then Never played. | New: history and stats |
 | 9 | 46-52 s | End card over a slow landscape shot: mod icon, name, short facts. | Quiet Please 2.0. Fabric, Forge, NeoForge, Quilt. Minecraft 1.18.2 to 26.3. Free on CurseForge |
 
-In 2.0.0 your own songs make no sound on Minecraft 1.20.1 and newer (the sound engine does not find the files), so the reference cut only shows the list in scene 4. Record the play click after the fix.
+Your own songs play with sound since 2.0.1; the reference cut plays a demo song in scene 4.
+
+The reference cut uses one still camera for the whole video: a cherry grove on a cliff above the sea at sunset, with the Solas shader. Keep the camera still in your own recording too; zoom in only on the volume slider (scene 3) and the Most played list (scene 8).
 
 Note blocks and the modpack default preset are 2.0 features too, but they are hard to show in a few seconds; they go in the description.
 

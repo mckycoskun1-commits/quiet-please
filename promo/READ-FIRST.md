@@ -2,6 +2,14 @@
 
 This file is for whoever records the next promo cut (2.0.1). Read it fully, then `promo/recorder/README.md`, `promo/video-script-2.0.0.md`, `promo/recorder/PromoDirector.java`, `promo/recorder/record.ps1` and `promo/recorder/edit.ps1` before changing anything.
 
+## State after the second cut (2026-11-17, 17:00)
+
+- The second cut is in `promo/videos/raw-2026-11-17-1653/` (`promo-16x9.mp4`, `promo-9x16.mp4`, 720p previews). It follows every decision below.
+- Shot: seed 1152036, camera at -2768.5 98 2934.5, yaw 90, pitch 6, time 12250. Cherry leaves on the left, the sun over the sea in the middle, a green slope with flowers on the right. No seed within reach has cherry trees on both sides of a sea view; placing a tree with `place feature` failed on that slope.
+- Sync measured with four cues: -3, -8 and +3 ms with only the start cue, -3 and -9 ms after the linear stretch. Capture dropped 2 frames.
+- The game music is captured very quietly (about -45 dB RMS), so the demo songs are made 25 dB quieter than before and the edit evens out each scene before the final loudness pass.
+- The cursor and taskbar tooltips showed up in world shots when the game window had no focus; the director now hides the cursor while no screen is open.
+
 ## What the user said about the first cut
 
 The reference cut from 2026-11-17 is in `promo/videos/raw-2026-11-17-0149/` (`promo-16x9.mp4`, `promo-9x16.mp4`).

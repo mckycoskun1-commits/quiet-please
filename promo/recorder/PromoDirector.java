@@ -6,7 +6,6 @@ import com.quietplease.music.MusicControl;
 import com.quietplease.music.Playlist;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
@@ -18,9 +17,15 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BiomeTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import org.lwjgl.glfw.GLFW;
 
@@ -37,6 +42,18 @@ public final class PromoDirector {
     private PromoDirector() {}
 
     private static final boolean ENABLED = System.getenv("QUIETPLEASE_PROMO") != null;
+    private static final boolean SCOUT = System.getenv("PROMO_SCOUT") != null;
+
+    private static final long SEED = 1152036L;
+    private static final double SHOT_X = -2768.5;
+    private static final double SHOT_Y = 98.0;
+    private static final double SHOT_Z = 2934.5;
+    private static final float SHOT_YAW = 90.0F;
+    private static final float SHOT_PITCH = 6.0F;
+    private static final int SHOT_TIME = 12250;
+
+    private static int[] SCOUT_TIMES = {12000, 12400, 12650};
+
     private static int phase = 0;
     private static long phaseStart;
     private static long cueTime = -1;
@@ -44,11 +61,9 @@ public final class PromoDirector {
     private static Process ffmpeg;
 
     private static volatile double camX, camY, camZ;
-    private static float baseYaw;
+    private static float camYaw = SHOT_YAW;
+    private static float camPitch = SHOT_PITCH;
     private static boolean camera = false;
-    private static long camStart;
-    private static float camYawSpeed = 4.5F;
-    private static double camForward = 0.35;
 
     private static double curX = -1, curY = -1;
     private static double fromX, fromY, toX, toY;
@@ -59,11 +74,18 @@ public final class PromoDirector {
     private static final List<Step> steps = new ArrayList<>();
     private static final List<String> marks = new ArrayList<>();
 
+    private record Shot(double x, double y, double z, float yaw, float pitch, int score) {}
+    private static final List<Shot> shots = new ArrayList<>();
+    private static volatile boolean scoutReady = false;
+    private static int shotIndex = 0;
+    private static int timeIndex = 0;
+
     public static void frame() {
         if (!ENABLED) return;
         Minecraft mc = Minecraft.getInstance();
         try {
             run(mc);
+            if (phase >= 2 && phase != 7 && mc.player != null) cursorMode(mc);
         } catch (Exception e) {
             QuietPlease.LOGGER.error("PROMO error", e);
             phase = 99;
@@ -72,6 +94,26 @@ public final class PromoDirector {
 
     private static long now() {
         return System.nanoTime() / 1_000_000L;
+    }
+
+    private static long seed() {
+        String s = System.getenv("PROMO_SEED");
+        return s == null ? SEED : Long.parseLong(s.trim());
+    }
+
+    private static void command(MinecraftServer server, String c) {
+        try {
+            server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), c);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static void worldRules(MinecraftServer server, int time) {
+        for (String c : List.of("gamemode spectator @a", "time set " + time, "weather clear 1000000",
+                "gamerule doDaylightCycle false", "gamerule doWeatherCycle false",
+                "gamerule advance_time false", "gamerule advance_weather false")) {
+            command(server, c);
+        }
     }
 
     private static void run(Minecraft mc) throws Exception {
@@ -85,6 +127,8 @@ public final class PromoDirector {
                 mc.options.getSoundSourceOptionInstance(SoundSource.MASTER).set(0.0);
                 mc.options.getSoundSourceOptionInstance(SoundSource.MUSIC).set(1.0);
                 mc.options.guiScale().set(3);
+                mc.options.exclusiveFullscreen().set(false);
+                mc.options.renderDistance().set(24);
                 setupWindow(mc);
                 mc.options.pauseOnLostFocus = false;
                 mc.options.tutorialStep = net.minecraft.client.tutorial.TutorialSteps.NONE;
@@ -94,52 +138,60 @@ public final class PromoDirector {
                         new net.minecraft.world.level.LevelSettings.DifficultySettings(net.minecraft.world.Difficulty.PEACEFUL, false, false),
                         true, net.minecraft.world.level.WorldDataConfiguration.DEFAULT);
                 mc.createWorldOpenFlows().createFreshLevel(settings.levelName(), settings,
-                        new net.minecraft.world.level.levelgen.WorldOptions(1234L, false, false),
+                        new net.minecraft.world.level.levelgen.WorldOptions(seed(), false, false),
                         net.minecraft.world.level.levelgen.presets.WorldPresets::createNormalWorldDimensions, new TitleScreen());
                 phase = 1;
             }
             case 1 -> {
                 if (mc.player == null || mc.level == null || mc.screen != null) return;
                 var server = mc.getSingleplayerServer();
-                server.execute(() -> {
-                    var level = server.overworld();
-                    var found = level.findClosestBiome3d(h -> h.is(Biomes.CHERRY_GROVE), mc.player.blockPosition(), 6400, 32, 64);
-                    BlockPos p = found == null ? mc.player.blockPosition() : found.getFirst();
-                    int top = p.getY();
-                    for (int dx = -32; dx <= 32; dx += 4) {
-                        for (int dz = -32; dz <= 32; dz += 4) {
-                            int x = p.getX() + dx;
-                            int z = p.getZ() + dz;
-                            top = Math.max(top, level.getChunk(x >> 4, z >> 4)
-                                    .getHeight(Heightmap.Types.MOTION_BLOCKING, x & 15, z & 15) + 1);
-                        }
-                    }
-                    camX = p.getX() + 0.5;
-                    camZ = p.getZ() + 0.5;
-                    for (var sp : server.getPlayerList().getPlayers()) {
-                        sp.getAbilities().flying = true;
-                        sp.teleportTo(camX, top + 7, camZ);
-                    }
-                    camY = top + 7;
-                    var src = server.createCommandSourceStack();
-                    for (String c : List.of("time set 1500", "weather clear 1000000", "gamerule doDaylightCycle false",
-                            "gamerule doWeatherCycle false", "gamerule advance_time false", "gamerule advance_weather false")) {
+                if (System.getenv("PROMO_SEEDSCAN") != null) {
+                    server.execute(() -> {
                         try {
-                            server.getCommands().performPrefixedCommand(src, c);
-                        } catch (Exception ignored) {
+                            Files.write(Path.of(System.getenv("PROMO_OUT"), "seeds.txt"), scanSeeds(server.overworld()));
+                        } catch (Exception e) {
+                            QuietPlease.LOGGER.error("PROMO seed scan failed", e);
                         }
-                    }
-                    QuietPlease.LOGGER.info("PROMO location {} found={} camera y={}", p, found != null, camY);
+                        scoutReady = true;
+                    });
+                    phase = 30;
+                    return;
+                }
+                if (SCOUT) {
+                    BlockPos origin = mc.player.blockPosition();
+                    String fixed = System.getenv("PROMO_SHOTS");
+                    String times = System.getenv("PROMO_TIMES");
+                    if (times != null) SCOUT_TIMES = java.util.Arrays.stream(times.split(",")).mapToInt(s -> Integer.parseInt(s.trim())).toArray();
+                    server.execute(() -> {
+                        worldRules(server, SCOUT_TIMES[0]);
+                        if (fixed != null) {
+                            for (String part : fixed.split(";")) {
+                                String[] v = part.trim().split(" ");
+                                shots.add(new Shot(Double.parseDouble(v[0]), Double.parseDouble(v[1]), Double.parseDouble(v[2]),
+                                        Float.parseFloat(v[3]), Float.parseFloat(v[4]), 0));
+                            }                        } else {
+                            findShots(server.overworld(), origin);
+                        }
+                        scoutReady = true;
+                    });
+                    mc.options.hideGui = true;
+                    phase = 20;
+                    return;
+                }
+                camX = SHOT_X;
+                camY = SHOT_Y;
+                camZ = SHOT_Z;
+                server.execute(() -> {
+                    worldRules(server, SHOT_TIME);
+                    for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(SHOT_X, SHOT_Y, SHOT_Z);
+                    QuietPlease.LOGGER.info("PROMO shot {} {} {} yaw {} pitch {} time {}", SHOT_X, SHOT_Y, SHOT_Z, SHOT_YAW, SHOT_PITCH, SHOT_TIME);
                 });
                 phase = 2;
                 phaseStart = now();
             }
             case 2 -> {
-                if (camY == 0) return;
                 mc.player.getAbilities().flying = true;
                 mc.player.onUpdateAbilities();
-                baseYaw = 0;
-                camStart = now();
                 camera = true;
                 applyCamera(mc);
                 phase = 3;
@@ -147,7 +199,7 @@ public final class PromoDirector {
             }
             case 3 -> {
                 applyCamera(mc);
-                if (now() - phaseStart < 15000) return;
+                if (now() - phaseStart < 25000) return;
                 mc.getToastManager().clear();
                 mc.getMusicManager().stopPlaying();
                 preparePlaylist();
@@ -159,10 +211,10 @@ public final class PromoDirector {
                 applyCamera(mc);
                 if (now() - phaseStart < 3000) return;
                 cueTime = now();
-                camStart = cueTime;
                 mc.options.getSoundSourceOptionInstance(SoundSource.MASTER).set(1.0);
                 mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING.value(), 2.0F, 1.0F));
                 mc.setScreen(new FlashScreen());
+                mark("cue1");
                 buildTimeline(mc);
                 phase = 5;
             }
@@ -183,8 +235,258 @@ public final class PromoDirector {
                 phase = 7;
                 mc.stop();
             }
+            case 20 -> {
+                if (!scoutReady) return;
+                List<String> lines = new ArrayList<>();
+                for (int i = 0; i < shots.size(); i++) {
+                    Shot s = shots.get(i);
+                    lines.add(i + " " + s.x() + " " + s.y() + " " + s.z() + " yaw " + s.yaw() + " pitch " + s.pitch() + " score " + s.score());
+                }
+                Files.write(Path.of(System.getenv("PROMO_OUT"), "scout.txt"), lines);
+                QuietPlease.LOGGER.info("PROMO scout found {} shots", shots.size());
+                if (shots.isEmpty()) {
+                    phase = 7;
+                    mc.stop();
+                    return;
+                }
+                shotIndex = 0;
+                phase = 21;
+            }
+            case 21 -> {
+                Shot s = shots.get(shotIndex);
+                camX = s.x();
+                camY = s.y();
+                camZ = s.z();
+                camYaw = s.yaw();
+                camPitch = s.pitch();
+                var server = mc.getSingleplayerServer();
+                server.execute(() -> {
+                    command(server, "time set " + SCOUT_TIMES[0]);
+                    for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(s.x(), s.y(), s.z());
+                });
+                mc.player.getAbilities().flying = true;
+                camera = true;
+                applyCamera(mc);
+                phase = 22;
+                phaseStart = now();
+            }
+            case 22 -> {
+                applyCamera(mc);
+                if (now() - phaseStart < (shotIndex == 0 || System.getenv("PROMO_SHOTS") == null ? 14000 : 6000)) return;
+                timeIndex = 0;
+                phase = 23;
+                phaseStart = now();
+            }
+            case 23 -> {
+                applyCamera(mc);
+                if (now() - phaseStart < 2500) return;
+                grab("shot" + shotIndex + "-t" + SCOUT_TIMES[timeIndex] + ".png");
+                phase = 25;
+                phaseStart = now();
+            }
+            case 25 -> {
+                applyCamera(mc);
+                if (now() - phaseStart < 1500) return;
+                timeIndex++;
+                if (timeIndex < SCOUT_TIMES.length) {
+                    int time = SCOUT_TIMES[timeIndex];
+                    var server = mc.getSingleplayerServer();
+                    server.execute(() -> command(server, "time set " + time));
+                    phase = 23;
+                    phaseStart = now();
+                    return;
+                }
+                shotIndex++;
+                phase = shotIndex < shots.size() ? 21 : 24;
+                phaseStart = now();
+            }
+            case 24 -> {
+                if (now() - phaseStart < 3000) return;
+                phase = 7;
+                mc.stop();
+            }
+            case 30 -> {
+                if (!scoutReady) return;
+                phase = 7;
+                mc.stop();
+            }
             default -> {
             }
+        }
+    }
+
+    private static boolean sea(ServerLevel level, int x, int z) {
+        return level.getUncachedNoiseBiome(x >> 2, 15, z >> 2).is(BiomeTags.IS_OCEAN);
+    }
+
+    private static List<String> scanSeeds(ServerLevel level) {
+        var gen = (net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator) level.getChunkSource().getGenerator();
+        var settings = gen.generatorSettings().value();
+        var noises = level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.NOISE);
+        var source = gen.getBiomeSource();
+        List<String> out = new ArrayList<>();
+        for (int i = 1; i <= 48; i++) {
+            long seed = i * 104729L + 17;
+            var sampler = net.minecraft.world.level.levelgen.RandomState.create(settings, noises, seed).sampler();
+            java.util.function.BiPredicate<Integer, Integer> sea = (x, z) -> source.getNoiseBiome(x >> 2, 15, z >> 2, sampler).is(BiomeTags.IS_OCEAN);
+            int count = 0;
+            int[] best = null;
+            for (int x = -3000; x <= 3000; x += 32) {
+                for (int z = -3000; z <= 3000; z += 32) {
+                    boolean c = false;
+                    for (int qy : new int[]{18, 21, 25, 30}) {
+                        if (source.getNoiseBiome(x >> 2, qy, z >> 2, sampler).is(Biomes.CHERRY_GROVE)) {
+                            c = true;
+                            break;
+                        }
+                    }
+                    if (!c) continue;
+                    int d = -1;
+                    for (int k = 8; k <= 120; k += 8) {
+                        if (sea.test(x - k, z)) {
+                            d = k;
+                            break;
+                        }
+                    }
+                    if (d < 24) continue;
+                    int sx = x - d;
+                    if (!(sea.test(sx - 48, z) && sea.test(sx - 128, z) && sea.test(sx - 96, z - 48) && sea.test(sx - 96, z + 48))) continue;
+                    count++;
+                    if (best == null || Math.abs(d - 60) < Math.abs(best[2] - 60)) best = new int[]{x, z, d};
+                }
+            }
+            String line = seed + " candidates " + count + (best == null ? "" : " best " + best[0] + " " + best[1] + " sea at " + best[2]);
+            QuietPlease.LOGGER.info("PROMO seed {}", line);
+            out.add(line);
+        }
+        return out;
+    }
+
+    private static boolean cherry(ServerLevel level, int x, int z) {
+        for (int qy : new int[]{18, 21, 25, 30}) {
+            if (level.getUncachedNoiseBiome(x >> 2, qy, z >> 2).is(Biomes.CHERRY_GROVE)) return true;
+        }
+        return false;
+    }
+
+    private static int topY(ServerLevel level, int x, int z) {
+        return level.getChunk(x >> 4, z >> 4).getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x & 15, z & 15);
+    }
+
+    private static void findShots(ServerLevel level, BlockPos origin) {
+        List<int[]> found = new ArrayList<>();
+        int ox = origin.getX();
+        int oz = origin.getZ();
+        int cherry = 0;
+        int near = 0;
+        for (int x = ox - 7000; x <= ox + 7000; x += 24) {
+            for (int z = oz - 7000; z <= oz + 7000; z += 24) {
+                if (!cherry(level, x, z)) continue;
+                cherry++;
+                int d = -1;
+                for (int k = 8; k <= 400; k += 8) {
+                    if (sea(level, x - k, z)) {
+                        d = k;
+                        break;
+                    }
+                }
+                if (d < 0) continue;
+                near++;
+                int sx = x - d;
+                if (!(sea(level, sx - 48, z) && sea(level, sx - 128, z) && sea(level, sx - 96, z - 48) && sea(level, sx - 96, z + 48))) continue;
+                found.add(new int[]{x, z, d});
+            }
+        }
+        QuietPlease.LOGGER.info("PROMO scout cherry samples {} sea within 400 west {} coast candidates {}", cherry, near, found.size());
+        found.sort(Comparator.comparingDouble(a -> Math.abs(a[2] - 60) + Math.hypot(a[0] - ox, a[1] - oz) / 100.0));
+        for (int[] f : found) QuietPlease.LOGGER.info("PROMO scout coast {} {} sea at {}", f[0], f[1], f[2]);
+        List<int[]> picked = new ArrayList<>();
+        for (int[] f : found) {
+            if (picked.stream().anyMatch(p -> Math.hypot(p[0] - f[0], p[1] - f[1]) < 120)) continue;
+            picked.add(f);
+            if (picked.size() >= 5) break;
+        }
+        for (int[] f : picked) {
+            Shot s = placeCamera(level, f[0], f[1]);
+            QuietPlease.LOGGER.info("PROMO scout candidate {} {} -> {}", f[0], f[1], s);
+            if (s != null) shots.add(s);
+        }
+    }
+
+    private static Shot placeCamera(ServerLevel level, int x, int z) {
+        int shore = Integer.MIN_VALUE;
+        for (int k = 0; k <= 420; k++) {
+            int cx = x - k;
+            int h = topY(level, cx, z);
+            if (h <= 63 && level.getBlockState(new BlockPos(cx, h, z)).getFluidState().is(FluidTags.WATER)) {
+                shore = cx;
+                break;
+            }
+        }
+        if (shore == Integer.MIN_VALUE) return null;
+        Shot best = null;
+        for (int back = 6; back <= x - shore + 24; back += 3) {
+            for (int dz = -15; dz <= 15; dz += 3) {
+                int cx = shore + back;
+                int cz = z + dz;
+                int g = topY(level, cx, cz);
+                if (g < 63 || !level.getBlockState(new BlockPos(cx, g, cz)).getFluidState().isEmpty()) continue;
+                for (double lift : new double[]{1.0, 2.5, 5.0}) {
+                    double ex = cx + 0.5;
+                    double ey = g + 1 + lift + 1.62;
+                    double ez = cz + 0.5;
+                    if (!level.getBlockState(BlockPos.containing(ex, ey, ez)).isAir()) continue;
+                    if (!clear(level, ex, ey, ez, SHOT_YAW, 0, 30)) continue;
+                    if (!clear(level, ex, ey, ez, SHOT_YAW, 4, 20)) continue;
+                    if (!clear(level, ex, ey, ez, SHOT_YAW - 15, 2, 14)) continue;
+                    if (!clear(level, ex, ey, ez, SHOT_YAW + 15, 2, 14)) continue;
+                    int left = leaves(level, ex, ey, ez, SHOT_YAW - 34) + leaves(level, ex, ey, ez, SHOT_YAW - 44);
+                    int right = leaves(level, ex, ey, ez, SHOT_YAW + 34) + leaves(level, ex, ey, ez, SHOT_YAW + 44);
+                    int score = Math.min(left, 4) + Math.min(right, 4) + (left > 0 && right > 0 ? 6 : 0) - back / 40;
+                    if (best == null || score > best.score()) best = new Shot(ex, ey - 1.62, ez, SHOT_YAW, SHOT_PITCH, score);
+                }
+            }
+        }
+        return best;
+    }
+
+    private static double[] dir(float yaw, float pitch) {
+        double y = Math.toRadians(yaw);
+        double p = Math.toRadians(pitch);
+        return new double[]{-Math.sin(y) * Math.cos(p), -Math.sin(p), Math.cos(y) * Math.cos(p)};
+    }
+
+    private static boolean clear(ServerLevel level, double x, double y, double z, float yaw, float pitch, double dist) {
+        double[] d = dir(yaw, pitch);
+        for (double s = 0.5; s <= dist; s += 0.5) {
+            BlockState st = level.getBlockState(BlockPos.containing(x + d[0] * s, y + d[1] * s, z + d[2] * s));
+            if (!st.isAir() && st.getFluidState().isEmpty()) return false;
+        }
+        return true;
+    }
+
+    private static int leaves(ServerLevel level, double x, double y, double z, float yaw) {
+        int n = 0;
+        for (float pitch : new float[]{-6.0F, 4.0F}) {
+            double[] d = dir(yaw, pitch);
+            for (double s = 3; s <= 16; s += 1) {
+                if (level.getBlockState(BlockPos.containing(x + d[0] * s, y + d[1] * s, z + d[2] * s)).is(Blocks.CHERRY_LEAVES)) n++;
+            }
+        }
+        return n;
+    }
+
+    private static void grab(String name) {
+        try {
+            Path out = Path.of(System.getenv("PROMO_OUT"));
+            Files.createDirectories(out);
+            new ProcessBuilder(System.getenv("PROMO_FFMPEG"), "-y", "-loglevel", "error", "-f", "lavfi", "-i",
+                    "ddagrab=output_idx=0:framerate=10", "-vf", "hwdownload,format=bgra", "-frames:v", "1", out.resolve(name).toString())
+                    .redirectErrorStream(true)
+                    .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+                    .start();
+        } catch (Exception e) {
+            QuietPlease.LOGGER.error("PROMO grab failed", e);
         }
     }
 
@@ -194,6 +496,19 @@ public final class PromoDirector {
         GLFW.glfwSetWindowAttrib(h, GLFW.GLFW_FLOATING, GLFW.GLFW_TRUE);
         GLFW.glfwSetWindowPos(h, 0, 0);
         GLFW.glfwSetWindowSize(h, 1920, 1080);
+        GLFW.glfwFocusWindow(h);
+        GLFW.glfwSetCursorPos(h, 960, 540);
+    }
+
+    private static void cursorMode(Minecraft mc) {
+        long h = mc.getWindow().handle();
+        int mode = GLFW.glfwGetInputMode(h, GLFW.GLFW_CURSOR);
+        if (mc.screen == null && mode == GLFW.GLFW_CURSOR_NORMAL) {
+            GLFW.glfwSetCursorPos(h, 960, 540);
+            GLFW.glfwSetInputMode(h, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_HIDDEN);
+        } else if (mc.screen != null && mode == GLFW.GLFW_CURSOR_HIDDEN) {
+            GLFW.glfwSetInputMode(h, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+        }
     }
 
     private static void preparePlaylist() {
@@ -217,6 +532,37 @@ public final class PromoDirector {
         marks.add(name + " " + (now() - cueTime));
     }
 
+    private static void markRect(Minecraft mc, String name, int x, int y, int w, int h) {
+        double s = mc.getWindow().getScreenWidth() / (double) mc.getWindow().getGuiScaledWidth();
+        marks.add(name + " " + (now() - cueTime) + " " + Math.round(x * s) + " " + Math.round(y * s)
+                + " " + Math.round(w * s) + " " + Math.round(h * s));
+    }
+
+    private static void markWidgets(Minecraft mc, String name, List<AbstractWidget> ws, int pad) {
+        if (ws.isEmpty()) {
+            QuietPlease.LOGGER.warn("PROMO zoom target missing: {}", name);
+            return;
+        }
+        int x0 = ws.stream().mapToInt(AbstractWidget::getX).min().getAsInt() - pad;
+        int y0 = ws.stream().mapToInt(AbstractWidget::getY).min().getAsInt() - pad;
+        int x1 = ws.stream().mapToInt(w -> w.getX() + w.getWidth()).max().getAsInt() + pad;
+        int y1 = ws.stream().mapToInt(w -> w.getY() + w.getHeight()).max().getAsInt() + pad;
+        markRect(mc, name, x0, y0, x1 - x0, y1 - y0);
+    }
+
+    private static void cue(Minecraft mc, String name, boolean pling) {
+        mc.options.hideGui = false;
+        mc.options.getSoundSourceOptionInstance(SoundSource.MASTER).set(1.0);
+        mc.getSoundManager().play(SimpleSoundInstance.forUI(
+                pling ? SoundEvents.NOTE_BLOCK_PLING.value() : SoundEvents.UI_BUTTON_CLICK.value(), pling ? 2.0F : 1.0F, 1.0F));
+        mc.setScreen(new FlashScreen());
+        mark(name);
+    }
+
+    private static void mute(Minecraft mc) {
+        mc.options.getSoundSourceOptionInstance(SoundSource.MASTER).set(0.0);
+    }
+
     private static void at(long ms, Runnable r) {
         steps.add(new Step(ms, r));
     }
@@ -229,9 +575,15 @@ public final class PromoDirector {
         });
         at(1500, () -> Playlist.playNow(0));
 
+        at(6300, () -> mute(mc));
+        at(7000, () -> cue(mc, "cue2", false));
+        at(7080, () -> {
+            mc.setScreen(null);
+            mc.options.hideGui = true;
+        });
+
         at(8000, () -> {
             mark("scene2");
-            camera = false;
             mc.options.hideGui = false;
             mc.setScreen(new QuietPleaseScreen(null));
             warp(mc, 320, 200);
@@ -254,7 +606,9 @@ public final class PromoDirector {
         typeAt(16500, mc, "left", 130);
         at(17600, () -> {
             AbstractWidget s = find(mc, w -> w.getClass().getSimpleName().equals("VolumeSlider"));
-            if (s != null) glidePoint(mc, s.getX() + s.getWidth() - 4, s.getY() + s.getHeight() / 2.0, 700);
+            if (s == null) return;
+            glidePoint(mc, s.getX() + s.getWidth() - 4, s.getY() + s.getHeight() / 2.0, 700);
+            markWidgets(mc, "zoom3", all(mc, w -> Math.abs(w.getY() - s.getY()) <= 2), 4);
         });
         at(18500, () -> button(mc, 1));
         at(18600, () -> {
@@ -281,14 +635,14 @@ public final class PromoDirector {
         at(23600, () -> glideTo(mc, find(mc, w -> w instanceof CycleButton<?> && w.getMessage().getString().startsWith("Mod")), 600));
         at(24300, () -> clickHere(mc));
         at(24900, () -> clickHere(mc));
-        at(25600, () -> {
-            AbstractWidget play = findText(mc, "▶");
-            if (play != null) glidePoint(mc, play.getX() + 70, play.getY() + 10, 800);
+        at(25600, () -> glideTo(mc, findText(mc, "▶"), 800));
+        at(26500, () -> {
+            clickHere(mc);
+            mark("play");
         });
-        at(27000, () -> {
-            AbstractWidget play = findText(mc, "▶");
-            if (play != null) glidePoint(mc, play.getX() + 70, play.getY() + 58, 1600);
-        });
+        at(26800, () -> glidePoint(mc, 320, 210, 700));
+        at(29300, () -> glideTo(mc, findText(mc, "■"), 700));
+        at(30200, () -> clickHere(mc));
 
         long b = 30500;
         at(b, () -> {
@@ -303,6 +657,7 @@ public final class PromoDirector {
         typeAt(b + 4300, mc, "komorebi", 110);
         at(b + 5400, () -> glideTo(mc, findText(mc, "+ Add"), 700));
         at(b + 6200, () -> clickHere(mc));
+        at(b + 6350, () -> glidePoint(mc, 300, 220, 450));
         at(b + 6900, () -> {
             EditBox box = (EditBox) find(mc, w -> w instanceof EditBox);
             if (box != null) box.setValue("");
@@ -310,15 +665,17 @@ public final class PromoDirector {
         typeAt(b + 7000, mc, "aria", 120);
         at(b + 7700, () -> glideTo(mc, findText(mc, "+ Add"), 600));
         at(b + 8400, () -> clickHere(mc));
+        at(b + 8550, () -> glidePoint(mc, 300, 220, 450));
         at(b + 9100, () -> glideTo(mc, findText(mc, "Queue"), 700));
         at(b + 9900, () -> clickHere(mc));
+
+        at(41750, () -> mute(mc));
+        at(42450, () -> cue(mc, "cue3", false));
+        at(42530, () -> mc.setScreen(null));
 
         at(43000, () -> {
             mark("scene6");
             mc.setScreen(null);
-            camera = true;
-            camStart = now();
-            baseYaw = 60;
         });
         at(44500, () -> {
             String result = MusicControl.skipAndDescribe();
@@ -331,7 +688,6 @@ public final class PromoDirector {
 
         at(57000, () -> {
             mark("scene8");
-            camera = false;
             mc.setScreen(new QuietPleaseScreen(null));
             warp(mc, 320, 200);
         });
@@ -339,23 +695,27 @@ public final class PromoDirector {
         at(58600, () -> clickHere(mc));
         at(59300, () -> glideTo(mc, findText(mc, "History & stats"), 800));
         at(60200, () -> clickHere(mc));
-        at(62700, () -> glideTo(mc, findText(mc, "Most played"), 700));
-        at(63500, () -> clickHere(mc));
-        at(65500, () -> glideTo(mc, findText(mc, "Never played"), 700));
-        at(66300, () -> clickHere(mc));
+        at(62200, () -> glideTo(mc, findText(mc, "Most played"), 700));
+        at(62900, () -> clickHere(mc));
+        at(63000, () -> glidePoint(mc, 320, mc.getWindow().getGuiScaledHeight() - 60, 500));
+        at(63100, () -> {
+            int h = mc.getWindow().getGuiScaledHeight();
+            List<AbstractWidget> ws = all(mc, w -> w.getY() >= 28 && w.getY() < h - 36);
+            markWidgets(mc, "zoom8", ws, 4);
+        });
+        at(66100, () -> glideTo(mc, findText(mc, "Never played"), 700));
+        at(66800, () -> clickHere(mc));
 
         at(68500, () -> {
             mark("scene9");
             mc.setScreen(null);
             mc.options.hideGui = true;
-            camera = true;
-            camStart = now();
-            baseYaw = 150;
         });
-        at(78500, () -> {
-            mark("end");
-            mc.options.hideGui = false;
-        });
+        at(78500, () -> mark("end"));
+        at(78600, () -> mute(mc));
+        at(80200, () -> cue(mc, "cue4", true));
+        at(80300, () -> mc.setScreen(null));
+        at(81200, () -> mark("stop"));
     }
 
     private static void typeAt(long start, Minecraft mc, String text, long perChar) {
@@ -380,13 +740,16 @@ public final class PromoDirector {
         return find(mc, w -> w.getMessage().getString().startsWith(prefix));
     }
 
-    private static AbstractWidget find(Minecraft mc, Predicate<AbstractWidget> p) {
-        if (mc.screen == null) return null;
+    private static List<AbstractWidget> all(Minecraft mc, Predicate<AbstractWidget> p) {
+        if (mc.screen == null) return List.of();
         List<AbstractWidget> out = new ArrayList<>();
         collect(mc.screen, out);
         int h = mc.getWindow().getGuiScaledHeight();
-        return out.stream().filter(w -> w.visible && w.getY() > 2 && w.getY() < h - 2).filter(p)
-                .min(Comparator.comparingInt(AbstractWidget::getY)).orElse(null);
+        return out.stream().filter(w -> w.visible && w.getY() > 2 && w.getY() < h - 2).filter(p).toList();
+    }
+
+    private static AbstractWidget find(Minecraft mc, Predicate<AbstractWidget> p) {
+        return all(mc, p).stream().min(Comparator.comparingInt(AbstractWidget::getY)).orElse(null);
     }
 
     private static void collect(GuiEventListener l, List<AbstractWidget> out) {
@@ -465,29 +828,24 @@ public final class PromoDirector {
     private static void applyCamera(Minecraft mc) {
         var p = mc.player;
         if (p == null || !camera) return;
-        double s = (now() - camStart) / 1000.0;
-        float yaw = baseYaw + (float) (s * camYawSpeed);
-        double rad = Math.toRadians(yaw);
-        double x = camX - Math.sin(rad) * s * camForward;
-        double z = camZ + Math.cos(rad) * s * camForward;
-        p.setPos(x, camY, z);
-        p.xo = p.xOld = x;
+        p.setPos(camX, camY, camZ);
+        p.xo = p.xOld = camX;
         p.yo = p.yOld = camY;
-        p.zo = p.zOld = z;
+        p.zo = p.zOld = camZ;
         p.setDeltaMovement(0, 0, 0);
-        p.setYRot(yaw);
-        p.setXRot(14.0F);
-        p.yRotO = yaw;
-        p.xRotO = 14.0F;
-        p.setYHeadRot(yaw);
+        p.setYRot(camYaw);
+        p.setXRot(camPitch);
+        p.yRotO = camYaw;
+        p.xRotO = camPitch;
+        p.setYHeadRot(camYaw);
     }
 
     private static void startFfmpeg() throws Exception {
         Path out = Path.of(System.getenv("PROMO_OUT"));
         Files.createDirectories(out);
         ffmpeg = new ProcessBuilder(System.getenv("PROMO_FFMPEG"), "-y", "-f", "lavfi", "-i",
-                "ddagrab=output_idx=0:framerate=60:draw_mouse=1", "-vf", "hwdownload,format=bgra",
-                "-c:v", "h264_nvenc", "-preset", "p5", "-cq", "17", "-pix_fmt", "yuv420p",
+                "ddagrab=output_idx=0:framerate=60:draw_mouse=1",
+                "-c:v", "h264_nvenc", "-preset", "p5", "-cq", "17",
                 out.resolve("raw.mp4").toString())
                 .redirectErrorStream(true)
                 .redirectOutput(out.resolve("ffmpeg.log").toFile())
