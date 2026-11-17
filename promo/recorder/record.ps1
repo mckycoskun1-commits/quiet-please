@@ -1,4 +1,4 @@
-param([switch]$Scout, [switch]$SeedScan, [switch]$NoShaders, [string]$Seed, [string]$Shots, [string]$Times)
+param([switch]$Scout, [switch]$SeedScan, [switch]$NoShaders, [switch]$AudioOnly, [string]$Seed, [string]$Shots, [string]$Times)
 $ErrorActionPreference = 'Stop'
 $repo = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 $here = $PSScriptRoot
@@ -6,7 +6,7 @@ $src = Join-Path $repo 'common\src\main\java\com\quietplease'
 $mixins = Join-Path $repo 'common\src\main\resources\quietplease.mixins.json'
 $run = Join-Path $repo 'fabric\run'
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmm'
-$kind = if ($Scout -or $SeedScan) { 'scout' } else { 'raw' }
+$kind = if ($Scout -or $SeedScan) { 'scout' } elseif ($AudioOnly) { 'audio' } else { 'raw' }
 $out = Join-Path $repo "promo\videos\$kind-$stamp"
 $backup = Join-Path $out 'backup'
 
@@ -16,7 +16,7 @@ if (-not $ffmpeg) { throw 'ffmpeg not found (winget install Gyan.FFmpeg)' }
 $packName = 'Solas Shader V3.2.zip'
 $userPacks = Join-Path $env:APPDATA '.minecraft\shaderpacks'
 $shaderJars = @(Get-ChildItem (Join-Path $here 'mods') -Filter *.jar -ErrorAction SilentlyContinue)
-$useShaders = (-not $NoShaders) -and $shaderJars.Count -ge 2 -and (Test-Path (Join-Path $userPacks $packName))
+$useShaders = (-not $NoShaders) -and (-not $AudioOnly) -and $shaderJars.Count -ge 2 -and (Test-Path (Join-Path $userPacks $packName))
 $runMods = Join-Path $run 'mods'
 $runPacks = Join-Path $run 'shaderpacks'
 $shaderConfigs = 'iris.properties', 'iris-excluded.json', 'sodium-options.json', 'sodium-mixins.properties', 'sodium-fingerprint.json'
@@ -96,6 +96,7 @@ shaderPack=$packName
     $env:ALSOFT_CONF = Join-Path $out 'alsoft.ini'
     if ($Scout) { $env:PROMO_SCOUT = '1' }
     if ($SeedScan) { $env:PROMO_SEEDSCAN = '1' }
+    if ($AudioOnly) { $env:PROMO_AUDIO_ONLY = '1' }
     if ($Seed) { $env:PROMO_SEED = $Seed }
     if ($Shots) { $env:PROMO_SHOTS = $Shots }
     if ($Times) { $env:PROMO_TIMES = $Times }
@@ -115,7 +116,7 @@ finally {
     foreach ($j in $shaderJars) { Remove-Item (Join-Path $runMods $j.Name) -ErrorAction SilentlyContinue }
     Remove-Item $runPacks -Recurse -Force -ErrorAction SilentlyContinue
     foreach ($c in $shaderConfigs) { Remove-Item (Join-Path $run "config\$c") -ErrorAction SilentlyContinue }
-    Remove-Item Env:QUIETPLEASE_PROMO, Env:PROMO_OUT, Env:PROMO_FFMPEG, Env:ALSOFT_CONF, Env:PROMO_SCOUT, Env:PROMO_SEEDSCAN, Env:PROMO_SEED, Env:PROMO_SHOTS, Env:PROMO_TIMES -ErrorAction SilentlyContinue
+    Remove-Item Env:QUIETPLEASE_PROMO, Env:PROMO_OUT, Env:PROMO_FFMPEG, Env:ALSOFT_CONF, Env:PROMO_SCOUT, Env:PROMO_SEEDSCAN, Env:PROMO_AUDIO_ONLY, Env:PROMO_SEED, Env:PROMO_SHOTS, Env:PROMO_TIMES -ErrorAction SilentlyContinue
     Push-Location $repo
     & .\gradlew.bat --stop | Out-Null
     Pop-Location

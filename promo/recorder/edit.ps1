@@ -1,8 +1,10 @@
-param([string]$Raw)
+param([string]$Raw, [string]$Video)
 $ErrorActionPreference = 'Stop'
 $repo = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 if (-not $Raw) { $Raw = (Get-ChildItem (Join-Path $repo 'promo\videos') -Directory -Filter 'raw-*' | Sort-Object Name | Select-Object -Last 1).FullName }
 $Raw = (Resolve-Path $Raw).Path
+$Video = if ($Video) { (Resolve-Path $Video).Path } else { $Raw }
+$rawVideo = Join-Path $Video 'raw.mp4'
 $inv = [Globalization.CultureInfo]::InvariantCulture
 function F([double]$x) { $x.ToString('0.######', $inv) }
 function Ms([double]$x) { [Math]::Round($x * 1000).ToString($inv) }
@@ -37,13 +39,13 @@ Push-Location $Raw
 try {
     $marks = @{}
     $rects = @{}
-    foreach ($line in Get-Content marks.txt) {
+    foreach ($line in Get-Content (Join-Path $Video 'marks.txt')) {
         $p = $line -split ' '
         $marks[$p[0]] = (P $p[1]) / 1000
         if ($p.Count -ge 6) { $rects[$p[0]] = @((P $p[2]), (P $p[3]), (P $p[4]), (P $p[5])) }
     }
 
-    $log = & cmd /c "`"$ffmpeg`" -hide_banner -i raw.mp4 -vf scale=64:36,signalstats,metadata=print:key=lavfi.signalstats.YAVG -f null - 2>&1"
+    $log = & cmd /c "`"$ffmpeg`" -hide_banner -i `"$rawVideo`" -vf scale=64:36,signalstats,metadata=print:key=lavfi.signalstats.YAVG -f null - 2>&1"
     $flashes = New-Object System.Collections.Generic.List[double]
     $t = 0.0
     $prevWhite = $false
@@ -125,12 +127,12 @@ try {
         $dur = 90
     }
     ($af -join ";`n") | Set-Content -Encoding ascii 'graph-sync.txt'
-    $drops = (Get-Content ffmpeg.log -ErrorAction SilentlyContinue | Select-String 'frame=' | Select-Object -Last 1)
+    $drops = (Get-Content (Join-Path $Video 'ffmpeg.log') -ErrorAction SilentlyContinue | Select-String 'frame=' | Select-Object -Last 1)
     if ($drops) { $report.Add("capture: " + ($drops.Line -replace '\s+', ' ').Trim()) }
     $report | Set-Content -Encoding ascii 'sync.txt'
     $report | ForEach-Object { Write-Host $_ }
 
-    & $ffmpeg -hide_banner -loglevel error -y -ss (F $v1) -t (F $dur) -i raw.mp4 -i audio.wav -/filter_complex 'graph-sync.txt' `
+    & $ffmpeg -hide_banner -loglevel error -y -ss (F $v1) -t (F $dur) -i $rawVideo -i audio.wav -/filter_complex 'graph-sync.txt' `
         -map 0:v -map '[aout]' -fps_mode cfr -r 60 -c:v h264_nvenc -preset p5 -cq 16 -pix_fmt yuv420p -c:a pcm_s16le -shortest synced.mkv
     if ($LASTEXITCODE -ne 0) { throw 'Sync step failed' }
 

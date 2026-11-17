@@ -10,6 +10,12 @@ This file is for whoever records the next promo cut (2.0.1). Read it fully, then
 - The game music is captured very quietly (about -45 dB RMS), so the demo songs are made 25 dB quieter than before and the edit evens out each scene before the final loudness pass.
 - The cursor and taskbar tooltips showed up in world shots when the game window had no focus; the director now hides the cursor while no screen is open.
 
+## Sound fix after the second cut (2026-11-17, 22:40)
+
+- The user found animal sounds too loud in some places. Animal calls were at about 1 s, 44.5 s, 53 s and 74 s; the per-scene loudness step raised them by 20 to 30 dB. They cannot be filtered out of the mix: the game music is stereo and covers the same frequencies.
+- Fix: the director now mutes the world sound categories (animals, monsters, ambient, blocks, weather, players, voice) in every run. The sound was recorded again with `record.ps1 -AudioOnly` and put under the old picture with `edit.ps1 -Video`.
+- Result in `promo/videos/audio-2026-11-17-2235/`: the picture is identical to the second cut, all 18 click sounds land within 20 ms of the old ones, sync offsets 8, 3 and 13 ms with the start cue, 7 and -4 ms after the stretch, -17.8 LUFS.
+
 ## What the user said about the first cut
 
 The reference cut from 2026-11-17 is in `promo/videos/raw-2026-11-17-0149/` (`promo-16x9.mp4`, `promo-9x16.mp4`).

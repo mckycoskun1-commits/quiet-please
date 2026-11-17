@@ -43,6 +43,7 @@ public final class PromoDirector {
 
     private static final boolean ENABLED = System.getenv("QUIETPLEASE_PROMO") != null;
     private static final boolean SCOUT = System.getenv("PROMO_SCOUT") != null;
+    private static final boolean AUDIO_ONLY = System.getenv("PROMO_AUDIO_ONLY") != null;
 
     private static final long SEED = 1152036L;
     private static final double SHOT_X = -2768.5;
@@ -126,6 +127,10 @@ public final class PromoDirector {
                 if (!(mc.screen instanceof TitleScreen) || mc.getOverlay() != null) return;
                 mc.options.getSoundSourceOptionInstance(SoundSource.MASTER).set(0.0);
                 mc.options.getSoundSourceOptionInstance(SoundSource.MUSIC).set(1.0);
+                for (SoundSource s : List.of(SoundSource.WEATHER, SoundSource.BLOCKS, SoundSource.HOSTILE, SoundSource.NEUTRAL,
+                        SoundSource.PLAYERS, SoundSource.AMBIENT, SoundSource.VOICE)) {
+                    mc.options.getSoundSourceOptionInstance(s).set(0.0);
+                }
                 mc.options.guiScale().set(3);
                 mc.options.exclusiveFullscreen().set(false);
                 mc.options.renderDistance().set(24);
@@ -203,7 +208,7 @@ public final class PromoDirector {
                 mc.getToastManager().clear();
                 mc.getMusicManager().stopPlaying();
                 preparePlaylist();
-                startFfmpeg();
+                if (!AUDIO_ONLY) startFfmpeg();
                 phase = 4;
                 phaseStart = now();
             }

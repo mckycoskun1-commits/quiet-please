@@ -32,6 +32,16 @@ It finds the sync cues in both files, corrects the sound to the picture, cuts th
 
 Sync: master volume stays at 0 until the first cue. There are four cues (start, 7 s, 42.5 s, end): the sound is muted for a moment, then a white frame is shown and a click or note block plays at the same moment. The cues fall between the scenes and are cut out. The edit script stretches the sound linearly between the first and the last cue and checks the two middle cues; if one is off by more than 20 ms it stretches piece by piece between all cues.
 
+Only music, interface and note block sounds are recorded: the director turns the world sound categories (animals, monsters, ambient, blocks, weather, players, voice) down to 0, because the edit raises quiet scenes by up to 30 dB and animal calls became too loud.
+
+New sound for an existing recording: the timeline and the songs are fixed, so a second run plays the same sounds at the same moments. `record.ps1 -AudioOnly` runs without shaders and without screen capture and writes only `audio.wav` and `marks.txt` into `promo/videos/audio-<date>/`. Then put that sound under the old picture:
+
+```
+powershell -ExecutionPolicy Bypass -File promo\recorder\edit.ps1 -Raw promo\videos\audio-<date> -Video promo\videos\raw-<date>
+```
+
+The window still covers the screen during the run; do not touch the mouse or keyboard.
+
 Finding a new shot:
 
 - `-SeedScan -NoShaders` checks 48 seeds for a cherry grove with the open sea to its west and writes `seeds.txt` into `promo/videos/scout-<date>/`.
