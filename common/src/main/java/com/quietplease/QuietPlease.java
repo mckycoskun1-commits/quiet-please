@@ -35,6 +35,7 @@ public class QuietPlease {
         com.quietplease.music.ListenStats.clientTick();
         QuietPleaseKeys.tick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
+        DevAudioTest.tick(mc);
         if (!autoDumpDone && mc.screen instanceof TitleScreen && mc.getOverlay() == null) onScreenInit(mc.screen);
         if (mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen
                 && System.getenv("QUIETPLEASE_AUTODUMP") != null
@@ -449,5 +450,6 @@ public class QuietPlease {
             LOGGER.error("QUIETPLEASE_AUTODUMP basarisiz", e);
         }
         if (mode.equals("gui")) guiTestTicks = 0;
+        if (mode.equals("audio")) DevAudioTest.start();
     }
 }

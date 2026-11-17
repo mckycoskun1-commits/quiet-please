@@ -106,14 +106,18 @@ public final class MusicSettings {
         return v == null ? 1.0F : v / 100.0F;
     }
 
+    /** Onizleme calarken arka plan muziginin carpani: -80 dB, duyulmaz ama ses kanali acik kalir. */
+    static final float PREVIEW_MUTE = 1.0E-4F;
+
     /** Calan bir ses icin carpan. Ses henuz bir dosyaya cozulmemisse etkilenmez. */
     public static float factor(SoundInstance instance) {
         // Onizleme: kapali olsa bile dinlenebilsin, ama ayarlanan ses seviyesiyle.
         if (instance instanceof MusicPreview.PreviewSound preview) {
             return get(preview.trackId).volume() / 100.0F * modFactor(preview.trackId) * Loudness.factor(preview.trackId);
         }
-        // Onizleme calarken oyunun kendi arka plan muzigi susar.
-        if (MusicPreview.hasPreview() && instance.getSource() == SoundSource.MUSIC) return 0.0F;
+        // Onizleme calarken oyunun kendi arka plan muzigi susar. Tam 0 degil: 0 olunca oyun calan sesi durdurur ya da
+        // yeni sarkiyi hic baslatmaz; duyulmayacak kadar kisik kalinca onizleme bitince sarki kaldigi yerden duyulur.
+        if (MusicPreview.hasPreview() && instance.getSource() == SoundSource.MUSIC) return PREVIEW_MUTE;
         if (SETTINGS.isEmpty() && MOD_VOLUME.isEmpty() && !Loudness.active()) return 1.0F;
         Sound sound;
         try {
