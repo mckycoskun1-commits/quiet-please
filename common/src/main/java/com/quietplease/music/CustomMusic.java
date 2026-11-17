@@ -21,8 +21,9 @@ import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackResources;
-import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceProvider;
 import net.minecraft.sounds.Music;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.valueproviders.ConstantFloat;
@@ -31,9 +32,9 @@ import net.minecraft.util.valueproviders.ConstantFloat;
  * Oyuncunun kendi muzikleri: config/quietplease/music klasorundeki .ogg dosyalari.
  *
  * Kaynak paketi gerekmez. Her dosya "quietplease_music:dosya_adi" kimligiyle panelde "Kendi muzigin" grubunda gorunur,
- * calma listesine eklenebilir ve (ayar aciksa) oyunun arka plan muzigine karisir. Dosyalar oyunun kaynak yoneticisi
- * uzerinden okunur (ReloadableResourceManagerMixin), boylece ses motoru, sure ve ses dengeleme hesabi onlari
- * diger muzikler gibi acar.
+ * calma listesine eklenebilir ve (ayar aciksa) oyunun arka plan muzigine karisir. Sure ve ses dengeleme hesabi dosyalari
+ * oyunun kaynak yoneticisinden (ReloadableResourceManagerMixin), ses motoru ise kendi dosya saglayicisindan
+ * (SoundBufferLibraryMixin) okur.
  */
 public final class CustomMusic {
 
@@ -127,7 +128,7 @@ public final class CustomMusic {
     /**
      * Kaynak yoneticisi bu ad alanindan bir dosya isteyince (mixin): "sounds/&lt;ad&gt;.ogg" -> klasordeki dosya.
      */
-    public static Optional<Resource> resource(ResourceLocation path, ReloadableResourceManager manager) {
+    public static Optional<Resource> resource(ResourceLocation path, ResourceManager manager) {
         String p = path.getPath();
         if (!p.startsWith("sounds/") || !p.endsWith(".ogg")) return Optional.empty();
         ResourceLocation id = id(p.substring(7, p.length() - 4));
@@ -136,6 +137,15 @@ public final class CustomMusic {
         Optional<PackResources> pack = manager.listPacks().findFirst();
         if (pack.isEmpty()) return Optional.empty();
         return Optional.of(new Resource(pack.get(), () -> Files.newInputStream(file)));
+    }
+
+    /**
+     * Ses motorunun dosya saglayicisi (SoundBufferLibraryMixin). Oyun sesleri, kaynak paketlerinden yuklemede bir kez
+     * toplanan bir haritadan okur; bu klasorun dosyalari o haritada olmadigi icin hic ses cikmazdi. Bu ad alani
+     * klasorden, gerisi her zamanki gibi oyunun saglayicisindan gelir.
+     */
+    public static ResourceProvider provider(ResourceProvider original) {
+        return path -> isCustom(path) ? resource(path, Minecraft.getInstance().getResourceManager()) : original.getResource(path);
     }
 
     /**
