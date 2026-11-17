@@ -137,10 +137,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Sync step failed' }
 
     $segs = @(
-        @{ S = 0.6; E = 6.0; Kind = 'world'; Cap = @(@{ T = 0.4; D = 4.6; Text = 'That one song again?' }) },
+        @{ S = 1.8; E = 6.0; Kind = 'world'; Cap = @(@{ T = 0.3; D = 3.7; Text = 'That one song again?' }) },
         @{ S = 8.0; E = 14.6; Kind = 'panel'; Cap = @(@{ T = 0.3; D = 6.0; Text = 'Turn it off. It stops right away.' }) },
         @{ S = 15.5; E = 21.2; Kind = 'panel'; Zoom = @{ Rect = 'zoom3'; In = 17.7; Out = 20.9 }; Cap = @(@{ T = 0.3; D = 5.1; Text = 'Too loud? Turn down just that song.' }) },
-        @{ S = 22.5; E = 30.0; Kind = 'panel'; Cap = @(@{ T = 0.3; D = 6.9; Text = 'Your own .ogg songs, right in the panel'; New = $true }) },
+        @{ S = 22.5; E = 30.45; Kind = 'panel'; Cap = @(@{ T = 0.3; D = 7.3; Text = 'Your own .ogg songs, right in the panel'; New = $true }) },
         @{ S = 30.5; E = 41.6; Kind = 'panel'; Cap = @(@{ T = 0.3; D = 10.5; Text = 'Build your own playlist' }) },
         @{ S = 43.0; E = 48.8; Kind = 'world'; Cap = @(@{ T = 1.2; D = 4.3; Text = 'Skip with a smooth crossfade' }) },
         @{ S = 49.5; E = 56.6; Kind = 'world'; Cap = @(@{ T = 0.4; D = 3.4; Text = 'Go back a song'; New = $true }, @{ T = 3.9; D = 2.9; Text = 'or never hear it again'; New = $true }) },
@@ -148,6 +148,7 @@ try {
         @{ S = 68.5; E = 76.5; Kind = 'end'; Cap = @() }
     )
 
+    $xf = 0.25
     $gains = @{}
     for ($i = 0; $i -lt $segs.Count; $i++) {
         $s = $segs[$i]
@@ -212,8 +213,12 @@ try {
             else {
                 $g.Add("[w$i]setsar=1[x$i]")
             }
-            $afadeOut = if ($i -eq $n - 1) { 1.5 } else { 0.15 }
-            $g.Add("[a$i]atrim=start=$(F $s.S):end=$(F $s.E),asetpts=PTS-STARTPTS,volume=$(F $gains[$i])dB,afade=t=in:d=0.08,afade=t=out:st=$(F ($len - $afadeOut)):d=$(F $afadeOut)[y$i]")
+            $aS = if ($i -gt 0) { $s.S - $xf / 2 } else { $s.S }
+            $aE = if ($i -lt $n - 1) { $s.E + $xf / 2 } else { $s.E }
+            $edge = ''
+            if ($i -eq 0) { $edge += ',afade=t=in:d=0.08' }
+            if ($i -eq $n - 1) { $edge += ",afade=t=out:st=$(F ($aE - $aS - 1.5)):d=1.5" }
+            $g.Add("[a$i]atrim=start=$(F $aS):end=$(F $aE),asetpts=PTS-STARTPTS,volume=$(F $gains[$i])dB$edge[y$i]")
             foreach ($c in $s.Cap) {
                 $style = if ($s.Kind -eq 'world') { 'Top' } else { 'Bottom' }
                 $mv = ''
@@ -223,7 +228,13 @@ try {
             }
             $pos += $len
         }
-        $g.Add((-join (0..($n - 1) | ForEach-Object { "[x$_][y$_]" })) + "concat=n=$($n):v=1:a=1[cv][ca]")
+        $g.Add((-join (0..($n - 1) | ForEach-Object { "[x$_]" })) + "concat=n=$($n):v=1:a=0[cv]")
+        $prev = 'y0'
+        for ($i = 1; $i -lt $n; $i++) {
+            $out = if ($i -eq $n - 1) { 'ca' } else { "z$i" }
+            $g.Add("[$prev][y$i]acrossfade=d=$(F $xf):c1=qsin:c2=qsin[$out]")
+            $prev = $out
+        }
         $g.Add("[cv]subtitles=filename=captions-$($fmt).ass:fontsdir='C\:/Windows/Fonts'[outv]")
         $g.Add("[ca]loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000[outa]")
         ($g -join ";`n") | Set-Content -Encoding ascii "graph-$fmt.txt"

@@ -28,7 +28,7 @@ Edit (newest raw folder, or pass `-Raw <folder>`):
 powershell -ExecutionPolicy Bypass -File promo\recorder\edit.ps1
 ```
 
-It finds the sync cues in both files, corrects the sound to the picture, cuts the scenes, zooms in on the volume slider (scene 3) and the Most played list (scene 8), evens out the loudness of each scene, adds the captions and the end card and writes `promo-16x9.mp4` and `promo-9x16.mp4` into the same folder. Scene times, zoom times and captions are in the `$segs` table; they follow `buildTimeline`. The measured offsets are written to `sync.txt`.
+It finds the sync cues in both files, corrects the sound to the picture, cuts the scenes, zooms in on the volume slider (scene 3) and the Most played list (scene 8), evens out the loudness of each scene, joins the sound of two scenes with a 0.25 s crossfade so the music never drops out at a cut, adds the captions and the end card and writes `promo-16x9.mp4` and `promo-9x16.mp4` into the same folder. Scene times, zoom times and captions are in the `$segs` table; they follow `buildTimeline`. The measured offsets are written to `sync.txt`.
 
 Sync: master volume stays at 0 until the first cue. There are four cues (start, 7 s, 42.5 s, end): the sound is muted for a moment, then a white frame is shown and a click or note block plays at the same moment. The cues fall between the scenes and are cut out. The edit script stretches the sound linearly between the first and the last cue and checks the two middle cues; if one is off by more than 20 ms it stretches piece by piece between all cues.
 

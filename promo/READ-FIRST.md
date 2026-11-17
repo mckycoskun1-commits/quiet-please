@@ -16,6 +16,14 @@ This file is for whoever records the next promo cut (2.0.1). Read it fully, then
 - Fix: the director now mutes the world sound categories (animals, monsters, ambient, blocks, weather, players, voice) in every run. The sound was recorded again with `record.ps1 -AudioOnly` and put under the old picture with `edit.ps1 -Video`.
 - Result in `promo/videos/audio-2026-11-17-2235/`: the picture is identical to the second cut, all 18 click sounds land within 20 ms of the old ones, sync offsets 8, 3 and 13 ms with the start cue, 7 and -4 ms after the stretch, -17.8 LUFS.
 
+## Music cutting out (2026-11-18)
+
+- The user heard the music stop suddenly while nothing happened on screen. The mod was not at fault; every stop in `audio.wav` matches a timeline action. Three causes, all in the recorder or the edit:
+  - Scene 1: the playlist starts a song by itself right after `preparePlaylist`, and the timeline cuts it at 1.5 s with `Playlist.playNow(0)` (Play now stops the current song at once, by design). The old cut started at 0.6 s, so the video opened with that song and then went silent. Scene 1 now starts at 1.8 s, just before rubedo comes in.
+  - Scene 4 ended at 30.0 s, before the stop click on the demo song at 30.2 s, so the song vanished without a click. It now ends at 30.45 s.
+  - Every cut faded the sound out and in over about 0.2 s, a short hole in the music. The scenes are now joined with a 0.25 s equal-power crossfade centred on the cut, which keeps the sync.
+- Skip, previous and "never play again" in scenes 6 and 7 are pressed as keys, so nothing moves on screen; only the action bar message and the captions explain them. That is how the features work, not a fault.
+
 ## What the user said about the first cut
 
 The reference cut from 2026-11-17 is in `promo/videos/raw-2026-11-17-0149/` (`promo-16x9.mp4`, `promo-9x16.mp4`).
