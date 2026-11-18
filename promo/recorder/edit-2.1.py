@@ -9,6 +9,7 @@ import sys
 ap = argparse.ArgumentParser()
 ap.add_argument("raw")
 ap.add_argument("--voice", default="")
+ap.add_argument("--out", default="2.1")
 ap.add_argument("--formats", default="16x9,9x16")
 ap.add_argument("--preview", action="store_true")
 ap.add_argument("--target", default="-19")
@@ -75,8 +76,8 @@ def m(name, off=0.0):
 
 segs = [
     dict(id="A", kind="world", src=(m("sceneA", 0.2), m("sceneA", 5.2)), view="in"),
-    dict(id="B", kind="world", src=(m("sceneB", -0.07), m("sceneB", 4.53)), view="punch"),
-    dict(id="C", kind="freeze", still=m("sceneB", 4.53), dur=5.4),
+    dict(id="B", kind="world", src=(m("sceneB", -0.07), m("sceneB", 4.13)), view="punch"),
+    dict(id="C", kind="freeze", src=(m("sceneF", 0.3), m("sceneF", 5.7)), dur=5.4),
     dict(id="D12", kind="panel", src=(m("sceneD1", -0.15), m("sceneD3", -0.3)), zoom=("zoom3", m("zoom3", 0.04))),
     dict(id="D3", kind="panel", src=(m("play", -1.5), m("play", 2.1))),
     dict(id="D3b", kind="panel", src=(m("sceneD3b", 0.3), m("sceneD3b", 4.5)), speed=1.5),
@@ -127,8 +128,8 @@ zoom8_out = at("D5", m("zoom8", -0.05))
 F = by["F"]["out"]
 
 lines = [
-    ("p1-chris-1", 0, 0, off("A", 0.6), -18, [(0.2, 2.94, "Wow. What a beautiful game.")], "Player"),
-    ("p2-chris-1", 0, 0, off("B", 0.9), -14.5, [(0.0, 3.08, "Oh, come on! Who put THIS in my modpack?!")], "Player"),
+    ("p1-chris-1", 0, 0, off("A", 0.6), -17, [(0.0, 2.53, "Okay, this view is really nice.")], "Player"),
+    ("p2-chris-1", 0, 0, off("B", 0.9), -16, [(0.0, 2.5, "Wait. Who put this song in my modpack?")], "Player"),
     ("n1-liam-1", 0, 0, off("C", 0.4), -16, [(0.0, 1.9, "Ever had a song ruin the moment?"), (2.2, 4.82, "Relax. Quiet Please fixes that.")], "Narr"),
     ("n2-liam-1", 0, 0, at("D12", m("sceneD1")), -16, [(0.0, 2.51, "Open the panel, find it, switch it off."), (2.93, 3.55, "Gone!")], "Narr"),
     ("n3-liam-1", 0, 0, at("D12", m("zoom3", -0.40)), -16, [(0.0, 2.86, "Too loud? Turn down just that one song.")], "Narr"),
@@ -158,8 +159,7 @@ rows = [
 for name, a, ln, t0, level, caps, style in lines:
     rows.append(("voice", "{voice}/" + name + ".mp3", t0, a, ln, level, "measure=0:0"))
 effects = [
-    ("zoom-impact", by["B"]["out"], -8, "align=0.13"),
-    ("vinyl-scratch", by["C"]["out"], -4, "out=0.12", 0.7),
+    ("vinyl-scratch", by["C"]["out"], -7, "out=0.12", 0.7),
     ("whoosh-cinematic", by["D12"]["out"], -8, "align=1.07"),
     ("record-swipe", off_out, -6, ""),
     ("sweep-small", drag_out, -12, "align=0.33"),
@@ -229,11 +229,10 @@ for fmt in args.formats.split(","):
     for i, s in enumerate(segs):
         k = s["kind"]
         if k == "freeze":
-            a = v1 + s["still"]
-            chain = (f"[v{i}]trim=start={f(a)}:end={f(a + 0.1)},setpts=PTS-STARTPTS,trim=end_frame=1,"
-                     f"tpad=stop_mode=clone:stop_duration={f(s['dur'])},fps=60,trim=duration={f(s['dur'])},"
-                     + persp(f"(1.10+0.05*{T}/{f(s['dur'])})", *punch)
-                     + f",hue=s='if(lt(t,{f(relax)}),0.25,min(1,0.25+(t-{f(relax)})*1.6))',vignette=PI/5")
+            a = v1 + s["src"][0]
+            chain = (f"[v{i}]trim=start={f(a)}:end={f(a + s['dur'])},setpts=PTS-STARTPTS,fps=60,trim=duration={f(s['dur'])},"
+                     + persp(f"(1.08+0.03*{T}/{f(s['dur'])})", *punch)
+                     + f",hue=s='if(lt(t,{f(relax)}),0.45,min(1,0.45+(t-{f(relax)})*1.2))'")
         else:
             a, b = v1 + s["src"][0], v1 + s["src"][1]
             chain = f"[v{i}]trim=start={f(a)}:end={f(b)},setpts=(PTS-STARTPTS)/{f(s['speed'])},fps=60,trim=duration={f(s['len'])}"
@@ -243,9 +242,7 @@ for fmt in args.formats.split(","):
             elif view == "out":
                 chain += "," + persp(f"(1.05-0.05*{T}/{f(s['len'])})", *calm)
             elif view == "punch":
-                dx = f"(16*sin(69*{T})*exp(-5*{T})+10*sin(75*{T})*exp(-6*({T}-2.75))*gte({T},2.75))"
-                dy = f"(11*sin(83*{T}+1)*exp(-5*{T})+7*sin(91*{T}+2)*exp(-6*({T}-2.75))*gte({T},2.75))"
-                chain += "," + persp(f"(1.10+0.10*exp(-7*{T}))", *punch, dx, dy)
+                chain += "," + persp(f"(1.02+0.06*{T}/{f(s['len'])})", *punch)
             if "zoom" in s and s["zoom"][0] in rects:
                 max_w = 1400 if vertical else 1920
                 chain += "," + rect_zoom(rects[s["zoom"][0]], (s["zoom"][1] - s["src"][0]) / s["speed"], max_w)
@@ -324,7 +321,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
     (raw / f"captions-2.1-{fmt}.ass").write_text(header + "\n".join(out) + "\n", encoding="utf-8")
 
-    name = f"promo-2.1-{fmt}.mp4"
+    name = f"promo-{args.out}-{fmt}.mp4"
     run([ffmpeg, "-hide_banner", "-loglevel", "error", "-y", "-i", "raw.mp4", "-loop", "1", "-framerate", "60", "-i", str(icon),
          "-i", "mix-2.1.wav", "-/filter_complex", f"graph-2.1-{fmt}.txt", "-map", "[outv]", "-map", "2:a",
          "-c:v", "h264_nvenc", "-preset", "p6", "-cq", "19", "-pix_fmt", "yuv420p", "-r", "60",
@@ -333,7 +330,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     if args.preview:
         scale = "720:1280" if vertical else "1280:720"
         run([ffmpeg, "-hide_banner", "-loglevel", "error", "-y", "-i", name, "-vf", f"scale={scale}", "-c:v", "h264_nvenc",
-             "-preset", "p6", "-cq", "27", "-r", "30", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", f"preview-2.1-{fmt}.mp4"])
-        print("preview", raw / f"preview-2.1-{fmt}.mp4")
+             "-preset", "p6", "-cq", "27", "-r", "30", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", f"preview-{args.out}-{fmt}.mp4"])
+        print("preview", raw / f"preview-{args.out}-{fmt}.mp4")
 
 print("length", f(total), "s; cue1 at", f(v1), "s in raw.mp4")

@@ -17,8 +17,8 @@ Story: a player enjoys a sunset with a calm, well-known Minecraft track, a terri
 
 | File | Voice | Scene | Text to paste |
 |------|-------|-------|---------------|
-| p1 | Player | A, calm sunset | [in awe] Wow. What a beautiful game. |
-| p2 | Player | B, terrible song starts | [annoyed] Oh, come on! Who put THIS in my modpack?! |
+| p1 | Player | A, calm sunset | Okay, this view is really nice. |
+| p2 | Player | B, terrible song starts | Wait. Who put this song in my modpack? |
 | n1 | Narrator | C, freeze frame | Ever had a song ruin the moment? [excited] Relax. Quiet Please fixes that. |
 | n2 | Narrator | D, panel | Open the panel, find it, switch it off. [satisfied] Gone! |
 | n3 | Narrator | D, volume slider | Too loud? Turn down just that one song. |
