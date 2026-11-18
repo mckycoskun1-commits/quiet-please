@@ -76,9 +76,10 @@ def m(name, off=0.0):
 
 
 PANEL = (2.0, 972, 270)
+POPUP_VX = 1180.0
 segs = [
     dict(id="A", kind="world", src=(m("sceneA", 0.2), m("sceneA", 3.1)), view="in"),
-    dict(id="B", kind="world", src=(m("sceneB", -0.07), m("sceneB", 4.13)), view="punch"),
+    dict(id="B", kind="world", src=(m("sceneB", -0.07), m("sceneB", 4.13)), view="punch", vx=POPUP_VX),
     dict(id="C", kind="freeze", src=(m("sceneF", 0.3), m("sceneF", 5.7)), dur=5.4),
     dict(id="D12", kind="panel", src=(m("sceneD1", -0.15), m("sceneD3", -0.3)),
          cam=[(m("sceneD1", 0.15), 0.5, PANEL), (m("off", -0.55), 0.45, (2.8, 1150, 215)),
@@ -86,9 +87,9 @@ segs = [
     dict(id="D3", kind="panel", src=(m("play", -1.5), m("play", 2.1)), cam=[(m("play", -0.5), 0.4, (2.8, 760, 232))]),
     dict(id="D3b", kind="panel", src=(m("sceneD3b", 0.3), m("sceneD3b", 4.5)), speed=1.5,
          cam=[(m("sceneD3b", 2.8), 0.3, (2.3, 960, 228)), (m("sceneD3b", 3.9), 0.35, (1.6, 960, 300))]),
-    dict(id="D4a", kind="wide", src=(m("skip", -0.3), m("skip", 0.9))),
-    dict(id="D4b", kind="wide", src=(m("previous", -0.2), m("previous", 0.9))),
-    dict(id="D4c", kind="wide", src=(m("never", -0.2), m("never", 1.6))),
+    dict(id="D4a", kind="wide", src=(m("skip", -0.3), m("skip", 0.9)), vx=POPUP_VX),
+    dict(id="D4b", kind="wide", src=(m("previous", -0.2), m("previous", 0.9)), vx=POPUP_VX),
+    dict(id="D4c", kind="wide", src=(m("never", -0.2), m("never", 1.6)), vx=POPUP_VX),
     dict(id="D5", kind="panel", src=(m("sceneD5", 0.2), m("sceneD5", 4.2)), cam=[]),
     dict(id="E", kind="world", src=(m("sceneE", 0.3), m("sceneE", 4.1)), view="out"),
     dict(id="F", kind="end", src=(m("sceneF", 0.3), m("sceneF", 7.3))),
@@ -295,7 +296,7 @@ for fmt in args.formats.split(","):
             g.append(f"[p{i}]crop=1400:1080:260:0,scale=1080:834[pf{i}]")
             g.append(f"[pb{i}][pf{i}]overlay=0:440[w{i}]")
         elif vertical:
-            cx = 960.0 if k == "wide" else world_x
+            cx = s.get("vx", 960.0 if k == "wide" else world_x)
             g.append(f"{chain},crop=608:1080:{int(cx - 304)}:0,scale=1080:1920[w{i}]")
         else:
             g.append(f"{chain}[w{i}]")
