@@ -145,7 +145,7 @@ kapatır ve sıradakine geçer (panelden tekrar açılır).
 panelde en üstte **Kendi müziğin** grubunda görünür: dinlenebilir, ses ayarı yapılabilir, çalma listesine eklenebilir.
 Ayarlar ekranındaki **Kendi müzik klasörün** düğmesi klasörü açar; yeni dosyalar paneli bir sonraki açışta görünür.
 Müzik davranışı ekranındaki **Kendi müziğin** ayarı açıkken (varsayılan) bu şarkılar oyunun arka plan müziğine de karışır:
-her biri yaklaşık bir oyun şarkısı kadar sık çalar. Dosya adları kimliğe çevrilir (`Benim Şarkım.ogg` → `quietplease_music:benim_ar_m`
+her biri yaklaşık bir oyun şarkısı kadar sık çalar. Dosya adları kimliğe çevrilir (`Benim Şarkım.ogg` → `quietplease_music:benim_ark_m`
 gibi: küçük harf, harf/rakam dışındakiler `_`); ekranda ise dosyanın gerçek adı görünür (`Benim Şarkım`).
 Dosyalar oyunun kaynak yöneticisinden okunur (`ReloadableResourceManagerMixin`).
 
