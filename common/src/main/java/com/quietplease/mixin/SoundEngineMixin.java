@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class SoundEngineMixin {
 
     /** Bir ses ilk calmaya baslarken. Sonuc 0 olursa oyun sesi hic baslatmaz. */
-    @ModifyExpressionValue(method = "play",
+    @ModifyExpressionValue(method = {"play", "playWithoutEvent"},
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/client/sounds/SoundEngine;calculateVolume(FLnet/minecraft/sounds/SoundSource;)F"))
     private float quietplease$volumeOnPlay(float original, @Local(argsOnly = true) SoundInstance sound) {
