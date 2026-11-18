@@ -44,6 +44,7 @@ public final class PromoDirector {
     private static final boolean ENABLED = System.getenv("QUIETPLEASE_PROMO") != null;
     private static final boolean SCOUT = System.getenv("PROMO_SCOUT") != null;
     private static final boolean AUDIO_ONLY = System.getenv("PROMO_AUDIO_ONLY") != null;
+    private static final boolean FIGURE_SCOUT = System.getenv("PROMO_FIGURES") != null;
 
     private static final long SEED = 1152036L;
     private static final double SHOT_X = -2768.5;
@@ -80,6 +81,11 @@ public final class PromoDirector {
     private static volatile boolean scoutReady = false;
     private static int shotIndex = 0;
     private static int timeIndex = 0;
+
+    private static final double[] FIGURE_DIST = {5.0, 6.5, 8.0};
+    private static final double[] FIGURE_SIDE = {-2.5, 0.0, 2.5, 4.0};
+    private static final List<double[]> figures = new ArrayList<>();
+    private static int figureIndex = 0;
 
     public static void frame() {
         if (!ENABLED) return;
@@ -186,6 +192,26 @@ public final class PromoDirector {
                 camX = SHOT_X;
                 camY = SHOT_Y;
                 camZ = SHOT_Z;
+                if (FIGURE_SCOUT) {
+                    server.execute(() -> {
+                        worldRules(server, SHOT_TIME);
+                        for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(SHOT_X, SHOT_Y, SHOT_Z);
+                        findFigures(server.overworld());
+                        if (!figures.isEmpty()) {
+                            double[] f = figures.get(0);
+                            command(server, "summon minecraft:mannequin " + f[0] + " " + f[1] + " " + f[2]
+                                    + " {Rotation:[90f,0f],immovable:1b,hide_description:1b}");
+                        }
+                        scoutReady = true;
+                    });
+                    mc.options.hideGui = true;
+                    mc.player.getAbilities().flying = true;
+                    mc.player.onUpdateAbilities();
+                    camera = true;
+                    phase = 40;
+                    phaseStart = now();
+                    return;
+                }
                 server.execute(() -> {
                     worldRules(server, SHOT_TIME);
                     for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(SHOT_X, SHOT_Y, SHOT_Z);
@@ -315,6 +341,42 @@ public final class PromoDirector {
                 phase = 7;
                 mc.stop();
             }
+            case 40 -> {
+                applyCamera(mc);
+                if (!scoutReady || now() - phaseStart < 25000) return;
+                List<String> lines = new ArrayList<>();
+                for (int i = 0; i < figures.size(); i++) {
+                    double[] f = figures.get(i);
+                    lines.add(i + " " + f[0] + " " + f[1] + " " + f[2] + " dist " + f[3] + " side " + f[4]);
+                }
+                Files.write(Path.of(System.getenv("PROMO_OUT"), "figures.txt"), lines);
+                QuietPlease.LOGGER.info("PROMO figure scout: {} places", figures.size());
+                figureIndex = 0;
+                phase = figures.isEmpty() ? 24 : 41;
+                phaseStart = now();
+            }
+            case 41 -> {
+                applyCamera(mc);
+                double[] f = figures.get(figureIndex);
+                var server = mc.getSingleplayerServer();
+                server.execute(() -> command(server, "tp @e[type=minecraft:mannequin] " + f[0] + " " + f[1] + " " + f[2] + " 90 0"));
+                phase = 42;
+                phaseStart = now();
+            }
+            case 42 -> {
+                applyCamera(mc);
+                if (now() - phaseStart < 1800) return;
+                grab("figure" + figureIndex + ".png");
+                phase = 43;
+                phaseStart = now();
+            }
+            case 43 -> {
+                applyCamera(mc);
+                if (now() - phaseStart < 900) return;
+                figureIndex++;
+                phase = figureIndex < figures.size() ? 41 : 24;
+                phaseStart = now();
+            }
             default -> {
             }
         }
@@ -365,6 +427,24 @@ public final class PromoDirector {
             out.add(line);
         }
         return out;
+    }
+
+    private static void findFigures(ServerLevel level) {
+        for (double dist : FIGURE_DIST) {
+            for (double side : FIGURE_SIDE) {
+                double x = SHOT_X - dist;
+                double z = SHOT_Z - side;
+                int bx = (int) Math.floor(x);
+                int bz = (int) Math.floor(z);
+                int y = topY(level, bx, bz);
+                BlockState below = level.getBlockState(new BlockPos(bx, y - 1, bz));
+                if (!below.getFluidState().isEmpty() || below.is(Blocks.CHERRY_LOG) || below.is(Blocks.CHERRY_LEAVES)) {
+                    QuietPlease.LOGGER.info("PROMO figure skip {} {} on {}", x, z, below);
+                    continue;
+                }
+                figures.add(new double[]{x, y, z, dist, side});
+            }
+        }
     }
 
     private static boolean cherry(ServerLevel level, int x, int z) {

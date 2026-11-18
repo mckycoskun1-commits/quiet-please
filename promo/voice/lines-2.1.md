@@ -7,7 +7,7 @@ Story: a player enjoys a sunset with a calm, well-known Minecraft track, a terri
 - Model: Eleven v4 (tested 2026-11-18: it acts out the audio tags in square brackets and does not read them aloud; Eleven v3 also works).
 - Stability: Natural. Player lines carry one light tag each and no "Ahh", "Man..." or sigh tags: the user found the sighing and breathing too much (2026-11-18).
 - Two voices from the Voice Library:
-  - Player: young, casual male gamer, American English. Search "casual young male" or "gamer".
+  - Player: Chris (premade, "Charming, Down-to-Earth"), chosen by the user on 2026-11-18.
   - Narrator: Liam (premade, "Energetic, Social Media Creator"), chosen by the user on 2026-11-18.
 - Make two or three takes of every line; v3 reads each take a little differently.
 - Download as MP3 44.1 kHz 128 kbps (higher formats need the Creator plan).
