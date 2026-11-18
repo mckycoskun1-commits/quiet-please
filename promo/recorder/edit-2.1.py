@@ -144,17 +144,33 @@ lines = [
     ("n7-liam-1", 0, 0, F + 0.35, -16, [], "Narr"),
 ]
 
+run([ffmpeg, "-hide_banner", "-loglevel", "error", "-y", "-/filter_complex", "song-Campfire-Lofi.txt", "-map", "[out]", "campfire.wav"])
+
+
+def lead(path):
+    log = run([ffmpeg, "-hide_banner", "-t", "4", "-i", str(path), "-af", "silencedetect=n=-40dB:d=0.02", "-f", "null", "-"]).stderr
+    st = re.search(r"silence_start: (-?[0-9.]+)", log)
+    en = re.search(r"silence_end: ([0-9.]+)", log)
+    if st and en and float(st.group(1)) < 0.01:
+        return max(0.0, float(en.group(1)) - 0.01)
+    return 0.0
+
+
+bad_lead = lead(raw / args.bad)
+camp_lead = lead(raw / "campfire.wav")
+feather_lead = lead(asset("featherfall"))
+print(f"leading silence: bad {bad_lead:.2f} s, campfire {camp_lead:.2f} s, featherfall {feather_lead:.2f} s")
 bloom_measure = "measure=125:20"
 bloom1_at = off_out + 0.35
 rows = [
     ("music", "{sweden}", 0.0, 45.0, by["A"]["len"], -21, "in=0.3,out=0.03"),
-    ("music", "{bad}", by["B"]["out"], 0.0, by["B"]["len"], -17, "in=0.005,out=0.02,duck=4"),
-    ("music", "{bad}", by["D12"]["out"], by["B"]["len"], off_out - by["D12"]["out"], -21, "in=0.05,out=0.01"),
+    ("music", "{bad}", by["B"]["out"], bad_lead, by["B"]["len"], -17, "in=0.005,out=0.02,duck=4"),
+    ("music", "{bad}", by["D12"]["out"], bad_lead + by["B"]["len"], off_out - by["D12"]["out"], -21, "in=0.05,out=0.01"),
     ("music", "{bloom}", bloom1_at, 125.0, drag_out - bloom1_at + 0.45, -22, "in=1.0,out=0.9," + bloom_measure),
     ("music", "{bloom}", drag_out, 125.0 + drag_out - bloom1_at, play_out - drag_out, -30, "in=0.9,out=0.15," + bloom_measure),
-    ("music", "{campfire}", play_out, 0.0, stop_out - play_out, -21, "in=0.03,out=0.12"),
-    ("music", "{bloom}", by["D3b"]["out"], 135.0, skip_out - by["D3b"]["out"] + 0.2, -22, "in=0.3,out=0.4," + bloom_measure),
-    ("music", "{feather}", skip_out, 0.0, by["E"]["out"] - skip_out + 0.5, -22, "in=0.25,out=0.6"),
+    ("music", "{campfire}", play_out, camp_lead, stop_out - play_out + 0.15, -21, "in=0.03,out=0.25,measure=0:20"),
+    ("music", "{bloom}", stop_out, 135.0, skip_out - stop_out + 0.2, -22, "in=0.35,out=0.4," + bloom_measure),
+    ("music", "{feather}", skip_out, feather_lead, by["E"]["out"] - skip_out + 0.5, -22, "in=0.15,out=0.6"),
     ("music", "{sweden}", by["E"]["out"], 51.0, total - by["E"]["out"], -21, "in=0.4,out=1.5"),
 ]
 for name, a, ln, t0, level, caps, style in lines:
@@ -187,7 +203,6 @@ for e in effects:
 
 tsv = "\n".join("\t".join([r[0], r[1], f(r[2]), f(r[3]), f(r[4]), f(r[5]), r[6]]) for r in rows) + "\n"
 (raw / "mix-2.1.tsv").write_text(tsv, encoding="utf-8")
-run([ffmpeg, "-hide_banner", "-loglevel", "error", "-y", "-/filter_complex", "song-Campfire-Lofi.txt", "-map", "[out]", "campfire.wav"])
 mix = run([sys.executable, "-I", str(here / "mix.py"), "mix-2.1.tsv", "mix-2.1.wav", "--ffmpeg", ffmpeg, "--target", args.target, "--length", f(total),
            "--var", "sweden=" + asset("sweden"), "--var", "bloom=" + asset("left_to_bloom"), "--var", "feather=" + asset("featherfall"),
            "--var", "bad=" + str(raw / args.bad), "--var", "campfire=" + str(raw / "campfire.wav"),
