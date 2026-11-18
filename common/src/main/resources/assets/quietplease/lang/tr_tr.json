@@ -251,7 +251,7 @@
   "quietplease.settings.history": "Geçmiş ve istatistik",
   "quietplease.settings.history.tooltip": "Son çalan 20 şarkı, en çok çalanlar ve hiç çalmayanlar",
   "quietplease.settings.custom_folder": "Kendi müzik klasörün",
-  "quietplease.settings.custom_folder.tooltip": "config/quietplease/music klasörünü açar. Kendi .ogg dosyalarını buraya koy; paneli bir sonraki açışında \"Kendi müziğin\" grubunda görünürler",
+  "quietplease.settings.custom_folder.tooltip": "config/quietplease/music klasörünü açar. Kendi .mp3 ya da .ogg dosyalarını buraya koy; paneli bir sonraki açışında \"Kendi müziğin\" grubunda görünürler",
   "quietplease.history.title": "Geçmiş ve istatistik",
   "quietplease.history.tab.recent": "Son çalanlar",
   "quietplease.history.tab.recent.tooltip": "Son 20 arka plan şarkısı, en yenisi en üstte",

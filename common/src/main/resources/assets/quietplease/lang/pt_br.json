@@ -251,7 +251,7 @@
   "quietplease.settings.history": "Histórico e estatísticas",
   "quietplease.settings.history.tooltip": "As últimas 20 músicas, as mais tocadas e as que nunca tocaram",
   "quietplease.settings.custom_folder": "Sua pasta de música",
-  "quietplease.settings.custom_folder.tooltip": "Abre config/quietplease/music. Coloque seus arquivos .ogg lá; eles aparecem no painel em \"Sua música\" na próxima vez que você abri-lo",
+  "quietplease.settings.custom_folder.tooltip": "Abre config/quietplease/music. Coloque seus arquivos .mp3 ou .ogg lá; eles aparecem no painel em \"Sua música\" na próxima vez que você abri-lo",
   "quietplease.history.title": "Histórico e estatísticas",
   "quietplease.history.tab.recent": "Recentes",
   "quietplease.history.tab.recent.tooltip": "As últimas 20 músicas de fundo, a mais nova no topo",

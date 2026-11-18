@@ -141,12 +141,21 @@ kapatır ve sıradakine geçer (panelden tekrar açılır).
 
 ## Kendi müziğin
 
-`config/quietplease/music/` klasörüne konan `.ogg` dosyaları (alt klasörler dahil, en fazla 500) kaynak paketi gerekmeden
+`config/quietplease/music/` klasörüne konan `.mp3` ve `.ogg` dosyaları (alt klasörler dahil, en fazla 500) kaynak paketi gerekmeden
 panelde en üstte **Kendi müziğin** grubunda görünür: dinlenebilir, ses ayarı yapılabilir, çalma listesine eklenebilir.
 Ayarlar ekranındaki **Kendi müzik klasörün** düğmesi klasörü açar; yeni dosyalar paneli bir sonraki açışta görünür.
 Müzik davranışı ekranındaki **Kendi müziğin** ayarı açıkken (varsayılan) bu şarkılar oyunun arka plan müziğine de karışır:
 her biri yaklaşık bir oyun şarkısı kadar sık çalar. Dosya adları kimliğe çevrilir (`Benim Şarkım.ogg` → `quietplease_music:benim_ar_m`
-gibi: küçük harf, harf/rakam dışındakiler `_`). Dosyalar oyunun kaynak yöneticisinden okunur (`ReloadableResourceManagerMixin`).
+gibi: küçük harf, harf/rakam dışındakiler `_`); ekranda ise dosyanın gerçek adı görünür (`Benim Şarkım`).
+Dosyalar oyunun kaynak yöneticisinden okunur (`ReloadableResourceManagerMixin`).
+
+Minecraft yalnızca OGG çözebildiği için MP3'ler moda gömülü [JavaMP3](https://github.com/delthas/JavaMP3) çözücüsüyle
+(MIT, `com.quietplease.lib.javamp3`; CRC, kare arama ve dosya sonu düzeltmeleriyle) çalarken parça parça 16 bit PCM'e
+çevrilir (`Mp3`, `SoundBufferLibraryMixin.getStream`). MPEG-1 Layer I/II/III desteklenir (44,1 / 48 / 32 kHz, yani
+neredeyse bütün müzik MP3'leri); düşük örnekleme hızlı MPEG-2 dosyaları çalmaz. Süre kare başlıklarından, ses dengeleme
+ölçümü dosya çözülerek hesaplanır.
+
+Panelde ve bildirimlerde şarkı adlarındaki alt çizgiler boşluk olarak gösterilir (`boss_theme` → `boss theme`).
 
 ## Mod paketi varsayılanı
 

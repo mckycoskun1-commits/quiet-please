@@ -105,7 +105,7 @@ public final class QuietPleaseKeys {
     }
 
     private static String shortName(Identifier id) {
-        return id.getPath().substring(id.getPath().lastIndexOf('/') + 1);
+        return com.quietplease.music.MusicTrack.title(id);
     }
 
     /** Calan arka plan sarkisini favorilere ekler ya da cikarir; ne oldugunu anlatan kisa mesaji dondurur. */
@@ -114,7 +114,7 @@ public final class QuietPleaseKeys {
         if (id == null) return Lang.tr("key.favorite.nothing").withStyle(ChatFormatting.GRAY);
         boolean added = Playlist.toggleFavorite(id);
         MusicSettings.save();
-        String name = id.getPath().substring(id.getPath().lastIndexOf('/') + 1);
+        String name = shortName(id);
         return Lang.tr(added ? "key.favorite.added" : "key.favorite.removed", name)
                 .withStyle(added ? ChatFormatting.GOLD : ChatFormatting.GRAY);
     }

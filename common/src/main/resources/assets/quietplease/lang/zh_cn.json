@@ -251,7 +251,7 @@
   "quietplease.settings.history": "历史与统计",
   "quietplease.settings.history.tooltip": "最近 20 首歌曲、播放最多的歌曲和从未播放过的歌曲",
   "quietplease.settings.custom_folder": "你的音乐文件夹",
-  "quietplease.settings.custom_folder.tooltip": "打开 config/quietplease/music。把你自己的 .ogg 文件放进去；下次打开面板时它们会出现在“你的音乐”中",
+  "quietplease.settings.custom_folder.tooltip": "打开 config/quietplease/music。把你自己的 .mp3 或 .ogg 文件放进去；下次打开面板时它们会出现在“你的音乐”中",
   "quietplease.history.title": "历史与统计",
   "quietplease.history.tab.recent": "最近播放",
   "quietplease.history.tab.recent.tooltip": "最近 20 首背景歌曲，最新的在最上面",
