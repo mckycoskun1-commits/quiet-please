@@ -49,6 +49,25 @@ public record MusicTrack(ResourceLocation id, Set<ResourceLocation> events, Kind
         return path.substring(path.lastIndexOf('/') + 1);
     }
 
+    /** Ekranda gosterilen ad; bkz. {@link #title(ResourceLocation)}. */
+    public String title() {
+        return title(id);
+    }
+
+    /**
+     * Ekranda gosterilen ad: kendi muziginde dosyanin gercek adi (Turkce harfler ve bosluklarla), digerlerinde
+     * dosya adinin son kismi. Ikisinde de alt cizgiler bosluk olur: "boss_theme" -> "boss theme".
+     */
+    public static String title(ResourceLocation id) {
+        String name = CustomMusic.fileTitle(id);
+        if (name == null) {
+            String path = id.getPath();
+            name = path.substring(path.lastIndexOf('/') + 1);
+        }
+        String spaced = name.replace('_', ' ').replaceAll(" {2,}", " ").trim();
+        return spaced.isEmpty() ? name : spaced;
+    }
+
     /** Parcanin geldigi mod (ya da kaynak paketi) kimligi. */
     public String namespace() {
         return id.getNamespace();
