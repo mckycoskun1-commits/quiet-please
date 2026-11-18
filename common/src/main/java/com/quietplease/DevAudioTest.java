@@ -16,7 +16,7 @@ import net.minecraft.sounds.SoundEvents;
  * OpenAL Soft'un wave cikisiyla dosyaya yazar ve bu testin isaretledigi araliklarda sesin gercekten duyulup
  * duyulmadigini olcer; ses kanalinin durumuna bakmak yetmiyor (kanal "caliyor" gorunup ses vermeyebiliyor).
  *
- * Kendi muzik klasorunde qp_audiotest_a.ogg (440 Hz, onizleme) ve qp_audiotest_b.ogg (1000 Hz, arka plan) olmali.
+ * Kendi muzik klasorunde qp_audiotest_a (440 Hz, onizleme) ve qp_audiotest_b (1000 Hz, arka plan) olmali (.ogg ya da .mp3).
  * Zaman cizelgesi (tick): 1 her sey susar, 40 isaret sesi, 100 onizleme A, 200 onizleme durur, 260 arka plan B,
  * 360 onizleme A (B susar), 440 onizleme durur (B hemen geri gelmeli), 540 bitis, 560 oyun kapanir.
  */

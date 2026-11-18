@@ -216,8 +216,7 @@ public class ListenHistoryScreen extends Screen {
             int y = LIST_TOP + i * ROW_H;
             if (i % 2 == 1) g.fill(left, y, left + rowW, y + ROW_H, 0x20FFFFFF);
             if (row.track() != null) g.renderItem(QuietPleaseScreen.iconFor(row.track()), left + 2, y + 3);
-            String path = row.id().getPath();
-            String name = path.substring(path.lastIndexOf('/') + 1);
+            String name = com.quietplease.music.MusicTrack.title(row.id());
             boolean now = playing.contains(row.id());
             boolean off = MusicSettings.isDisabled(row.id());
             int nameColor = now ? 0xFF7CFC7C : off ? 0xFF808080 : 0xFFFFFFFF;

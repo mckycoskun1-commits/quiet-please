@@ -87,7 +87,7 @@ public final class SongPopup {
     public static void show(ResourceLocation file, ResourceLocation event) {
         MusicTrack track = new MusicTrack(file, Set.of(event),
                 file.getPath().contains("records/") ? MusicTrack.Kind.DISC : MusicTrack.Kind.MUSIC);
-        show(track.shortName(), MusicLibrary.modName(track.namespace()), QuietPleaseScreen.iconFor(track));
+        show(track.title(), MusicLibrary.modName(track.namespace()), QuietPleaseScreen.iconFor(track));
     }
 
     public static void preview() {
