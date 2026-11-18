@@ -196,4 +196,4 @@ Voice: ElevenLabs (elevenlabs.io)
 ```
 
 - The profile has no link in the bio yet; adding one is an account setting and needs the user's yes.
-- Reddit cannot be opened by Claude in Chrome or the built-in browser (blocked by safety rules); the user posts promo-2.1-16x9.mp4 himself. Suggested title: "I made Quiet Please, a client-side mod to turn off or turn down single songs (Fabric, Forge, NeoForge, Quilt, 1.18.2 to 26.3)". First comment: the CurseForge, Modrinth, website and source links plus "Voice in the video: ElevenLabs (elevenlabs.io)". The user did not want a line about Claude in the Reddit comment.
+- Reddit cannot be opened by Claude in Chrome or the built-in browser (blocked by safety rules); the user posts promo-2.1-16x9.mp4 themselves. Suggested title: "I made Quiet Please, a client-side mod to turn off or turn down single songs (Fabric, Forge, NeoForge, Quilt, 1.18.2 to 26.3)". First comment: the CurseForge, Modrinth, website and source links plus "Voice in the video: ElevenLabs (elevenlabs.io)". The user did not want a line about Claude in the Reddit comment.
