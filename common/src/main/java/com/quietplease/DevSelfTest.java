@@ -285,7 +285,7 @@ final class DevSelfTest {
                 "kendi muzigin: ad " + com.quietplease.music.CustomMusic.slugForTest("Benim Sarkim (v2).ogg"));
         check(failures, com.quietplease.music.CustomMusic.slugForTest("Albüm\\01 - Giriş.OGG").equals("alb_m/01_-_giri"),
                 "kendi muzigin: alt klasor adi " + com.quietplease.music.CustomMusic.slugForTest("Albüm\\01 - Giriş.OGG"));
-        check(failures, com.quietplease.music.CustomMusic.slugForTest("Benim Şarkım.MP3").equals("benim_ar_m"),
+        check(failures, com.quietplease.music.CustomMusic.slugForTest("Benim Şarkım.MP3").equals("benim_ark_m"),
                 "kendi muzigin: mp3 adi " + com.quietplease.music.CustomMusic.slugForTest("Benim Şarkım.MP3"));
         check(failures, com.quietplease.music.MusicTrack.title(new ResourceLocation("somemod", "music/boss__theme_2")).equals("boss theme 2"),
                 "sarki adi: alt cizgiler bosluk olmali " + com.quietplease.music.MusicTrack.title(new ResourceLocation("somemod", "music/boss__theme_2")));
