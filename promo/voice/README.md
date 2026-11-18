@@ -14,7 +14,7 @@ promo\voice\.venv\Scripts\python.exe -I promo\voice\eleven.py say --player <name
 
 `say` writes `takes/<line>-<voice>-<take>.mp3`, skips files that already exist (`--force` remakes them), and accepts `--lines p1,n2`, `--speed`, `--stability` (0 creative, 0.5 natural, 1 robust) and several comma separated voices per role for comparisons.
 
-### Run
+## Kokoro temp track
 
 Kokoro makes a quick local temp track from `script-en.txt` (id, start time in seconds, text) so timing can be tried before the real takes exist. It sounds flat; never use it in a published cut.
 
