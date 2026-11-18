@@ -75,17 +75,21 @@ def m(name, off=0.0):
     return marks[name] + off
 
 
+PANEL = (2.0, 972, 270)
 segs = [
-    dict(id="A", kind="world", src=(m("sceneA", 0.2), m("sceneA", 5.2)), view="in"),
+    dict(id="A", kind="world", src=(m("sceneA", 0.2), m("sceneA", 3.1)), view="in"),
     dict(id="B", kind="world", src=(m("sceneB", -0.07), m("sceneB", 4.13)), view="punch"),
     dict(id="C", kind="freeze", src=(m("sceneF", 0.3), m("sceneF", 5.7)), dur=5.4),
-    dict(id="D12", kind="panel", src=(m("sceneD1", -0.15), m("sceneD3", -0.3)), zoom=("zoom3", m("zoom3", 0.04))),
-    dict(id="D3", kind="panel", src=(m("play", -1.5), m("play", 2.1))),
-    dict(id="D3b", kind="panel", src=(m("sceneD3b", 0.3), m("sceneD3b", 4.5)), speed=1.5),
+    dict(id="D12", kind="panel", src=(m("sceneD1", -0.15), m("sceneD3", -0.3)),
+         cam=[(m("sceneD1", 0.15), 0.5, PANEL), (m("off", -0.55), 0.45, (2.8, 1150, 215)),
+              (m("off", 0.85), 0.45, PANEL), (m("zoom3"), 0.45, (2.4, 1060, 232))]),
+    dict(id="D3", kind="panel", src=(m("play", -1.5), m("play", 2.1)), cam=[(m("play", -0.5), 0.4, (2.8, 760, 232))]),
+    dict(id="D3b", kind="panel", src=(m("sceneD3b", 0.3), m("sceneD3b", 4.5)), speed=1.5,
+         cam=[(m("sceneD3b", 2.8), 0.3, (2.3, 960, 228)), (m("sceneD3b", 3.9), 0.35, (1.6, 960, 300))]),
     dict(id="D4a", kind="wide", src=(m("skip", -0.3), m("skip", 0.9))),
     dict(id="D4b", kind="wide", src=(m("previous", -0.2), m("previous", 0.9))),
     dict(id="D4c", kind="wide", src=(m("never", -0.2), m("never", 1.6))),
-    dict(id="D5", kind="panel", src=(m("sceneD5", 0.2), m("sceneD5", 4.2)), zoom=("zoom8", m("zoom8", -0.05))),
+    dict(id="D5", kind="panel", src=(m("sceneD5", 0.2), m("sceneD5", 4.2)), cam=[]),
     dict(id="E", kind="world", src=(m("sceneE", 0.3), m("sceneE", 4.1)), view="out"),
     dict(id="F", kind="end", src=(m("sceneF", 0.3), m("sceneF", 7.3))),
 ]
@@ -129,7 +133,7 @@ zoom8_out = at("D5", m("zoom8", -0.05))
 F = by["F"]["out"]
 
 lines = [
-    ("p1-chris-1", 0, 0, off("A", 0.6), -17, [(0.0, 2.53, "Okay, this view is really nice.")], "Player"),
+    ("p1-chris-1", 0, 0, off("A", 0.15), -17, [(0.0, 2.53, "Okay, this view is really nice.")], "Player"),
     ("p2-chris-1", 0, 0, off("B", 0.9), -16, [(0.0, 2.5, "Wait. Who put this song in my modpack?")], "Player"),
     ("n1-liam-1", 0, 0, off("C", 0.4), -16, [(0.0, 1.9, "Ever had a song ruin the moment?"), (2.2, 4.82, "Relax. Quiet Please fixes that.")], "Narr"),
     ("n2-liam-1", 0, 0, at("D12", m("sceneD1")), -16, [(0.0, 2.51, "Open the panel, find it, switch it off."), (2.93, 3.55, "Gone!")], "Narr"),
@@ -163,14 +167,16 @@ print(f"leading silence: bad {bad_lead:.2f} s, campfire {camp_lead:.2f} s, feath
 bloom_measure = "measure=125:20"
 bloom1_at = off_out + 0.35
 rows = [
-    ("music", "{sweden}", 0.0, 45.0, by["A"]["len"], -21, "in=0.3,out=0.03"),
+    ("music", "{sweden}", 0.0, 45.0, by["A"]["len"], -21, "in=0.05,out=0.03"),
     ("music", "{bad}", by["B"]["out"], bad_lead, by["B"]["len"], -17, "in=0.005,out=0.02,duck=4"),
     ("music", "{bad}", by["D12"]["out"], bad_lead + by["B"]["len"], off_out - by["D12"]["out"], -21, "in=0.05,out=0.01"),
     ("music", "{bloom}", bloom1_at, 125.0, drag_out - bloom1_at + 0.45, -22, "in=1.0,out=0.9," + bloom_measure),
     ("music", "{bloom}", drag_out, 125.0 + drag_out - bloom1_at, play_out - drag_out, -30, "in=0.9,out=0.15," + bloom_measure),
     ("music", "{campfire}", play_out, camp_lead, stop_out - play_out + 0.15, -21, "in=0.03,out=0.25,measure=0:20"),
-    ("music", "{bloom}", stop_out, 135.0, skip_out - stop_out + 0.2, -22, "in=0.35,out=0.4," + bloom_measure),
-    ("music", "{feather}", skip_out, feather_lead, by["E"]["out"] - skip_out + 0.5, -22, "in=0.15,out=0.6"),
+    ("music", "{bloom}", stop_out, 135.0, skip_out - stop_out + 0.15, -22, "in=0.35,out=0.2," + bloom_measure),
+    ("music", "{feather}", skip_out, feather_lead, prev_out - skip_out + 0.15, -22, "in=0.12,out=0.2"),
+    ("music", "{bloom}", prev_out, 135.0 + prev_out - stop_out, never_out - prev_out + 0.15, -22, "in=0.12,out=0.2," + bloom_measure),
+    ("music", "{aria}", never_out, 45.0, by["E"]["out"] - never_out + 0.5, -22, "in=0.12,out=0.6"),
     ("music", "{sweden}", by["E"]["out"], 51.0, total - by["E"]["out"], -21, "in=0.4,out=1.5"),
 ]
 for name, a, ln, t0, level, caps, style in lines:
@@ -204,7 +210,7 @@ for e in effects:
 tsv = "\n".join("\t".join([r[0], r[1], f(r[2]), f(r[3]), f(r[4]), f(r[5]), r[6]]) for r in rows) + "\n"
 (raw / "mix-2.1.tsv").write_text(tsv, encoding="utf-8")
 mix = run([sys.executable, "-I", str(here / "mix.py"), "mix-2.1.tsv", "mix-2.1.wav", "--ffmpeg", ffmpeg, "--target", args.target, "--length", f(total),
-           "--var", "sweden=" + asset("sweden"), "--var", "bloom=" + asset("left_to_bloom"), "--var", "feather=" + asset("featherfall"),
+           "--var", "sweden=" + asset("sweden"), "--var", "bloom=" + asset("left_to_bloom"), "--var", "feather=" + asset("featherfall"), "--var", "aria=" + asset("creative/aria_math"),
            "--var", "bad=" + str(raw / args.bad), "--var", "campfire=" + str(raw / "campfire.wav"),
            "--var", "voice=" + str(voice), "--var", "sfx=" + str(sfx)]).stdout
 (raw / "mix-2.1-report.txt").write_text(mix, encoding="utf-8")
@@ -214,8 +220,10 @@ T = "(in/60)"
 
 
 def persp(e, cx, cy, dx="0", dy="0"):
-    x0 = f"clip({f(cx)}+{dx}-W/(2*{e}),0,W-W/{e})"
-    y0 = f"clip({f(cy)}+{dy}-H/(2*{e}),0,H-H/{e})"
+    cx = cx if isinstance(cx, str) else f(cx)
+    cy = cy if isinstance(cy, str) else f(cy)
+    x0 = f"clip({cx}+{dx}-W/(2*{e}),0,W-W/{e})"
+    y0 = f"clip({cy}+{dy}-H/(2*{e}),0,H-H/{e})"
     x1 = f"({x0}+W/{e})"
     y1 = f"({y0}+H/{e})"
     return (f"perspective=x0='{x0}':y0='{y0}':x1='{x1}':y1='{y0}':x2='{x0}':y2='{y1}':x3='{x1}':y3='{y1}'"
@@ -227,6 +235,23 @@ def rect_zoom(rect, tin, max_w):
     z = min(1.7, 0.94 * max_w / w, 0.85 * 1080 / h)
     e = f"(1+{f(z - 1)}*st(0,clip(({T}-{f(tin)})/0.5,0,1))*ld(0)*(3-2*ld(0)))"
     return persp(e, x + w / 2, y + h / 2)
+
+
+def cam_filter(s, vertical):
+    keys = [(s["src"][0], 0.0, PANEL)] + s["cam"]
+    def zoom(z):
+        return max(1.0, z * 0.78) if vertical else z
+    parts = [f(zoom(keys[0][2][0])), f(keys[0][2][1]), f(keys[0][2][2])]
+    prev = keys[0][2]
+    for src, dur, val in keys[1:]:
+        a = (src - s["src"][0]) / s["speed"]
+        d = max(dur / s["speed"], 0.01)
+        term = f"st(0,clip(({T}-{f(a)})/{f(d)},0,1))*ld(0)*(3-2*ld(0))"
+        parts[0] += f"+({f(zoom(val[0]) - zoom(prev[0]))})*{term}"
+        parts[1] += f"+({f(val[1] - prev[1])})*{term}"
+        parts[2] += f"+({f(val[2] - prev[2])})*{term}"
+        prev = val
+    return persp(f"({parts[0]})", f"({parts[1]})", f"({parts[2]})")
 
 
 def ass_time(x):
@@ -259,6 +284,8 @@ for fmt in args.formats.split(","):
                 chain += "," + persp(f"(1.05-0.05*{T}/{f(s['len'])})", *calm)
             elif view == "punch":
                 chain += "," + persp(f"(1.02+0.06*{T}/{f(s['len'])})", *punch)
+            if "cam" in s:
+                chain += "," + cam_filter(s, vertical)
             if "zoom" in s and s["zoom"][0] in rects:
                 max_w = 1400 if vertical else 1920
                 chain += "," + rect_zoom(rects[s["zoom"][0]], (s["zoom"][1] - s["src"][0]) / s["speed"], max_w)
@@ -311,6 +338,26 @@ for fmt in args.formats.split(","):
     for k2, text in enumerate(["Fabric, Forge, NeoForge, Quilt", "Minecraft 1.18.2 to 26.3", "Free on CurseForge"]):
         out.append(f"Dialogue: 0,{ass_time(F + 0.65 + 0.25 * k2)},{end_t},EndLine,,0,0,0,,"
                    f"{{\\an5\\pos({cx},{ty + 90 + k2 * step})\\fad(200,600)}}{text}")
+    out.append(f"Dialogue: 1,{ass_time(0)},{ass_time(by['B']['out'] + 1.3)},Hook,,0,0,0,,{{\\fad(0,300)}}That one song in your modpack...")
+    toasts = [
+        (by["B"]["out"] + 0.15, by["C"]["out"], "Now playing", "Kazoo Disaster"),
+        (skip_out + 0.1, by["D4b"]["out"], "Skipped", "Next: Featherfall"),
+        (prev_out + 0.1, by["D4c"]["out"], "Back one song", "Left to Bloom"),
+        (never_out + 0.1, by["D5"]["out"], "Never play again", "Left to Bloom: off"),
+    ]
+    ss, bs, pad = (44, 66, 36) if vertical else (36, 58, 30)
+    for t0, t1, small, big in toasts:
+        w = int(max(len(big) * 0.56 * bs, len(small) * 0.56 * ss) + 2 * pad + 10)
+        h = int(ss * 1.25 + bs * 1.25 + pad)
+        x, y = (540 - w // 2, 780) if vertical else (1860 - w, 470)
+        a, b = ass_time(t0), ass_time(t1)
+
+        def mv(xx, yy):
+            return f"\\move({xx + 50},{yy},{xx},{yy},0,220)\\fad(150,200)"
+        out.append(f"Dialogue: 2,{a},{b},Toast,,0,0,0,,{{\\an7{mv(x, y)}\\p1\\1c&H141414&\\1a&H30&}}m 0 0 l {w} 0 l {w} {h} l 0 {h}")
+        out.append(f"Dialogue: 3,{a},{b},Toast,,0,0,0,,{{\\an7{mv(x, y)}\\p1\\1c&H5CD65C&}}m 0 0 l 8 0 l 8 {h} l 0 {h}")
+        out.append(f"Dialogue: 4,{a},{b},Toast,,0,0,0,,{{\\an7{mv(x + pad, y + int(pad * 0.5))}\\fs{ss}\\b0\\1c&HB8B8B8&}}{small}")
+        out.append(f"Dialogue: 4,{a},{b},Toast,,0,0,0,,{{\\an7{mv(x + pad, y + int(pad * 0.5 + ss * 1.2))}\\fs{bs}\\b1\\1c&HFFFFFF&}}{big}")
     size = 66 if vertical else 58
     margin = 560 if vertical else 70
     box_margin = 560 if vertical else 30
@@ -330,6 +377,8 @@ Style: PlayerTop,Segoe UI,{size},&H0060E0FF,&H0060E0FF,&H00101010,&H80000000,-1,
 Style: NarrBox,Segoe UI,{size},&H00FFFFFF,&H00FFFFFF,&H50000000,&H50000000,-1,0,0,0,100,100,0,0,3,14,0,2,70,70,{box_margin},1
 Style: PlayerBox,Segoe UI,{size},&H0060E0FF,&H0060E0FF,&H50000000,&H50000000,-1,0,0,0,100,100,0,0,3,14,0,2,70,70,{box_margin},1
 Style: EndTitle,Segoe UI,{104 if vertical else 92},&H00FFFFFF,&H00FFFFFF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,4,3,5,40,40,0,1
+Style: Hook,Segoe UI,{86 if vertical else 76},&H00FFFFFF,&H00FFFFFF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,5,2,8,60,60,{280 if vertical else 70},1
+Style: Toast,Segoe UI,40,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
 Style: EndLine,Segoe UI,{54 if vertical else 46},&H00E0E0E0,&H00FFFFFF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,3,2,5,40,40,0,1
 
 [Events]
