@@ -197,3 +197,10 @@ Voice: ElevenLabs (elevenlabs.io)
 
 - The profile has no link in the bio yet; adding one is an account setting and needs the user's yes.
 - Reddit cannot be opened by Claude in Chrome or the built-in browser (blocked by safety rules); the user posts promo-2.1-16x9.mp4 themselves. Suggested title: "I made Quiet Please, a client-side mod to turn off or turn down single songs (Fabric, Forge, NeoForge, Quilt, 1.18.2 to 26.3)". First comment: the CurseForge, Modrinth, website and source links plus "Voice in the video: ElevenLabs (elevenlabs.io)". The user did not want a line about Claude in the Reddit comment.
+
+## 2.5 replaces 2.1 (2026-11-18, late)
+
+- YouTube main video https://youtu.be/TUMl7yBDT30 and Short https://youtube.com/shorts/XS_QnnwljSY, both public, same title, descriptions (with the ElevenLabs credit), tags and settings as 2.1, AI use Yes, files `promo/videos/raw-2026-11-18-2250/promo-2.5-*.mp4`.
+- The 2.1 videos F81Rtr-39NQ and M_0A-kxQRaE are set to Private (not deleted). The 2.0.1 videos are unchanged.
+- CurseForge and Modrinth descriptions now embed TUMl7yBDT30 (checked on both public pages).
+- Instagram Reel 2.5: https://www.instagram.com/reel/Df5YsMjRrTT/ (same caption, 9:16, AI label on). The 2.1 Reel Df5FRjCRy73 is still up: Instagram web has no Archive, only Delete or "remove from profile grid"; waiting for the user's choice.
