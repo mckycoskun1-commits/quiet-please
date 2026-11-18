@@ -1,0 +1,10 @@
+p1	1.5	Man... this game is beautiful.
+p2	6.6	Oh, come on! Who put this in my modpack?!
+n1	11.0	Ever had a song ruin the moment? Relax. Quiet Please fixes that.
+n2	15.2	Open the panel, find it, switch it off. Gone!
+n3	20.5	Too loud? Turn down just that one song.
+n4	25.0	Play your own music. Build your own playlist.
+n5	31.0	Skip it, go back, or never hear it again.
+n6	36.0	And see your history and stats.
+p3	41.5	Ahh... much better.
+n7	47.0	Quiet Please two point oh. Free on Curse Forge.

@@ -49,3 +49,8 @@ promo/videos/raw-*/
 promo/recorder/mods/
 promo/videos/scout-*/
 promo/videos/audio-*/
+promo/voice/.venv/
+promo/voice/models/
+promo/videos/voice-*/
+promo/sfx/files/
+promo/voice/takes/
