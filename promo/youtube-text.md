@@ -203,4 +203,10 @@ Voice: ElevenLabs (elevenlabs.io)
 - YouTube main video https://youtu.be/TUMl7yBDT30 and Short https://youtube.com/shorts/XS_QnnwljSY, both public, same title, descriptions (with the ElevenLabs credit), tags and settings as 2.1, AI use Yes, files `promo/videos/raw-2026-11-18-2250/promo-2.5-*.mp4`.
 - The 2.1 videos F81Rtr-39NQ and M_0A-kxQRaE are set to Private (not deleted). The 2.0.1 videos are unchanged.
 - CurseForge and Modrinth descriptions now embed TUMl7yBDT30 (checked on both public pages).
-- Instagram Reel 2.5: https://www.instagram.com/reel/Df5YsMjRrTT/ (same caption, 9:16, AI label on). The 2.1 Reel Df5FRjCRy73 is still up: Instagram web has no Archive, only Delete or "remove from profile grid"; waiting for the user's choice.
+- Instagram Reel 2.5: https://www.instagram.com/reel/Df5YsMjRrTT/ (same caption, 9:16, AI label on). The 2.1 Reel Df5FRjCRy73 is still up: Instagram web has no Archive, only Delete or "remove from profile grid"; the user archives it from the phone app.
+
+## Channel links (2026-11-19)
+
+- Description URLs stay plain text: clickable description links need YouTube's Advanced features (ID or video verification), and the user will not do that.
+- Instead the channel profile (Studio > Customization > Profile > Links) has four links, which work without verification: "Quiet Please - CurseForge", "Quiet Please - Modrinth", "Quiet Please website", "Source code (GitHub)". Logged out, the channel header shows the CurseForge link plus "and 3 more links", and all four are clickable.
+- The user posted on Reddit and added the Instagram bio link themselves.
