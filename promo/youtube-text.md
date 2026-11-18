@@ -127,3 +127,54 @@ Website: https://mckycoskun1-commits.github.io/quiet-please/
 ```
 
 Use the same tags as the main video. After both are up, link the Short to the main video in YouTube Studio (Related video).
+
+## 2.1 video with voice-over (promo-2.1-16x9.mp4 and promo-2.1-9x16.mp4)
+
+Not uploaded yet. The user chose the plain cut in `promo/videos/raw-2026-11-18-1753`. The voices are ElevenLabs free-plan takes and the user does not move to a paid plan (2026-11-18), so the free-plan rules apply: credit ElevenLabs in every description and keep the videos without ads (no monetization). The sound effects are Mixkit (no credit needed); the music is the Minecraft soundtrack plus our own Kazoo Disaster and Campfire Lofi.
+
+### Main video description
+
+Same as the live main video, with the credit line before the hashtags:
+
+```
+🎵 Big modpack, too much music? Don't mute everything!
+Quiet Please lets you choose which songs you hear, one by one.
+
+🔇 Turn off the song that bugs you
+🔉 Turn down the one that's too loud
+💿 Play your own .ogg songs
+📜 Build your own playlist
+⏭️ Skip with a smooth crossfade
+📊 See what you listened to the most
+
+⬇️ Download
+CurseForge: https://www.curseforge.com/minecraft/mc-mods/quiet-please
+Modrinth: https://modrinth.com/mod/quiet-please
+🌐 Website: https://mckycoskun1-commits.github.io/quiet-please/
+🐞 Bugs and source: https://github.com/mckycoskun1-commits/quiet-please
+
+✅ Minecraft 1.18.2 to 26.3 (7 versions) · Fabric, Quilt, Forge, NeoForge · client-side only
+
+Voice: ElevenLabs (elevenlabs.io)
+
+#Minecraft #MinecraftMods #Modpack
+```
+
+### Short description
+
+```
+Big modpack, too much music? Don't mute everything. Quiet Please lets you turn off or turn down single songs, add your own music and build your own playlist.
+
+Download: https://www.curseforge.com/minecraft/mc-mods/quiet-please
+Website: https://mckycoskun1-commits.github.io/quiet-please/
+
+Voice: ElevenLabs (elevenlabs.io)
+
+#Minecraft #MinecraftMods #Shorts
+```
+
+### Settings
+
+- Same title, tags, category and audience as the live videos.
+- Monetization: off.
+- Altered or synthetic content: No. The narration is a generic AI voice, not a real person, and the gameplay is real.
