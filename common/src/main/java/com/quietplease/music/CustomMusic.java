@@ -25,7 +25,7 @@ import net.minecraft.sounds.Music;
 import java.util.Random;
 
 /**
- * Oyuncunun kendi muzikleri: config/quietplease/music klasorundeki .ogg dosyalari.
+ * Oyuncunun kendi muzikleri: config/quietplease/music klasorundeki .ogg ve .mp3 dosyalari (MP3: {@link Mp3}).
  *
  * Kaynak paketi gerekmez. Her dosya "quietplease_music:dosya_adi" kimligiyle panelde "Kendi muzigin" grubunda gorunur,
  * calma listesine eklenebilir ve (ayar aciksa) oyunun arka plan muzigine karisir. Dosyalar oyunun kaynak yoneticisi
@@ -56,12 +56,12 @@ public final class CustomMusic {
         try {
             Files.createDirectories(dir);
             try (Stream<Path> walk = Files.walk(dir, 3)) {
-                List<Path> oggs = walk.filter(Files::isRegularFile)
-                        .filter(p -> p.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".ogg"))
+                List<Path> songs = walk.filter(Files::isRegularFile)
+                        .filter(p -> isSongFile(p.getFileName().toString()))
                         .sorted(Comparator.comparing(p -> p.toString().toLowerCase(Locale.ROOT)))
                         .limit(MAX_FILES)
                         .toList();
-                for (Path p : oggs) {
+                for (Path p : songs) {
                     String base = slug(dir.relativize(p).toString());
                     String name = base;
                     for (int i = 2; found.containsKey(id(name)); i++) name = base + "_" + i;
@@ -75,6 +75,50 @@ public final class CustomMusic {
         files = Map.copyOf(found);
     }
 
+    /** Kendi muzigindeki bir parcanin dosya adi (uzantisiz, oldugu gibi); baska bir parcaysa null. */
+    @Nullable
+    public static String fileTitle(ResourceLocation id) {
+        if (!isCustom(id)) return null;
+        Path file = files.get(id);
+        if (file == null) return null;
+        String name = file.getFileName().toString();
+        return isSongFile(name) ? name.substring(0, name.length() - 4) : name;
+    }
+
+    static boolean isSongFile(String name) {
+        String n = name.toLowerCase(Locale.ROOT);
+        return n.endsWith(".ogg") || n.endsWith(".mp3");
+    }
+
+    /**
+     * Bu kimligin (ya da ses motorunun istedigi "sounds/&lt;ad&gt;.ogg" yolunun) MP3 dosyasi; OGG ya da baska bir
+     * ad alaniysa null.
+     */
+    @Nullable
+    public static Path mp3File(ResourceLocation idOrPath) {
+        if (!isCustom(idOrPath)) return null;
+        String p = idOrPath.getPath();
+        if (p.startsWith("sounds/") && p.endsWith(".ogg")) p = p.substring(7, p.length() - 4);
+        ResourceLocation id = id(p);
+        Path file = id == null ? null : files.get(id);
+        return file != null && Mp3.isMp3(file) ? file : null;
+    }
+
+    /** Ses motoru bir MP3 akisi isteyince (SoundBufferLibraryMixin); MP3 degilse null, oyun her zamanki gibi acar. */
+    @Nullable
+    public static java.util.concurrent.CompletableFuture<net.minecraft.client.sounds.AudioStream> mp3Stream(ResourceLocation path) {
+        Path file = mp3File(path);
+        if (file == null) return null;
+        return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+            try {
+                return Mp3.stream(file);
+            } catch (IOException e) {
+                QuietPlease.LOGGER.warn("MP3 acilamadi: {}", file, e);
+                throw new java.util.concurrent.CompletionException(e);
+            }
+        });
+    }
+
     @Nullable
     private static ResourceLocation id(String path) {
         try {
@@ -84,10 +128,10 @@ public final class CustomMusic {
         }
     }
 
-    /** "Benim Sarkim (v2).ogg" -> "benim_sarkim_v2"; alt klasorler "/" ile kalir. */
+    /** "Benim Sarkim (v2).ogg" (ya da .mp3) -> "benim_sarkim_v2"; alt klasorler "/" ile kalir. */
     static String slug(String relative) {
         String s = relative.replace('\\', '/');
-        if (s.toLowerCase(Locale.ROOT).endsWith(".ogg")) s = s.substring(0, s.length() - 4);
+        if (isSongFile(s)) s = s.substring(0, s.length() - 4);
         StringBuilder out = new StringBuilder();
         for (char c : s.toLowerCase(Locale.ROOT).toCharArray()) {
             if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '/' || c == '.' || c == '-') out.append(c);

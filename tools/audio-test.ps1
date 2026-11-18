@@ -1,5 +1,7 @@
 param(
     [string]$Loader = 'fabric',
+    [ValidateSet('ogg', 'mp3')]
+    [string]$Format = 'ogg',
     [string]$Recording
 )
 
@@ -37,10 +39,11 @@ else {
     New-Item -ItemType Directory -Force $out | Out-Null
     $musicDir = Join-Path $run 'config\quietplease\music'
     New-Item -ItemType Directory -Force $musicDir | Out-Null
-    $songs = @(@{ File = 'qp_audiotest_a.ogg'; Hz = 440 }, @{ File = 'qp_audiotest_b.ogg'; Hz = 1000 })
+    $songs = @(@{ File = "qp_audiotest_a.$Format"; Hz = 440 }, @{ File = "qp_audiotest_b.$Format"; Hz = 1000 })
+    $codec = if ($Format -eq 'mp3') { @('-c:a', 'libmp3lame', '-b:a', '192k') } else { @('-c:a', 'libvorbis', '-q:a', '4') }
     foreach ($s in $songs) {
-        $null = Invoke-Tool $ffmpeg @('-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', "sine=frequency=$($s.Hz):duration=60:sample_rate=48000",
-            '-af', 'volume=6', '-c:a', 'libvorbis', '-q:a', '4', (Join-Path $musicDir $s.File))
+        $null = Invoke-Tool $ffmpeg (@('-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', "sine=frequency=$($s.Hz):duration=60:sample_rate=48000",
+            '-af', 'volume=6') + $codec + @((Join-Path $musicDir $s.File)))
     }
 
     $wavPath = (Join-Path $out 'audio.wav') -replace '\\', '/'

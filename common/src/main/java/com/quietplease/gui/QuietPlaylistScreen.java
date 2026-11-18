@@ -285,9 +285,9 @@ public class QuietPlaylistScreen extends Screen {
             boolean favorite = Playlist.isFavorite(id);
             String reason = favorite ? "playlist.suggest.favorite"
                     : Playlist.history().contains(id) ? "playlist.suggest.history" : "playlist.suggest.popular";
-            Component label = fit(com.quietplease.Txt.literal("+ " + track.shortName())
+            Component label = fit(com.quietplease.Txt.literal("+ " + track.title())
                     .withStyle(s -> s.withColor((favorite ? GOLD : TEXT) & 0xFFFFFF)), sideW() - 10);
-            Component tooltip = com.quietplease.Txt.literal(track.shortName()).withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
+            Component tooltip = com.quietplease.Txt.literal(track.title()).withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
                     .append(com.quietplease.Txt.literal("\n" + MusicLibrary.modName(track.namespace()) + " · ").withStyle(ChatFormatting.GRAY))
                     .append(Lang.tr(reason).withStyle(ChatFormatting.GRAY))
                     .append(com.quietplease.Txt.literal("\n").append(Lang.tr("playlist.add.tooltip")).withStyle(ChatFormatting.DARK_GRAY));
@@ -403,8 +403,7 @@ public class QuietPlaylistScreen extends Screen {
     }
 
     private static String shortName(ResourceLocation id) {
-        String path = id.getPath();
-        return path.substring(path.lastIndexOf('/') + 1);
+        return MusicTrack.title(id);
     }
 
     @Override
@@ -665,7 +664,7 @@ public class QuietPlaylistScreen extends Screen {
             toggle.setMessage(in ? Lang.tr("playlist.added").withStyle(ChatFormatting.GREEN) : Lang.tr("playlist.add"));
             toggle.setTooltip(Tooltip.create(Lang.tr(in ? "playlist.added.tooltip" : "playlist.add.tooltip")));
             boolean disabled = MusicSettings.isDisabled(track.id());
-            MutableComponent name = com.quietplease.Txt.literal(track.shortName());
+            MutableComponent name = com.quietplease.Txt.literal(track.title());
             if (disabled) name.withStyle(ChatFormatting.STRIKETHROUGH, ChatFormatting.DARK_GRAY);
             MutableComponent line = name.append(com.quietplease.Txt.literal("  ").append(track.kind().displayName()).withStyle(ChatFormatting.DARK_GRAY));
             g.drawString(font, fit(line, toggle.getX() - 6 - (left + 22)), left + 22, top + (height - 8) / 2, in ? GOLD : TEXT);

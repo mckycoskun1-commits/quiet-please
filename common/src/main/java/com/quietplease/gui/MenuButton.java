@@ -92,8 +92,8 @@ public final class MenuButton {
         }
         // Tam boy yazi (kucultulmus piksel yazi bulanik ve zor okunuyordu). Sigmazsa once mod adi, sonra sarki adinin
         // sonu kisalir.
-        String text = "♪ " + track.shortName() + " · " + MusicLibrary.modName(track.namespace()) + more;
-        if (font.width(text) > available) text = "♪ " + track.shortName() + more;
+        String text = "♪ " + track.title() + " · " + MusicLibrary.modName(track.namespace()) + more;
+        if (font.width(text) > available) text = "♪ " + track.title() + more;
         if (font.width(text) > available) text = font.plainSubstrByWidth(text, available - font.width("…")) + "…";
         int w = font.width(text);
         int x = below ? button.getX() + button.getWidth() - w : button.getX() - 6 - w;

@@ -200,7 +200,7 @@ public final class QuietPleaseCommands {
                         .collect(Collectors.joining())).withStyle(ChatFormatting.WHITE));
 
         MutableComponent line = com.quietplease.Txt.literal(" [").append(t.kind().displayName()).append("] ").withStyle(kindColor(t.kind()))
-                .append(com.quietplease.Txt.literal(t.shortName()).withStyle(Style.EMPTY
+                .append(com.quietplease.Txt.literal(t.title()).withStyle(Style.EMPTY
                         .withColor(s.enabled() ? ChatFormatting.WHITE : ChatFormatting.DARK_GRAY)
                         .withStrikethrough(!s.enabled())
                         .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, details))));
