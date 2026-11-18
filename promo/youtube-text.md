@@ -178,3 +178,22 @@ Voice: ElevenLabs (elevenlabs.io)
 - Same title, tags, category and audience as the live videos.
 - Monetization: off.
 - AI use: Yes (the upload form asks about any AI use, realistic AI voice included; answering No would be a false statement).
+
+## Instagram and Reddit (2026-11-18)
+
+- Instagram Reel on kirem_333: https://www.instagram.com/reel/Df5FRjCRy73/ (promo-2.1-9x16.mp4, crop set to 9:16 in the create dialog, AI label on because the voice is AI). Caption:
+
+```
+Big modpack, too much music? Don't mute everything.
+Quiet Please lets you turn off or turn down single songs in Minecraft, play your own music and build your own playlist.
+
+Free on CurseForge and Modrinth (link in bio).
+Minecraft 1.18.2 to 26.3 · Fabric, Quilt, Forge, NeoForge
+
+Voice: ElevenLabs (elevenlabs.io)
+
+#minecraft #minecraftmods #modpack #minecraftmusic #gaming
+```
+
+- The profile has no link in the bio yet; adding one is an account setting and needs the user's yes.
+- Reddit cannot be opened by Claude in Chrome or the built-in browser (blocked by safety rules); the user posts promo-2.1-16x9.mp4 himself. Suggested title: "I made Quiet Please, a client-side mod to turn off or turn down single songs (Fabric, Forge, NeoForge, Quilt, 1.18.2 to 26.3)". First comment: the CurseForge, Modrinth, website and source links plus "Voice in the video: ElevenLabs (elevenlabs.io)". The user did not want a line about Claude in the Reddit comment.
