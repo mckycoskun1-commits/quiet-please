@@ -130,7 +130,7 @@ Use the same tags as the main video. After both are up, link the Short to the ma
 
 ## 2.1 video with voice-over (promo-2.1-16x9.mp4 and promo-2.1-9x16.mp4)
 
-Not uploaded yet. The user chose the plain cut in `promo/videos/raw-2026-11-18-1753`. The voices are ElevenLabs free-plan takes and the user does not move to a paid plan (2026-11-18), so the free-plan rules apply: credit ElevenLabs in every description and keep the videos without ads (no monetization). The sound effects are Mixkit (no credit needed); the music is the Minecraft soundtrack plus our own Kazoo Disaster and Campfire Lofi.
+Published on 2026-11-18, both public, master at -19 LUFS (the user found -16 too loud): main video https://youtu.be/F81Rtr-39NQ, Short https://youtube.com/shorts/M_0A-kxQRaE. The old 2.0.1 videos are still up and still embedded on the mod pages. YouTube now asks "did you use AI in any way" (realistic AI sound counts), so both were answered Yes and carry the AI label. The user chose the plain cut in `promo/videos/raw-2026-11-18-1753`. The voices are ElevenLabs free-plan takes and the user does not move to a paid plan (2026-11-18), so the free-plan rules apply: credit ElevenLabs in every description and keep the videos without ads (no monetization). The sound effects are Mixkit (no credit needed); the music is the Minecraft soundtrack plus our own Kazoo Disaster and Campfire Lofi.
 
 ### Main video description
 
@@ -177,4 +177,4 @@ Voice: ElevenLabs (elevenlabs.io)
 
 - Same title, tags, category and audience as the live videos.
 - Monetization: off.
-- Altered or synthetic content: No. The narration is a generic AI voice, not a real person, and the gameplay is real.
+- AI use: Yes (the upload form asks about any AI use, realistic AI voice included; answering No would be a false statement).
