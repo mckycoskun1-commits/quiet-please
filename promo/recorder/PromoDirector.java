@@ -82,17 +82,20 @@ public final class PromoDirector {
     private static int shotIndex = 0;
     private static int timeIndex = 0;
 
-    private static final double FIGURE_DIST_USED = 16.0;
+    private static final double FIGURE_DIST_USED = 24.0;
     private static final double FIGURE_SIDE_USED = 0.0;
-    private static final double CLOSE_BACK = 4.0;
+    private static final double CLOSE_BACK = 5.5;
     private static final double CLOSE_RIGHT = 1.6;
-    private static final double CLOSE_LIFT = 1.0;
-    private static final float CLOSE_PITCH = 8.0F;
+    private static final double CLOSE_LIFT = 0.6;
+    private static final float CLOSE_PITCH = 4.0F;
+    private static final int CLOSE_FOV = 45;
+    private static final int WIDE_FOV = 70;
+    private static volatile int camFov = WIDE_FOV;
     private static final Identifier BAD_SONG = Identifier.fromNamespaceAndPath("quietplease_music", "kazoo_disaster");
     private static final Identifier SWEDEN = Identifier.withDefaultNamespace("music/game/sweden");
     private static final long SWEDEN_LEAD_MS = 42000;
-    private static final double[] FIGURE_DIST = {12.0, 16.0, 20.0, 24.0};
-    private static final double[] FIGURE_SIDE = {-3.0, 0.0, 3.0};
+    private static final double[] FIGURE_DIST = {20.0, 22.0, 24.0};
+    private static final double[] FIGURE_SIDE = {0.0, 3.0};
     private static final List<double[]> figures = new ArrayList<>();
     private static int figureIndex = 0;
 
@@ -230,6 +233,7 @@ public final class PromoDirector {
                     command(server, "summon minecraft:mannequin " + f[0] + " " + f[1] + " " + f[2]
                             + " {Rotation:[90f,0f],immovable:1b,hide_description:1b}");
                     closeCamera(f);
+                    clearPlants(server, f);
                     for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(f[3], f[4], f[5]);
                 });
                 phase = 2;
@@ -377,6 +381,7 @@ public final class PromoDirector {
                 closeCamera(f);
                 var server = mc.getSingleplayerServer();
                 server.execute(() -> {
+                    clearPlants(server, f);
                     command(server, "tp @e[type=minecraft:mannequin] " + f[0] + " " + f[1] + " " + f[2] + " 90 0");
                     for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(f[3], f[4], f[5]);
                 });
@@ -479,6 +484,19 @@ public final class PromoDirector {
         camZ = f[5];
         camYaw = SHOT_YAW;
         camPitch = CLOSE_PITCH;
+        camFov = CLOSE_FOV;
+    }
+
+    private static void clearPlants(MinecraftServer server, double[] f) {
+        int x0 = (int) Math.floor(f[0]) - 3;
+        int x1 = (int) Math.floor(f[3]) + 1;
+        int y0 = (int) Math.floor(f[1]) - 1;
+        int y1 = (int) Math.floor(f[4]) + 3;
+        int z0 = (int) Math.floor(Math.min(f[2], f[5])) - 2;
+        int z1 = (int) Math.floor(Math.max(f[2], f[5])) + 2;
+        for (String b : List.of("short_grass", "tall_grass", "fern", "large_fern", "bush", "short_dry_grass", "tall_dry_grass", "dead_bush")) {
+            command(server, "fill " + x0 + " " + y0 + " " + z0 + " " + x1 + " " + y1 + " " + z1 + " minecraft:air replace minecraft:" + b);
+        }
     }
 
     private static void wideCamera() {
@@ -487,6 +505,7 @@ public final class PromoDirector {
         camZ = SHOT_Z;
         camYaw = SHOT_YAW;
         camPitch = SHOT_PITCH;
+        camFov = WIDE_FOV;
     }
 
     private static boolean cherry(ServerLevel level, int x, int z) {
@@ -1005,6 +1024,7 @@ public final class PromoDirector {
         p.yRotO = camYaw;
         p.xRotO = camPitch;
         p.setYHeadRot(camYaw);
+        if (mc.options.fov().get() != camFov) mc.options.fov().set(camFov);
     }
 
     private static void startFfmpeg() throws Exception {
