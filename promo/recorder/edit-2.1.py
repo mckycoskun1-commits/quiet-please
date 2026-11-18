@@ -10,6 +10,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("raw")
 ap.add_argument("--voice", default="")
 ap.add_argument("--out", default="2.1")
+ap.add_argument("--bad", default="bad-song.wav")
 ap.add_argument("--formats", default="16x9,9x16")
 ap.add_argument("--preview", action="store_true")
 ap.add_argument("--target", default="-19")
@@ -189,7 +190,7 @@ tsv = "\n".join("\t".join([r[0], r[1], f(r[2]), f(r[3]), f(r[4]), f(r[5]), r[6]]
 run([ffmpeg, "-hide_banner", "-loglevel", "error", "-y", "-/filter_complex", "song-Campfire-Lofi.txt", "-map", "[out]", "campfire.wav"])
 mix = run([sys.executable, "-I", str(here / "mix.py"), "mix-2.1.tsv", "mix-2.1.wav", "--ffmpeg", ffmpeg, "--target", args.target, "--length", f(total),
            "--var", "sweden=" + asset("sweden"), "--var", "bloom=" + asset("left_to_bloom"), "--var", "feather=" + asset("featherfall"),
-           "--var", "bad=" + str(raw / "bad-song.wav"), "--var", "campfire=" + str(raw / "campfire.wav"),
+           "--var", "bad=" + str(raw / args.bad), "--var", "campfire=" + str(raw / "campfire.wav"),
            "--var", "voice=" + str(voice), "--var", "sfx=" + str(sfx)]).stdout
 (raw / "mix-2.1-report.txt").write_text(mix, encoding="utf-8")
 print(mix)

@@ -12,11 +12,14 @@ args = ap.parse_args()
 SR = 48000
 rng = np.random.default_rng(args.seed)
 total = int(args.seconds * SR)
-t_all = np.arange(total) / SR
 
 TUNE = [0, 0, 7, 7, 9, 9, 7, None, 5, 5, 4, 4, 2, 2, 0, None,
         7, 7, 5, 5, 4, 4, 2, None, 7, 7, 5, 5, 4, 4, 2, None]
-BASE = 523.25
+SOUR = {3: 1, 5: -1, 10: 1, 13: -1}
+LATE = {4: 0.12, 11: 0.09}
+BASE = 392.0
+STEP = 0.36
+CHORDS = [0, 0, 5, 0, 7, 7, 0, 0]
 
 
 def spectral(x, shape):
@@ -27,103 +30,120 @@ def spectral(x, shape):
 
 def melody_events():
     events = []
-    pos = 0.15
-    step = 0.33
+    pos = 0.2
+    loop = 0
     while pos < args.seconds - 1:
-        for note in TUNE:
-            dur = step * rng.uniform(0.8, 1.25)
+        for i, note in enumerate(TUNE):
+            dur = STEP * rng.uniform(0.88, 1.15)
+            if rng.random() < 0.08:
+                dur *= 1.5
             if note is not None:
                 n = note
-                if rng.random() < 0.14:
-                    n += rng.choice([-1, 1, 6])
-                cents = rng.uniform(-75, 75)
-                events.append((pos, dur * 0.92, BASE * 2 ** ((n + cents / 100) / 12), rng.random() < 0.12))
+                if loop == 0 and i in SOUR:
+                    n += SOUR[i]
+                elif rng.random() < 0.1:
+                    n += rng.choice([-1, 1])
+                cents = rng.uniform(-30, 30) - 15 * np.sin(pos / 9)
+                late = LATE.get(i, 0.0) if loop == 0 else max(0.0, rng.normal(0, 0.03))
+                events.append((pos + late, dur, BASE * 2 ** ((n + cents / 100) / 12)))
             pos += dur
             if pos >= args.seconds - 1:
                 break
+        loop += 1
     return events
 
 
-def recorder(events):
+def toy_piano(events):
     out = np.zeros(total)
-    for start, dur, freq, squeak in events:
+    partials = [(1.0, 1.0, 3.2), (2.01, 0.32, 5.0), (3.04, 0.12, 7.5), (4.12, 0.05, 10.0)]
+    for start, dur, freq in events:
         i0 = int(start * SR)
-        n = min(int(dur * SR), total - i0)
+        n = min(int(min(dur * 1.6, 1.3) * SR), total - i0)
         if n <= 0:
             continue
         t = np.arange(n) / SR
-        wobble = 1 + 0.012 * np.sin(2 * np.pi * 5.5 * t) + 0.02 * np.sin(2 * np.pi * 0.7 * t)
-        f = freq * wobble
-        if squeak:
-            k = int(min(0.12, dur * 0.4) * SR)
-            f[:k] *= 3.0
-        phase = np.cumsum(f) / SR
-        wave = np.where((phase % 1.0) < 0.25, 1.0, -0.6)
-        breath = rng.standard_normal(n) * 0.18
-        env = np.minimum(1, t / 0.015) * np.minimum(1, (dur - t) / 0.03)
-        out[i0:i0 + n] += (wave + breath) * env
-    return spectral(out, lambda fr: np.clip((fr - 300) / 400, 0, 1) * np.exp(-((fr - 2800) / 5000) ** 2) * 1.6)
+        note = sum(a * np.sin(2 * np.pi * freq * k * t) * np.exp(-t * d) for k, a, d in partials)
+        env = np.minimum(1, t / 0.006) * np.minimum(1, (n / SR - t) / 0.05)
+        out[i0:i0 + n] += note * env
+    return out
 
 
-def kazoo(events):
+def melodica(events):
     out = np.zeros(total)
-    for start, dur, freq, _ in events:
-        i0 = int((start + 0.06) * SR)
-        n = min(int(dur * SR), total - i0)
+    for start, dur, freq in events:
+        i0 = int((start + rng.uniform(0.04, 0.09)) * SR)
+        n = min(int(dur * 0.9 * SR), total - i0)
         if n <= 0:
             continue
         t = np.arange(n) / SR
-        f = freq / 2 * 2 ** (rng.uniform(-60, 60) / 1200) * (1 + 0.03 * np.sin(2 * np.pi * 7 * t))
+        f = freq * 2 ** (rng.uniform(25, 45) / 1200) * (1 + 0.006 * np.sin(2 * np.pi * 4.5 * t))
         phase = np.cumsum(f) / SR
-        saw = 2 * (phase % 1.0) - 1
-        buzz = 1 + 0.6 * np.sign(np.sin(2 * np.pi * 95 * t))
-        env = np.minimum(1, t / 0.02) * np.minimum(1, (dur - t) / 0.04)
-        out[i0:i0 + n] += saw * buzz * env
-    def formant(fr):
-        return (np.exp(-((fr - 650) / 180) ** 2) + 0.8 * np.exp(-((fr - 1250) / 260) ** 2) + 0.5 * np.exp(-((fr - 2700) / 400) ** 2))
-    return spectral(out, formant) * 1.4
+        tri = 2 * np.abs(2 * (phase % 1.0) - 1) - 1
+        env = np.minimum(1, t / 0.06) * np.minimum(1, (n / SR - t) / 0.08)
+        out[i0:i0 + n] += tri * env
+    return spectral(out, lambda fr: 1 / (1 + (fr / 1800) ** 4))
+
+
+def bass():
+    out = np.zeros(total)
+    beat = STEP * 2
+    k = 0
+    while True:
+        at = 0.2 + k * beat + rng.normal(0, 0.035)
+        if at > args.seconds - 0.8:
+            break
+        chord = CHORDS[(k // 2) % len(CHORDS)]
+        if k in (1, 2) or rng.random() < 0.12:
+            chord += 1
+        root = 98.0 * 2 ** ((chord + (7 if k % 2 else 0)) / 12)
+        i0 = int(at * SR)
+        n = min(int(0.55 * SR), total - i0)
+        t = np.arange(n) / SR
+        tone = (np.sin(2 * np.pi * root * t) + 0.25 * np.sin(4 * np.pi * root * t)) * np.exp(-t * 4.5)
+        out[i0:i0 + n] += tone * np.minimum(1, t / 0.01)
+        k += 1
+    return out
 
 
 def drums():
     out = np.zeros(total)
-    beat = 60 / 101
+    beat = STEP * 2
     k = 0
     while True:
-        at = 0.05 + k * beat + rng.normal(0, 0.025)
+        at = 0.2 + k * beat + rng.normal(0, 0.04)
         if at > args.seconds - 0.5:
             break
+        if rng.random() < 0.06:
+            k += 1
+            continue
         i0 = int(at * SR)
         if k % 2 == 0:
-            n = int(0.35 * SR)
+            n = min(int(0.3 * SR), total - i0)
             t = np.arange(n) / SR
-            f = 48 + 90 * np.exp(-t * 30)
-            kick = np.tanh(4 * np.sin(2 * np.pi * np.cumsum(f) / SR)) * np.exp(-t * 9)
-            out[i0:i0 + n] += kick[: total - i0] * 0.9
+            f = 55 + 70 * np.exp(-t * 25)
+            out[i0:i0 + n] += np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 11)
         else:
-            n = int(0.22 * SR)
+            n = min(int(0.12 * SR), total - i0)
             t = np.arange(n) / SR
-            bell = (np.sign(np.sin(2 * np.pi * 545 * t)) + np.sign(np.sin(2 * np.pi * 812 * t))) * np.exp(-t * 18)
-            out[i0:i0 + n] += bell[: total - i0] * 0.25
-        h0 = int((at + beat / 2 + 0.04) * SR)
-        if h0 + 2000 < total:
-            out[h0:h0 + 2000] += rng.standard_normal(2000) * np.exp(-np.arange(2000) / 300) * 0.3
+            block = np.sin(2 * np.pi * 820 * t) * np.exp(-t * 45) + 0.4 * np.sin(2 * np.pi * 1310 * t) * np.exp(-t * 60)
+            out[i0:i0 + n] += block * 0.35
+            if rng.random() < 0.15:
+                j0 = i0 + int(0.09 * SR)
+                m = min(n, total - j0)
+                out[j0:j0 + m] += block[:m] * 0.25
         k += 1
     return out
 
 
 events = melody_events()
-mix = 0.55 * recorder(events) + 0.45 * kazoo(events) + 0.7 * drums()
-delay = int(0.11 * SR)
-mix[delay:] += 0.35 * mix[:-delay]
-mix = np.tanh(2.2 * mix / (np.max(np.abs(mix)) + 1e-9))
-hold = 4
-mix = np.repeat(mix[::hold], hold)[:total]
-mix = np.round(mix * 24) / 24
+mix = 0.5 * toy_piano(events) + 0.32 * melodica(events) + 0.42 * bass() + 0.5 * drums()
+mix = spectral(mix, lambda fr: 1 / (1 + (fr / 5000) ** 4))
+mix = np.tanh(1.2 * mix / (np.max(np.abs(mix)) + 1e-9)) / np.tanh(1.2)
 fade = int(0.02 * SR)
 mix[:fade] *= np.linspace(0, 1, fade)
 mix[-SR * 2:] *= np.linspace(1, 0, SR * 2)
 mix *= 10 ** (-24 / 20) / (np.sqrt(np.mean(mix ** 2)) + 1e-9)
 left = mix
-right = np.roll(mix, int(0.012 * SR)) * 0.9
+right = np.roll(mix, int(0.008 * SR)) * 0.92
 sf.write(args.out, np.stack([left, right], axis=1).astype(np.float32), SR)
 print(f"{args.out}: {args.seconds:.0f} s, {len(events)} notes, peak {20 * np.log10(np.max(np.abs(mix)) + 1e-9):.1f} dBFS")
