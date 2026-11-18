@@ -492,6 +492,8 @@ public final class Playlist {
      * Dosyanin tamami bellege alinmaz: sadece basi ve son ~72 KB'i tutulur (bir sarki birkac MB olabilir).
      */
     public static int readOggSeconds(Identifier path) {
+        java.nio.file.Path mp3 = CustomMusic.mp3File(path);
+        if (mp3 != null) return Mp3.seconds(mp3);
         try (InputStream in = Minecraft.getInstance().getResourceManager().open(path)) {
             byte[] head = in.readNBytes(OGG_HEAD);
             long rate = 0;
