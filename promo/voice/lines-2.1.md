@@ -4,13 +4,13 @@ Story: a player enjoys a sunset with a calm, well-known Minecraft track, a terri
 
 ## Settings
 
-- Model: Eleven v3 (the only model that reads the audio tags in square brackets).
+- Model: Eleven v4 (tested 2026-11-18: it acts out the audio tags in square brackets and does not read them aloud; Eleven v3 also works).
 - Stability: Natural. Switch to Creative only for the angry line if it sounds flat.
 - Two voices from the Voice Library:
   - Player: young, casual male gamer, American English. Search "casual young male" or "gamer".
   - Narrator: energetic, punchy, social media style. Search "energetic narrator" or "youtube".
 - Make two or three takes of every line; v3 reads each take a little differently.
-- Download as MP3 44.1 kHz 128 kbps or better.
+- Download as MP3 44.1 kHz 128 kbps (higher formats need the Creator plan).
 - Save the files in `promo/voice/takes/` with the names below, adding `-a`, `-b`, `-c` per take (for example `p2-b.mp3`). The folder is not committed.
 
 ## Lines

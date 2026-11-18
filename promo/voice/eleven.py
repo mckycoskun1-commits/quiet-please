@@ -100,7 +100,7 @@ def cmd_say(args):
                     "seed": args.seed + take,
                     "voice_settings": {"stability": args.stability, "similarity_boost": 0.75, "speed": args.speed},
                 }
-                audio = call(f"/v1/text-to-speech/{voice['voice_id']}?output_format=mp3_44100_192", body, raw=True)
+                audio = call(f"/v1/text-to-speech/{voice['voice_id']}?output_format=mp3_44100_128", body, raw=True)
                 target.write_bytes(audio)
                 print(target.name, len(audio))
 
@@ -117,7 +117,7 @@ say.add_argument("--takes", type=int, default=1)
 say.add_argument("--seed", type=int, default=100)
 say.add_argument("--speed", type=float, default=1.0)
 say.add_argument("--stability", type=float, default=0.5)
-say.add_argument("--model", default="eleven_v3")
+say.add_argument("--model", default="eleven_v4")
 say.add_argument("--force", action="store_true")
 say.add_argument("--out", default=str(here / "takes"))
 say.set_defaults(run=cmd_say)
