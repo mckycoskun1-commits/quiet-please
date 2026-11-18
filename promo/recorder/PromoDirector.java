@@ -44,6 +44,7 @@ public final class PromoDirector {
     private static final boolean ENABLED = System.getenv("QUIETPLEASE_PROMO") != null;
     private static final boolean SCOUT = System.getenv("PROMO_SCOUT") != null;
     private static final boolean AUDIO_ONLY = System.getenv("PROMO_AUDIO_ONLY") != null;
+    private static final boolean MANNEQUIN = System.getenv("PROMO_MANNEQUIN") != null;
 
     private static final long SEED = 1152036L;
     private static final double SHOT_X = -2768.5;
@@ -84,6 +85,16 @@ public final class PromoDirector {
     private static final Identifier BAD_SONG = Identifier.fromNamespaceAndPath("quietplease_music", "kazoo_disaster");
     private static final Identifier SWEDEN = Identifier.withDefaultNamespace("music/game/sweden");
     private static final long SWEDEN_LEAD_MS = 42000;
+
+    private static final double FIGURE_DIST = 24.0;
+    private static final double FIGURE_SIDE = 0.0;
+    private static final double CLOSE_BACK = 5.5;
+    private static final double CLOSE_RIGHT = 1.6;
+    private static final double CLOSE_LIFT = 0.6;
+    private static final float CLOSE_PITCH = 4.0F;
+    private static final int CLOSE_FOV = 45;
+    private static final int WIDE_FOV = 70;
+    private static volatile int camFov = WIDE_FOV;
 
     private static final int RENDER_DISTANCE = 32;
     private static final long CHUNK_MIN_MS = 8000;
@@ -201,6 +212,14 @@ public final class PromoDirector {
                     worldRules(server, SHOT_TIME);
                     for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(SHOT_X, SHOT_Y, SHOT_Z);
                     QuietPlease.LOGGER.info("PROMO shot {} {} {} yaw {} pitch {} time {}", SHOT_X, SHOT_Y, SHOT_Z, SHOT_YAW, SHOT_PITCH, SHOT_TIME);
+                    if (!MANNEQUIN) return;
+                    double[] f = figurePlace(server.overworld());
+                    QuietPlease.LOGGER.info("PROMO mannequin at {} {} {} camera {} {} {}", f[0], f[1], f[2], f[3], f[4], f[5]);
+                    command(server, "summon minecraft:mannequin " + f[0] + " " + f[1] + " " + f[2]
+                            + " {Rotation:[90f,0f],immovable:1b,hide_description:1b}");
+                    closeCamera(f);
+                    clearPlants(server, f);
+                    for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(f[3], f[4], f[5]);
                 });
                 phase = 2;
                 phaseStart = now();
@@ -413,6 +432,66 @@ public final class PromoDirector {
         if (waited < CHUNK_MIN_MS || now() - chunksSince < CHUNK_STEADY_MS) return false;
         QuietPlease.LOGGER.info("PROMO chunks full {}/{} after {} s", count[1], count[0], waited / 1000);
         return true;
+    }
+
+    private static double[] figurePlace(ServerLevel level) {
+        double x = SHOT_X - FIGURE_DIST;
+        double z = SHOT_Z - FIGURE_SIDE;
+        int bx = (int) Math.floor(x);
+        int bz = (int) Math.floor(z);
+        int y = topY(level, bx, bz);
+        BlockState below = level.getBlockState(new BlockPos(bx, y - 1, bz));
+        if (!below.getFluidState().isEmpty() || below.is(Blocks.CHERRY_LOG) || below.is(Blocks.CHERRY_LEAVES)) {
+            QuietPlease.LOGGER.warn("PROMO mannequin stands on {}", below);
+        }
+        double cx = x + CLOSE_BACK;
+        double cz = z + CLOSE_RIGHT;
+        double cy = Math.max(y + CLOSE_LIFT, topY(level, (int) Math.floor(cx), (int) Math.floor(cz)) + 0.3);
+        return new double[]{x, y, z, cx, cy, cz};
+    }
+
+    private static void closeCamera(double[] f) {
+        camX = f[3];
+        camY = f[4];
+        camZ = f[5];
+        camYaw = SHOT_YAW;
+        camPitch = CLOSE_PITCH;
+        camFov = CLOSE_FOV;
+    }
+
+    private static void clearPlants(MinecraftServer server, double[] f) {
+        int x0 = (int) Math.floor(f[0]) - 3;
+        int x1 = (int) Math.floor(f[3]) + 1;
+        int y0 = (int) Math.floor(f[1]) - 1;
+        int y1 = (int) Math.floor(f[4]) + 3;
+        int z0 = (int) Math.floor(Math.min(f[2], f[5])) - 2;
+        int z1 = (int) Math.floor(Math.max(f[2], f[5])) + 2;
+        for (String b : List.of("short_grass", "tall_grass", "fern", "large_fern", "bush", "short_dry_grass", "tall_dry_grass", "dead_bush")) {
+            command(server, "fill " + x0 + " " + y0 + " " + z0 + " " + x1 + " " + y1 + " " + z1 + " minecraft:air replace minecraft:" + b);
+        }
+    }
+
+    private static void wideCamera() {
+        camX = SHOT_X;
+        camY = SHOT_Y;
+        camZ = SHOT_Z;
+        camYaw = SHOT_YAW;
+        camPitch = SHOT_PITCH;
+        camFov = WIDE_FOV;
+    }
+
+    private static void figure(Minecraft mc, String command) {
+        if (!MANNEQUIN) return;
+        var server = mc.getSingleplayerServer();
+        server.execute(() -> command(server, command));
+    }
+
+    private static void facing(Minecraft mc, float yaw) {
+        figure(mc, "execute as @e[type=minecraft:mannequin] at @s run tp @s ~ ~ ~ " + yaw + " 0");
+    }
+
+    private static void pose(Minecraft mc, String pose) {
+        figure(mc, "data merge entity @e[type=minecraft:mannequin,limit=1] {pose:\"" + pose + "\"}");
     }
 
     private static boolean cherry(ServerLevel level, int x, int z) {
@@ -635,12 +714,19 @@ public final class PromoDirector {
             mark("sceneB");
             Playlist.playNow(Playlist.tracks().indexOf(BAD_SONG));
         });
+        at(21000, () -> facing(mc, 270.0F));
+        for (int i = 0; i < 14; i++) {
+            String p = i % 2 == 0 ? "crouching" : "standing";
+            at(21500 + i * 180L, () -> pose(mc, p));
+        }
 
         at(26300, () -> mute(mc));
         at(27000, () -> cue(mc, "cue2", false));
         at(27080, () -> {
             mc.setScreen(null);
             mc.options.hideGui = true;
+            facing(mc, 90.0F);
+            wideCamera();
         });
 
         long d = 28000;
@@ -894,6 +980,7 @@ public final class PromoDirector {
         p.yRotO = camYaw;
         p.xRotO = camPitch;
         p.setYHeadRot(camYaw);
+        if (mc.options.fov().get() != camFov) mc.options.fov().set(camFov);
     }
 
     private static void startFfmpeg() throws Exception {
