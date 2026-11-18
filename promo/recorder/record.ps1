@@ -50,6 +50,15 @@ aevalsrc=exprs='st(0,mod(floor(t/$P),4));st(1,$K*if(eq(ld(0),0),261.63,if(eq(ld(
     if ($LASTEXITCODE -ne 0) { throw "Demo song failed: $($s.Name)" }
     $songFiles += $file
 }
+$python = Join-Path $repo 'promo\voice\.venv\Scripts\python.exe'
+if (-not (Test-Path $python)) { throw 'Python venv missing, see promo/voice/README.md' }
+$badWav = Join-Path $out 'bad-song.wav'
+& $python -I (Join-Path $here 'bad-song.py') $badWav --seconds 90
+if ($LASTEXITCODE -ne 0) { throw 'Bad song failed' }
+$file = Join-Path $musicDir 'Kazoo Disaster.ogg'
+& $ffmpeg -hide_banner -loglevel error -y -i $badWav -c:a libvorbis -q:a 5 $file
+if ($LASTEXITCODE -ne 0) { throw 'Bad song encode failed' }
+$songFiles += $file
 
 $wav = (Join-Path $out 'audio.wav') -replace '\\', '/'
 @"

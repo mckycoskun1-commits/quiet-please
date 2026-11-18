@@ -104,3 +104,11 @@ Do all of these:
 - Make 720p previews (about 15 MB) and send both to the user with SendUserFile, together with a short Turkish summary of what changed.
 - Commit and push the recorder and edit script changes to `mc/26.1.2` without asking. Never commit videos, jars or the shader pack. Do not upload the video anywhere.
 - Update the promo memory note (promo-video-progress) with the result.
+
+## 2.1 promo with voice-over (2026-11-18)
+
+- Story and voice lines: `promo/voice/lines-2.1.md` (player Chris, narrator Liam, ElevenLabs Eleven v4). Effects: `promo/sfx/README.md`.
+- Recording order in `PromoDirector` is not the order of the video: Sweden starts 42 s before the first cue so its melody is full, then sceneA (sunset), sceneE (same shot for the ending), sceneF (end card background), then sceneB (Kazoo Disaster starts, the mannequin turns to the camera and crouches in and out), cue2, sceneD1 to sceneD5 (fast tour: switch off Kazoo Disaster, volume slider, own music and playlist, cue3, skip, previous, never again, history and stats), cue4.
+- The player is a `minecraft:mannequin` placed `FIGURE_DIST_USED` west and `FIGURE_SIDE_USED` north of the camera on the ground. `record.ps1 -Figures` saves `figureN.png` for 12 places; pick one and set the two constants (or `PROMO_FIGURE="dist side"`).
+- `record.ps1` makes `Kazoo Disaster.ogg` with `bad-song.py` (Python venv from `promo/voice`).
+- `mix.py` builds the sound from a timeline file (music, voice and effect rows with target loudness, automatic ducking under the voice, -16 LUFS master with a limiter). `animatic-2.1.tsv` is the audio draft made from the game files before recording; levels: voice -16 LUFS (soft player line -18, angry line -14.5), music -21 to -22 without voice and about 9 dB lower under it, Kazoo Disaster -17 and only 4 dB lower under the angry line.

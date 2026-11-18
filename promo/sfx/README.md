@@ -20,3 +20,9 @@ License checked on 2026-11-18 (Mixkit Sound Effects Free License): free for comm
 | logo-impact.wav | 2900 | Movie logo intro impact | slow swell, peak at 4.4 s |
 
 Download: `https://assets.mixkit.co/active_storage/sfx/<id>/<id>.wav`.
+
+`boom.wav` is our own, made with ffmpeg:
+
+```
+ffmpeg -f lavfi -i "aevalsrc=exprs='0.85*sin(2*PI*(40*t+(80/12)*(1-exp(-12*t))))*exp(-3*t)+0.3*(random(0)*2-1)*exp(-35*t)':s=48000:d=1.8" -af "lowpass=f=2500,aformat=channel_layouts=stereo" promo/sfx/files/boom.wav
+```

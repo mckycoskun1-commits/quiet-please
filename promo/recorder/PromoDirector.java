@@ -82,6 +82,11 @@ public final class PromoDirector {
     private static int shotIndex = 0;
     private static int timeIndex = 0;
 
+    private static final double FIGURE_DIST_USED = 6.5;
+    private static final double FIGURE_SIDE_USED = 2.5;
+    private static final Identifier BAD_SONG = Identifier.fromNamespaceAndPath("quietplease_music", "kazoo_disaster");
+    private static final Identifier SWEDEN = Identifier.withDefaultNamespace("music/game/sweden");
+    private static final long SWEDEN_LEAD_MS = 42000;
     private static final double[] FIGURE_DIST = {5.0, 6.5, 8.0};
     private static final double[] FIGURE_SIDE = {-2.5, 0.0, 2.5, 4.0};
     private static final List<double[]> figures = new ArrayList<>();
@@ -216,6 +221,10 @@ public final class PromoDirector {
                     worldRules(server, SHOT_TIME);
                     for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(SHOT_X, SHOT_Y, SHOT_Z);
                     QuietPlease.LOGGER.info("PROMO shot {} {} {} yaw {} pitch {} time {}", SHOT_X, SHOT_Y, SHOT_Z, SHOT_YAW, SHOT_PITCH, SHOT_TIME);
+                    double[] f = figurePlace(server.overworld());
+                    QuietPlease.LOGGER.info("PROMO figure at {} {} {}", f[0], f[1], f[2]);
+                    command(server, "summon minecraft:mannequin " + f[0] + " " + f[1] + " " + f[2]
+                            + " {Rotation:[90f,0f],immovable:1b,hide_description:1b}");
                 });
                 phase = 2;
                 phaseStart = now();
@@ -225,15 +234,16 @@ public final class PromoDirector {
                 mc.player.onUpdateAbilities();
                 camera = true;
                 applyCamera(mc);
+                mc.getMusicManager().stopPlaying();
+                preparePlaylist();
+                Playlist.playNow(Playlist.tracks().indexOf(SWEDEN));
                 phase = 3;
                 phaseStart = now();
             }
             case 3 -> {
                 applyCamera(mc);
-                if (now() - phaseStart < 25000) return;
+                if (now() - phaseStart < SWEDEN_LEAD_MS) return;
                 mc.getToastManager().clear();
-                mc.getMusicManager().stopPlaying();
-                preparePlaylist();
                 if (!AUDIO_ONLY) startFfmpeg();
                 phase = 4;
                 phaseStart = now();
@@ -606,11 +616,40 @@ public final class PromoDirector {
         com.quietplease.music.ListenStats.clear();
         for (Identifier fav : new ArrayList<>(Playlist.favorites())) Playlist.toggleFavorite(fav);
         Playlist.clear();
-        for (String s : List.of("nether/nether_wastes/rubedo", "left_to_bloom", "featherfall", "sweden")) {
+        com.quietplease.music.CustomMusic.refresh();
+        Playlist.add(BAD_SONG);
+        for (String s : List.of("left_to_bloom", "featherfall", "sweden")) {
             Playlist.add(Identifier.withDefaultNamespace("music/game/" + s));
         }
-        com.quietplease.music.MusicSettings.setEnabled(Identifier.withDefaultNamespace("music/game/nether/nether_wastes/rubedo"), true);
+        com.quietplease.music.MusicSettings.setEnabled(BAD_SONG, true);
         com.quietplease.music.MusicSettings.setVolume(Identifier.withDefaultNamespace("music/game/left_to_bloom"), 100);
+    }
+
+    private static double[] figurePlace(ServerLevel level) {
+        double dist = FIGURE_DIST_USED;
+        double side = FIGURE_SIDE_USED;
+        String env = System.getenv("PROMO_FIGURE");
+        if (env != null) {
+            String[] v = env.trim().split(" ");
+            dist = Double.parseDouble(v[0]);
+            side = Double.parseDouble(v[1]);
+        }
+        double x = SHOT_X - dist;
+        double z = SHOT_Z - side;
+        return new double[]{x, topY(level, (int) Math.floor(x), (int) Math.floor(z)), z};
+    }
+
+    private static void figure(Minecraft mc, String command) {
+        var server = mc.getSingleplayerServer();
+        server.execute(() -> command(server, command));
+    }
+
+    private static void facing(Minecraft mc, float yaw) {
+        figure(mc, "execute as @e[type=minecraft:mannequin] at @s run tp @s ~ ~ ~ " + yaw + " 0");
+    }
+
+    private static void pose(Minecraft mc, String pose) {
+        figure(mc, "data merge entity @e[type=minecraft:mannequin,limit=1] {pose:\"" + pose + "\"}");
     }
 
     private static void mark(String name) {
@@ -656,151 +695,158 @@ public final class PromoDirector {
         at(80, () -> mc.setScreen(null));
         at(100, () -> {
             mc.options.hideGui = true;
-            mark("scene1");
+            mark("sceneA");
         });
-        at(1500, () -> Playlist.playNow(0));
+        at(6500, () -> mark("sceneE"));
+        at(12000, () -> mark("sceneF"));
 
-        at(6300, () -> mute(mc));
-        at(7000, () -> cue(mc, "cue2", false));
-        at(7080, () -> {
+        at(20500, () -> {
+            mark("sceneB");
+            Playlist.playNow(Playlist.tracks().indexOf(BAD_SONG));
+        });
+        at(21000, () -> facing(mc, 270.0F));
+        for (int i = 0; i < 14; i++) {
+            String p = i % 2 == 0 ? "crouching" : "standing";
+            at(21500 + i * 180L, () -> pose(mc, p));
+        }
+
+        at(26300, () -> mute(mc));
+        at(27000, () -> cue(mc, "cue2", false));
+        at(27080, () -> {
             mc.setScreen(null);
             mc.options.hideGui = true;
+            facing(mc, 90.0F);
         });
 
-        at(8000, () -> {
-            mark("scene2");
+        long d = 28000;
+        at(d, () -> {
+            mark("sceneD1");
             mc.options.hideGui = false;
             mc.setScreen(new QuietPleaseScreen(null));
             warp(mc, 320, 200);
         });
-        at(8800, () -> glideTo(mc, find(mc, w -> w instanceof EditBox), 700));
-        at(9600, () -> clickHere(mc));
-        typeAt(9900, mc, "rubedo", 130);
-        at(11300, () -> glideTo(mc, find(mc, PromoDirector::isToggle), 800));
-        at(12300, () -> clickHere(mc));
-
-        at(15500, () -> {
-            mark("scene3");
-            glideTo(mc, find(mc, w -> w instanceof EditBox), 600);
+        at(d + 300, () -> glideTo(mc, find(mc, w -> w instanceof EditBox), 450));
+        at(d + 800, () -> clickHere(mc));
+        typeAt(d + 950, mc, "kazoo", 80);
+        at(d + 1500, () -> glideTo(mc, find(mc, PromoDirector::isToggle), 500));
+        at(d + 2100, () -> {
+            clickHere(mc);
+            mark("off");
         });
-        at(16200, () -> {
+
+        at(d + 3300, () -> {
+            mark("sceneD2");
+            glideTo(mc, find(mc, w -> w instanceof EditBox), 350);
+        });
+        at(d + 3700, () -> {
             clickHere(mc);
             EditBox box = (EditBox) find(mc, w -> w instanceof EditBox);
             if (box != null) box.setValue("");
         });
-        typeAt(16500, mc, "left", 130);
-        at(17600, () -> {
+        typeAt(d + 3800, mc, "left", 80);
+        at(d + 4300, () -> {
             AbstractWidget s = find(mc, w -> w.getClass().getSimpleName().equals("VolumeSlider"));
             if (s == null) return;
-            glidePoint(mc, s.getX() + s.getWidth() - 4, s.getY() + s.getHeight() / 2.0, 700);
+            glidePoint(mc, s.getX() + s.getWidth() - 4, s.getY() + s.getHeight() / 2.0, 450);
             markWidgets(mc, "zoom3", all(mc, w -> Math.abs(w.getY() - s.getY()) <= 2), 4);
         });
-        at(18500, () -> button(mc, 1));
-        at(18600, () -> {
+        at(d + 4800, () -> button(mc, 1));
+        at(d + 4850, () -> {
             AbstractWidget s = find(mc, w -> w.getClass().getSimpleName().equals("VolumeSlider"));
             if (s != null) {
                 dragging = true;
-                glidePoint(mc, s.getX() + 4 + 0.3 * (s.getWidth() - 8), s.getY() + s.getHeight() / 2.0, 1400);
+                glidePoint(mc, s.getX() + 4 + 0.3 * (s.getWidth() - 8), s.getY() + s.getHeight() / 2.0, 900);
             }
         });
-        at(20100, () -> {
+        at(d + 5800, () -> {
             dragging = false;
             button(mc, 0);
         });
 
-        at(22500, () -> {
-            mark("scene4");
-            glideTo(mc, find(mc, w -> w instanceof EditBox), 500);
+        at(d + 6600, () -> {
+            mark("sceneD3");
+            glideTo(mc, find(mc, w -> w instanceof EditBox), 350);
         });
-        at(23100, () -> {
+        at(d + 7000, () -> {
             clickHere(mc);
             EditBox box = (EditBox) find(mc, w -> w instanceof EditBox);
             if (box != null) box.setValue("");
         });
-        at(23600, () -> glideTo(mc, find(mc, w -> w instanceof CycleButton<?> && w.getMessage().getString().startsWith("Mod")), 600));
-        at(24300, () -> clickHere(mc));
-        at(24900, () -> clickHere(mc));
-        at(25600, () -> glideTo(mc, findText(mc, "▶"), 800));
-        at(26500, () -> {
+        at(d + 7150, () -> glideTo(mc, find(mc, w -> w instanceof CycleButton<?> && w.getMessage().getString().startsWith("Mod")), 400));
+        at(d + 7600, () -> clickHere(mc));
+        at(d + 7900, () -> clickHere(mc));
+        at(d + 8300, () -> glideTo(mc, findText(mc, "▶"), 450));
+        at(d + 8800, () -> {
             clickHere(mc);
             mark("play");
         });
-        at(26800, () -> glidePoint(mc, 320, 210, 700));
-        at(29300, () -> glideTo(mc, findText(mc, "■"), 700));
-        at(30200, () -> clickHere(mc));
-
-        long b = 30500;
-        at(b, () -> {
-            mark("scene5");
-            glideTo(mc, findText(mc, "Playlist"), 700);
+        at(d + 8900, () -> glidePoint(mc, 320, 210, 500));
+        at(d + 10300, () -> glideTo(mc, findText(mc, "■"), 400));
+        at(d + 10750, () -> clickHere(mc));
+        at(d + 11000, () -> {
+            mark("sceneD3b");
+            glideTo(mc, findText(mc, "Playlist"), 450);
         });
-        at(b + 800, () -> clickHere(mc));
-        at(b + 2000, () -> glideTo(mc, findText(mc, "Add songs"), 700));
-        at(b + 2800, () -> clickHere(mc));
-        at(b + 3400, () -> glideTo(mc, find(mc, w -> w instanceof EditBox), 600));
-        at(b + 4100, () -> clickHere(mc));
-        typeAt(b + 4300, mc, "komorebi", 110);
-        at(b + 5400, () -> glideTo(mc, findText(mc, "+ Add"), 700));
-        at(b + 6200, () -> clickHere(mc));
-        at(b + 6350, () -> glidePoint(mc, 300, 220, 450));
-        at(b + 6900, () -> {
-            EditBox box = (EditBox) find(mc, w -> w instanceof EditBox);
-            if (box != null) box.setValue("");
-        });
-        typeAt(b + 7000, mc, "aria", 120);
-        at(b + 7700, () -> glideTo(mc, findText(mc, "+ Add"), 600));
-        at(b + 8400, () -> clickHere(mc));
-        at(b + 8550, () -> glidePoint(mc, 300, 220, 450));
-        at(b + 9100, () -> glideTo(mc, findText(mc, "Queue"), 700));
-        at(b + 9900, () -> clickHere(mc));
+        at(d + 11500, () -> clickHere(mc));
+        at(d + 12000, () -> glideTo(mc, findText(mc, "Add songs"), 400));
+        at(d + 12450, () -> clickHere(mc));
+        at(d + 12800, () -> glideTo(mc, find(mc, w -> w instanceof EditBox), 350));
+        at(d + 13200, () -> clickHere(mc));
+        typeAt(d + 13300, mc, "aria", 80);
+        at(d + 13800, () -> glideTo(mc, findText(mc, "+ Add"), 400));
+        at(d + 14250, () -> clickHere(mc));
+        at(d + 14400, () -> glidePoint(mc, 300, 220, 300));
+        at(d + 14800, () -> glideTo(mc, findText(mc, "Queue"), 400));
+        at(d + 15250, () -> clickHere(mc));
 
-        at(41750, () -> mute(mc));
-        at(42450, () -> cue(mc, "cue3", false));
-        at(42530, () -> mc.setScreen(null));
+        at(d + 16600, () -> mute(mc));
+        at(d + 17300, () -> cue(mc, "cue3", false));
+        at(d + 17380, () -> mc.setScreen(null));
 
-        at(43000, () -> {
-            mark("scene6");
+        at(d + 18000, () -> {
+            mark("sceneD4");
             mc.setScreen(null);
         });
-        at(44500, () -> {
+        at(d + 18500, () -> {
             String result = MusicControl.skipAndDescribe();
             mc.gui.setOverlayMessage(Lang.tr(result).withStyle(net.minecraft.ChatFormatting.GREEN), false);
+            mark("skip");
+        });
+        at(d + 20300, () -> {
+            mc.gui.setOverlayMessage(QuietPleaseKeys.previous(), false);
+            mark("previous");
+        });
+        at(d + 22000, () -> {
+            mc.gui.setOverlayMessage(QuietPleaseKeys.disablePlaying(mc), false);
+            mark("never");
         });
 
-        at(49500, () -> mark("scene7"));
-        at(50000, () -> mc.gui.setOverlayMessage(QuietPleaseKeys.previous(), false));
-        at(53500, () -> mc.gui.setOverlayMessage(QuietPleaseKeys.disablePlaying(mc), false));
-
-        at(57000, () -> {
-            mark("scene8");
+        at(d + 24200, () -> {
+            mark("sceneD5");
             mc.setScreen(new QuietPleaseScreen(null));
             warp(mc, 320, 200);
         });
-        at(57800, () -> glideTo(mc, findText(mc, "Settings"), 700));
-        at(58600, () -> clickHere(mc));
-        at(59300, () -> glideTo(mc, findText(mc, "History & stats"), 800));
-        at(60200, () -> clickHere(mc));
-        at(62200, () -> glideTo(mc, findText(mc, "Most played"), 700));
-        at(62900, () -> clickHere(mc));
-        at(63000, () -> glidePoint(mc, 320, mc.getWindow().getGuiScaledHeight() - 60, 500));
-        at(63100, () -> {
+        at(d + 24300, () -> glideTo(mc, findText(mc, "Settings"), 400));
+        at(d + 24750, () -> clickHere(mc));
+        at(d + 24900, () -> glideTo(mc, findText(mc, "History & stats"), 450));
+        at(d + 25400, () -> clickHere(mc));
+        at(d + 26300, () -> glideTo(mc, findText(mc, "Most played"), 400));
+        at(d + 26750, () -> clickHere(mc));
+        at(d + 26850, () -> glidePoint(mc, 320, mc.getWindow().getGuiScaledHeight() - 60, 400));
+        at(d + 26950, () -> {
             int h = mc.getWindow().getGuiScaledHeight();
-            List<AbstractWidget> ws = all(mc, w -> w.getY() >= 28 && w.getY() < h - 36);
-            markWidgets(mc, "zoom8", ws, 4);
+            markWidgets(mc, "zoom8", all(mc, w -> w.getY() >= 28 && w.getY() < h - 36), 4);
         });
-        at(66100, () -> glideTo(mc, findText(mc, "Never played"), 700));
-        at(66800, () -> clickHere(mc));
 
-        at(68500, () -> {
-            mark("scene9");
+        at(d + 29500, () -> {
+            mark("end");
             mc.setScreen(null);
             mc.options.hideGui = true;
         });
-        at(78500, () -> mark("end"));
-        at(78600, () -> mute(mc));
-        at(80200, () -> cue(mc, "cue4", true));
-        at(80300, () -> mc.setScreen(null));
-        at(81200, () -> mark("stop"));
+        at(d + 29600, () -> mute(mc));
+        at(d + 31200, () -> cue(mc, "cue4", true));
+        at(d + 31300, () -> mc.setScreen(null));
+        at(d + 32200, () -> mark("stop"));
     }
 
     private static void typeAt(long start, Minecraft mc, String text, long perChar) {

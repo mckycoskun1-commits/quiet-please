@@ -1,0 +1,33 @@
+music	{sweden}	0.0	45.0	5.5	-21	in=0.3,out=0.03
+music	{bad}	5.5	0.0	4.7	-17	in=0.005,out=0.02,duck=4
+music	{bad}	15.7	9.5	2.6	-21	in=0.05,out=0.01
+music	{bloom}	18.6	125.0	17.6	-22	in=1.0,out=0.3
+music	{sweden}	36.2	51.0	9.5	-21	in=0.4,out=1.5
+voice	{voice}/p1-chris-1.mp3	1.4	0	0	-18
+voice	{voice}/p2-chris-1.mp3	6.8	0	0	-14.5
+voice	{voice}/n1-liam-1.mp3	10.7	0	0	-16
+voice	{voice}/n2-liam-1.mp3	15.6	0	0	-16
+voice	{voice}/n3-liam-1.mp3	19.2	0	0	-16
+voice	{voice}/n4-liam-1.mp3	22.4	0	0	-16
+voice	{voice}/n5-liam-1.mp3	27.9	0	0	-16
+voice	{voice}/n6-liam-1.mp3	32.9	0	0	-16
+voice	{voice}/p3-chris-1.mp3	36.6	0	0	-16.5
+voice	{voice}/n7-liam-1.mp3	41.5	0	0	-16
+sfx	{sfx}/zoom-impact.wav	5.5	0	0	-8	align=0.13
+sfx	{sfx}/vinyl-scratch.wav	10.2	0	0.7	-4	out=0.12
+sfx	{sfx}/whoosh-cinematic.wav	15.7	0	0	-8	align=1.07
+sfx	{sfx}/record-swipe.wav	18.3	0	0	-6
+sfx	{sfx}/swoosh-fast.wav	19.0	0	0	-8	align=0.11
+sfx	{sfx}/sweep-small.wav	20.5	0	0	-12	align=0.33
+sfx	{sfx}/swoosh-fast.wav	22.2	0	0	-8	align=0.11
+sfx	{sfx}/whoosh-cinematic.wav	27.7	0	0	-10	align=1.07
+sfx	{sfx}/vinyl-back.wav	29.0	0	0	-8	align=0.30
+sfx	{sfx}/record-swipe.wav	30.2	0	0	-8
+sfx	{sfx}/swoosh-fast.wav	32.7	0	0	-8	align=0.11
+sfx	{sfx}/sweep-small.wav	33.9	0	0	-12	align=0.33
+sfx	{sfx}/whoosh-cinematic.wav	36.2	0	0	-10	align=1.07
+sfx	{sfx}/riser.wav	39.7	0	0	-6	align=2.53
+sfx	{sfx}/boom.wav	41.3	0	0	-4
+sfx	{sfx}/pop-whoosh.wav	41.7	0	0	-14	align=0.02
+sfx	{sfx}/pop-whoosh.wav	41.95	0	0	-14	align=0.02
+sfx	{sfx}/pop-whoosh.wav	42.2	0	0	-14	align=0.02
