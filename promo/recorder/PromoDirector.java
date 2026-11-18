@@ -95,6 +95,7 @@ public final class PromoDirector {
     private static final int CLOSE_FOV = 45;
     private static final int WIDE_FOV = 70;
     private static volatile int camFov = WIDE_FOV;
+    private static boolean figurePlaced = false;
 
     private static final int RENDER_DISTANCE = 32;
     private static final long CHUNK_MIN_MS = 8000;
@@ -126,7 +127,7 @@ public final class PromoDirector {
 
     private static void command(MinecraftServer server, String c) {
         try {
-            server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), c);
+            server.getCommands().performPrefixedCommand(server.createCommandSourceStack().withSuppressedOutput(), c);
         } catch (Exception ignored) {
         }
     }
@@ -212,14 +213,6 @@ public final class PromoDirector {
                     worldRules(server, SHOT_TIME);
                     for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(SHOT_X, SHOT_Y, SHOT_Z);
                     QuietPlease.LOGGER.info("PROMO shot {} {} {} yaw {} pitch {} time {}", SHOT_X, SHOT_Y, SHOT_Z, SHOT_YAW, SHOT_PITCH, SHOT_TIME);
-                    if (!MANNEQUIN) return;
-                    double[] f = figurePlace(server.overworld());
-                    QuietPlease.LOGGER.info("PROMO mannequin at {} {} {} camera {} {} {}", f[0], f[1], f[2], f[3], f[4], f[5]);
-                    command(server, "summon minecraft:mannequin " + f[0] + " " + f[1] + " " + f[2]
-                            + " {Rotation:[90f,0f],immovable:1b,hide_description:1b}");
-                    closeCamera(f);
-                    clearPlants(server, f);
-                    for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(f[3], f[4], f[5]);
                 });
                 phase = 2;
                 phaseStart = now();
@@ -236,6 +229,22 @@ public final class PromoDirector {
             case 8 -> {
                 applyCamera(mc);
                 if (!chunksDone(mc)) return;
+                if (MANNEQUIN && !figurePlaced) {
+                    figurePlaced = true;
+                    var server = mc.getSingleplayerServer();
+                    server.execute(() -> {
+                        double[] f = figurePlace(server.overworld());
+                        QuietPlease.LOGGER.info("PROMO mannequin at {} {} {} camera {} {} {}", f[0], f[1], f[2], f[3], f[4], f[5]);
+                        command(server, "summon minecraft:mannequin " + f[0] + " " + f[1] + " " + f[2]
+                                + " {Rotation:[90f,0f],immovable:1b,hide_description:1b}");
+                        closeCamera(f);
+                        clearPlants(server, f);
+                        for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(f[3], f[4], f[5]);
+                    });
+                    chunksSince = -1;
+                    phaseStart = now();
+                    return;
+                }
                 mc.getMusicManager().stopPlaying();
                 preparePlaylist();
                 Playlist.playNow(Playlist.tracks().indexOf(SWEDEN));
