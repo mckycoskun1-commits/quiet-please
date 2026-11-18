@@ -91,6 +91,9 @@ for kind, path, at, start, length, level, opts in sorted(rows, key=lambda r: r[0
     clip = decode(path, start, length)
     if kind == "sfx":
         gain = level
+    elif "measure" in opts:
+        a, b = (float(v) for v in opts["measure"].split(":"))
+        gain = level - loudness(decode(path, a, b))
     else:
         gain = level - loudness(clip)
     clip = fades(clip * 10 ** (gain / 20), float(opts.get("in", 0.005 if kind != "music" else 0.02)), float(opts.get("out", 0.01 if kind != "music" else 0.05)))
