@@ -63,8 +63,8 @@ public final class PromoDirector {
     private static Process ffmpeg;
 
     private static volatile double camX, camY, camZ;
-    private static float camYaw = SHOT_YAW;
-    private static float camPitch = SHOT_PITCH;
+    private static volatile float camYaw = SHOT_YAW;
+    private static volatile float camPitch = SHOT_PITCH;
     private static boolean camera = false;
 
     private static double curX = -1, curY = -1;
@@ -82,13 +82,17 @@ public final class PromoDirector {
     private static int shotIndex = 0;
     private static int timeIndex = 0;
 
-    private static final double FIGURE_DIST_USED = 6.5;
-    private static final double FIGURE_SIDE_USED = 2.5;
+    private static final double FIGURE_DIST_USED = 16.0;
+    private static final double FIGURE_SIDE_USED = 0.0;
+    private static final double CLOSE_BACK = 4.0;
+    private static final double CLOSE_RIGHT = 1.6;
+    private static final double CLOSE_LIFT = 1.0;
+    private static final float CLOSE_PITCH = 8.0F;
     private static final Identifier BAD_SONG = Identifier.fromNamespaceAndPath("quietplease_music", "kazoo_disaster");
     private static final Identifier SWEDEN = Identifier.withDefaultNamespace("music/game/sweden");
     private static final long SWEDEN_LEAD_MS = 42000;
-    private static final double[] FIGURE_DIST = {5.0, 6.5, 8.0};
-    private static final double[] FIGURE_SIDE = {-2.5, 0.0, 2.5, 4.0};
+    private static final double[] FIGURE_DIST = {12.0, 16.0, 20.0, 24.0};
+    private static final double[] FIGURE_SIDE = {-3.0, 0.0, 3.0};
     private static final List<double[]> figures = new ArrayList<>();
     private static int figureIndex = 0;
 
@@ -222,9 +226,11 @@ public final class PromoDirector {
                     for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(SHOT_X, SHOT_Y, SHOT_Z);
                     QuietPlease.LOGGER.info("PROMO shot {} {} {} yaw {} pitch {} time {}", SHOT_X, SHOT_Y, SHOT_Z, SHOT_YAW, SHOT_PITCH, SHOT_TIME);
                     double[] f = figurePlace(server.overworld());
-                    QuietPlease.LOGGER.info("PROMO figure at {} {} {}", f[0], f[1], f[2]);
+                    QuietPlease.LOGGER.info("PROMO figure at {} {} {} camera {} {} {}", f[0], f[1], f[2], f[3], f[4], f[5]);
                     command(server, "summon minecraft:mannequin " + f[0] + " " + f[1] + " " + f[2]
                             + " {Rotation:[90f,0f],immovable:1b,hide_description:1b}");
+                    closeCamera(f);
+                    for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(f[3], f[4], f[5]);
                 });
                 phase = 2;
                 phaseStart = now();
@@ -357,7 +363,7 @@ public final class PromoDirector {
                 List<String> lines = new ArrayList<>();
                 for (int i = 0; i < figures.size(); i++) {
                     double[] f = figures.get(i);
-                    lines.add(i + " " + f[0] + " " + f[1] + " " + f[2] + " dist " + f[3] + " side " + f[4]);
+                    lines.add(i + " figure " + f[0] + " " + f[1] + " " + f[2] + " camera " + f[3] + " " + f[4] + " " + f[5] + " dist " + f[6] + " side " + f[7]);
                 }
                 Files.write(Path.of(System.getenv("PROMO_OUT"), "figures.txt"), lines);
                 QuietPlease.LOGGER.info("PROMO figure scout: {} places", figures.size());
@@ -368,8 +374,12 @@ public final class PromoDirector {
             case 41 -> {
                 applyCamera(mc);
                 double[] f = figures.get(figureIndex);
+                closeCamera(f);
                 var server = mc.getSingleplayerServer();
-                server.execute(() -> command(server, "tp @e[type=minecraft:mannequin] " + f[0] + " " + f[1] + " " + f[2] + " 90 0"));
+                server.execute(() -> {
+                    command(server, "tp @e[type=minecraft:mannequin] " + f[0] + " " + f[1] + " " + f[2] + " 90 0");
+                    for (var sp : server.getPlayerList().getPlayers()) sp.teleportTo(f[3], f[4], f[5]);
+                });
                 phase = 42;
                 phaseStart = now();
             }
@@ -439,22 +449,44 @@ public final class PromoDirector {
         return out;
     }
 
+    private static double[] figureAt(ServerLevel level, double dist, double side) {
+        double x = SHOT_X - dist;
+        double z = SHOT_Z - side;
+        int bx = (int) Math.floor(x);
+        int bz = (int) Math.floor(z);
+        int y = topY(level, bx, bz);
+        BlockState below = level.getBlockState(new BlockPos(bx, y - 1, bz));
+        double cx = x + CLOSE_BACK;
+        double cz = z + CLOSE_RIGHT;
+        double cy = Math.max(y + CLOSE_LIFT, topY(level, (int) Math.floor(cx), (int) Math.floor(cz)) + 0.3);
+        boolean ok = below.getFluidState().isEmpty() && !below.is(Blocks.CHERRY_LOG) && !below.is(Blocks.CHERRY_LEAVES);
+        if (!ok) QuietPlease.LOGGER.info("PROMO figure skip {} {} on {}", x, z, below);
+        return ok ? new double[]{x, y, z, cx, cy, cz, dist, side} : null;
+    }
+
     private static void findFigures(ServerLevel level) {
         for (double dist : FIGURE_DIST) {
             for (double side : FIGURE_SIDE) {
-                double x = SHOT_X - dist;
-                double z = SHOT_Z - side;
-                int bx = (int) Math.floor(x);
-                int bz = (int) Math.floor(z);
-                int y = topY(level, bx, bz);
-                BlockState below = level.getBlockState(new BlockPos(bx, y - 1, bz));
-                if (!below.getFluidState().isEmpty() || below.is(Blocks.CHERRY_LOG) || below.is(Blocks.CHERRY_LEAVES)) {
-                    QuietPlease.LOGGER.info("PROMO figure skip {} {} on {}", x, z, below);
-                    continue;
-                }
-                figures.add(new double[]{x, y, z, dist, side});
+                double[] f = figureAt(level, dist, side);
+                if (f != null) figures.add(f);
             }
         }
+    }
+
+    private static void closeCamera(double[] f) {
+        camX = f[3];
+        camY = f[4];
+        camZ = f[5];
+        camYaw = SHOT_YAW;
+        camPitch = CLOSE_PITCH;
+    }
+
+    private static void wideCamera() {
+        camX = SHOT_X;
+        camY = SHOT_Y;
+        camZ = SHOT_Z;
+        camYaw = SHOT_YAW;
+        camPitch = SHOT_PITCH;
     }
 
     private static boolean cherry(ServerLevel level, int x, int z) {
@@ -634,9 +666,12 @@ public final class PromoDirector {
             dist = Double.parseDouble(v[0]);
             side = Double.parseDouble(v[1]);
         }
+        double[] f = figureAt(level, dist, side);
+        if (f != null) return f;
         double x = SHOT_X - dist;
         double z = SHOT_Z - side;
-        return new double[]{x, topY(level, (int) Math.floor(x), (int) Math.floor(z)), z};
+        double y = topY(level, (int) Math.floor(x), (int) Math.floor(z));
+        return new double[]{x, y, z, x + CLOSE_BACK, y + CLOSE_LIFT, z + CLOSE_RIGHT, dist, side};
     }
 
     private static void figure(Minecraft mc, String command) {
@@ -716,6 +751,7 @@ public final class PromoDirector {
             mc.setScreen(null);
             mc.options.hideGui = true;
             facing(mc, 90.0F);
+            wideCamera();
         });
 
         long d = 28000;
