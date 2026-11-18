@@ -78,6 +78,19 @@ The first title, "Turn off that one Minecraft song", was dropped because the use
 
 ### Description
 
+Live since 2026-11-18 (the first, plainer version was replaced at the user's request):
+
+```
+Big modpack, too much music? Don't mute everything. Quiet Please lets you turn off or turn down single songs, add your own music and build your own playlist.
+
+Download: https://www.curseforge.com/minecraft/mc-mods/quiet-please
+Website: https://mckycoskun1-commits.github.io/quiet-please/
+
+#Minecraft #MinecraftMods #Shorts
+```
+
+First version:
+
 ```
 Quiet Please: turn any Minecraft song off or down, play your own songs, build a playlist and skip with a crossfade.
 
