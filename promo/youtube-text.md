@@ -1,5 +1,14 @@
 # YouTube texts for the promo video
 
+Published on 2026-11-18 on the kirem333 channel, both public:
+
+- Main video: https://youtu.be/Sy-1RGe4uAs (title, description and tags as below, category Gaming, not made for kids, no altered content)
+- Short: https://youtube.com/shorts/qngE8Y6C8uk (title without #Shorts, the tag stays in the description)
+
+The main video is embedded at the top of the CurseForge description (right under the title, youtube.com/embed) and the Modrinth description (youtube-nocookie.com/embed). When the better social media video is ready, replace the video id in both descriptions.
+
+Upload note: the Chrome file upload tool takes at most 10 MB per call, so the mp4 was split into 9 MB parts, each part was put into its own hidden file input, joined into one File in the page (sha256 checked against the original) and handed to YouTube's Filedata input.
+
 Ready to copy into YouTube Studio. The links are the public CurseForge page, the Modrinth page, the website and the GitHub repository. If the Modrinth page is still not public when the video goes up, leave that line out and add it later.
 
 ## Main video (promo-16x9.mp4)
