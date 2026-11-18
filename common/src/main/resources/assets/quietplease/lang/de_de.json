@@ -251,7 +251,7 @@
   "quietplease.settings.history": "Verlauf & Statistik",
   "quietplease.settings.history.tooltip": "Die letzten 20 Lieder, die meistgespielten und die nie gespielten Lieder",
   "quietplease.settings.custom_folder": "Dein Musikordner",
-  "quietplease.settings.custom_folder.tooltip": "Öffnet config/quietplease/music. Lege dort eigene .ogg-Dateien ab; beim nächsten Öffnen des Panels stehen sie unter \"Deine Musik\"",
+  "quietplease.settings.custom_folder.tooltip": "Öffnet config/quietplease/music. Lege dort eigene .mp3- oder .ogg-Dateien ab; beim nächsten Öffnen des Panels stehen sie unter \"Deine Musik\"",
   "quietplease.history.title": "Verlauf & Statistik",
   "quietplease.history.tab.recent": "Zuletzt gespielt",
   "quietplease.history.tab.recent.tooltip": "Die letzten 20 Hintergrundlieder, das neueste oben",

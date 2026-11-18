@@ -203,6 +203,18 @@ public final class Loudness {
 
     /** Bir muzik dosyasinin yuksekligi (LUFS); okunamazsa NaN. */
     public static float measure(ResourceLocation file) {
+        java.nio.file.Path mp3 = CustomMusic.mp3File(file);
+        if (mp3 != null) {
+            try {
+                AudioFormat format = Mp3.format(mp3);
+                Meter meter = new Meter(format.getSampleRate(), format.getChannels());
+                Mp3.decode(mp3, meter);
+                return meter.loudness();
+            } catch (Exception e) {
+                QuietPlease.LOGGER.debug("Ses esitleme: {} olculemedi", file, e);
+                return Float.NaN;
+            }
+        }
         ResourceLocation path = new ResourceLocation(file.getNamespace(), "sounds/" + file.getPath() + ".ogg");
         try (InputStream in = Minecraft.getInstance().getResourceManager().open(path);
              OggAudioStream stream = new OggAudioStream(new BufferedInputStream(in))) {

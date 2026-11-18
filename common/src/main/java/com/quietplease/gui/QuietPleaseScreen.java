@@ -224,6 +224,7 @@ public class QuietPleaseScreen extends Screen {
     private static boolean matches(MusicTrack t, String q) {
         return q.isEmpty()
                 || t.id().toString().toLowerCase(Locale.ROOT).contains(q)
+                || t.title().toLowerCase(Locale.ROOT).contains(q)
                 || MusicLibrary.modName(t.namespace()).toLowerCase(Locale.ROOT).contains(q);
     }
 
@@ -301,7 +302,7 @@ public class QuietPleaseScreen extends Screen {
         MusicTrack shown = nowPlaying.get(Math.floorMod(nowPlayingIndex, nowPlaying.size()));
         drawEqualizer(g, left + 7, top + NOW_PLAYING_H - 4, PLAYING);
         MutableComponent line = Lang.tr("screen.now_playing").append(" ")
-                .append(Component.literal(shown.shortName()).withStyle(s -> s.withColor(PLAYING & 0xFFFFFF)))
+                .append(Component.literal(shown.title()).withStyle(s -> s.withColor(PLAYING & 0xFFFFFF)))
                 .append(Component.literal("  " + MusicLibrary.modName(shown.namespace())).withStyle(ChatFormatting.GRAY));
         if (nowPlaying.size() > 1) line.append(Component.literal("  ")).append(Lang.tr("screen.now_playing.more", nowPlaying.size() - 1).withStyle(ChatFormatting.DARK_GRAY));
         // Uzun adlar cubugun (ve Atla dugmesinin) ustune tasmasin
@@ -626,7 +627,7 @@ public class QuietPleaseScreen extends Screen {
             Component playingTag = Lang.tr("screen.playing_tag");
             int extraW = playing ? 12 : inGame ? 14 + font.width(playingTag) : 0;
             int nameMaxW = slider.getX() - 8 - nameX - extraW;
-            String name = track.shortName();
+            String name = track.title();
             if (font.width(name) > nameMaxW) name = font.plainSubstrByWidth(name, nameMaxW - font.width("…")) + "…";
             if (enabled) {
                 g.drawString(font, name, nameX, textY, playing ? GOLD : inGame ? PLAYING : TEXT);
@@ -654,7 +655,7 @@ public class QuietPleaseScreen extends Screen {
 
         private List<FormattedCharSequence> details() {
             List<FormattedCharSequence> lines = new ArrayList<>();
-            lines.add(Component.literal(track.shortName()).withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
+            lines.add(Component.literal(track.title()).withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
                     .append(Component.literal("  ").append(track.kind().displayName()).withStyle(ChatFormatting.GRAY)).getVisualOrderText());
             if (!Screen.hasControlDown()) {
                 lines.add(Lang.tr("screen.details_hint").withStyle(ChatFormatting.DARK_GRAY).getVisualOrderText());

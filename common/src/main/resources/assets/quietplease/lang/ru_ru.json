@@ -251,7 +251,7 @@
   "quietplease.settings.history": "История и статистика",
   "quietplease.settings.history.tooltip": "Последние 20 песен, самые частые и ни разу не игравшие",
   "quietplease.settings.custom_folder": "Папка с твоей музыкой",
-  "quietplease.settings.custom_folder.tooltip": "Открывает config/quietplease/music. Положи туда свои файлы .ogg; при следующем открытии панели они появятся в группе \"Твоя музыка\"",
+  "quietplease.settings.custom_folder.tooltip": "Открывает config/quietplease/music. Положи туда свои файлы .mp3 или .ogg; при следующем открытии панели они появятся в группе \"Твоя музыка\"",
   "quietplease.history.title": "История и статистика",
   "quietplease.history.tab.recent": "Недавние",
   "quietplease.history.tab.recent.tooltip": "Последние 20 фоновых песен, новые сверху",
