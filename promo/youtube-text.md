@@ -24,6 +24,32 @@ Other options:
 
 ### Description
 
+Live since 2026-11-18. The user found the first version too long and asked for a shorter one with emoji, without the shader and AI lines (the AI disclosure stays on the mod pages):
+
+```
+🎵 Big modpack, too much music? Don't mute everything!
+Quiet Please lets you choose which songs you hear, one by one.
+
+🔇 Turn off the song that bugs you
+🔉 Turn down the one that's too loud
+💿 Play your own .ogg songs
+📜 Build your own playlist
+⏭️ Skip with a smooth crossfade
+📊 See what you listened to the most
+
+⬇️ Download
+CurseForge: https://www.curseforge.com/minecraft/mc-mods/quiet-please
+Modrinth: https://modrinth.com/mod/quiet-please
+🌐 Website: https://mckycoskun1-commits.github.io/quiet-please/
+🐞 Bugs and source: https://github.com/mckycoskun1-commits/quiet-please
+
+✅ Minecraft 1.18.2 to 26.3 (7 versions) · Fabric, Quilt, Forge, NeoForge · client-side only
+
+#Minecraft #MinecraftMods #Modpack
+```
+
+First version:
+
 ```
 Tired of hearing the same song again and again? Quiet Please lets you decide, song by song, what music plays in your Minecraft game or modpack.
 
