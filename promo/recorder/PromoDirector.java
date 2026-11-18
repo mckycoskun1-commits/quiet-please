@@ -85,6 +85,9 @@ public final class PromoDirector {
     private static final Identifier BAD_SONG = Identifier.fromNamespaceAndPath("quietplease_music", "kazoo_disaster");
     private static final Identifier SWEDEN = Identifier.withDefaultNamespace("music/game/sweden");
     private static final long SWEDEN_LEAD_MS = 42000;
+    private static final int POPUP_SCALE = 180;
+    private static final int POPUP_OFFSET_X = 226;
+    private static final int POPUP_OFFSET_Y = -60;
 
     private static final double FIGURE_DIST = 24.0;
     private static final double FIGURE_SIDE = 0.0;
@@ -658,6 +661,15 @@ public final class PromoDirector {
         ModOptions.fadeOnSkip = true;
         ModOptions.normalize = false;
         ModOptions.popupPosition = ModOptions.PopupPosition.RIGHT_MIDDLE;
+        ModOptions.songPopup = true;
+        ModOptions.popupScale = POPUP_SCALE;
+        ModOptions.popupDuration = 6;
+        ModOptions.popupBackground = ModOptions.PopupBackground.DARK;
+        ModOptions.popupOffsetX = POPUP_OFFSET_X;
+        ModOptions.popupOffsetY = POPUP_OFFSET_Y;
+        ModOptions.popupShowIcon = true;
+        ModOptions.popupShowMod = true;
+        ModOptions.popupEqualizer = true;
         com.quietplease.music.MusicSettings.resetAll();
         com.quietplease.music.ListenStats.clear();
         for (Identifier fav : new ArrayList<>(Playlist.favorites())) Playlist.toggleFavorite(fav);
@@ -721,6 +733,7 @@ public final class PromoDirector {
 
         at(20500, () -> {
             mark("sceneB");
+            mc.options.hideGui = false;
             Playlist.playNow(Playlist.tracks().indexOf(BAD_SONG));
         });
         at(21000, () -> facing(mc, 270.0F));

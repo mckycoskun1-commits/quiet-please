@@ -283,7 +283,7 @@ for fmt in args.formats.split(","):
             elif view == "out":
                 chain += "," + persp(f"(1.05-0.05*{T}/{f(s['len'])})", *calm)
             elif view == "punch":
-                chain += "," + persp(f"(1.02+0.06*{T}/{f(s['len'])})", *punch)
+                chain += "," + persp(f"(1.01+0.04*{T}/{f(s['len'])})", *punch)
             if "cam" in s:
                 chain += "," + cam_filter(s, vertical)
             if "zoom" in s and s["zoom"][0] in rects:
@@ -339,25 +339,6 @@ for fmt in args.formats.split(","):
         out.append(f"Dialogue: 0,{ass_time(F + 0.65 + 0.25 * k2)},{end_t},EndLine,,0,0,0,,"
                    f"{{\\an5\\pos({cx},{ty + 90 + k2 * step})\\fad(200,600)}}{text}")
     out.append(f"Dialogue: 1,{ass_time(0)},{ass_time(by['B']['out'] + 1.3)},Hook,,0,0,0,,{{\\fad(0,300)}}That one song in your modpack...")
-    toasts = [
-        (by["B"]["out"] + 0.15, by["C"]["out"], "Now playing", "Kazoo Disaster"),
-        (skip_out + 0.1, by["D4b"]["out"], "Skipped", "Next: Featherfall"),
-        (prev_out + 0.1, by["D4c"]["out"], "Back one song", "Left to Bloom"),
-        (never_out + 0.1, by["D5"]["out"], "Never play again", "Left to Bloom: off"),
-    ]
-    ss, bs, pad = (44, 66, 36) if vertical else (36, 58, 30)
-    for t0, t1, small, big in toasts:
-        w = int(max(len(big) * 0.56 * bs, len(small) * 0.56 * ss) + 2 * pad + 10)
-        h = int(ss * 1.25 + bs * 1.25 + pad)
-        x, y = (540 - w // 2, 780) if vertical else (1860 - w, 470)
-        a, b = ass_time(t0), ass_time(t1)
-
-        def mv(xx, yy):
-            return f"\\move({xx + 50},{yy},{xx},{yy},0,220)\\fad(150,200)"
-        out.append(f"Dialogue: 2,{a},{b},Toast,,0,0,0,,{{\\an7{mv(x, y)}\\p1\\1c&H141414&\\1a&H30&}}m 0 0 l {w} 0 l {w} {h} l 0 {h}")
-        out.append(f"Dialogue: 3,{a},{b},Toast,,0,0,0,,{{\\an7{mv(x, y)}\\p1\\1c&H5CD65C&}}m 0 0 l 8 0 l 8 {h} l 0 {h}")
-        out.append(f"Dialogue: 4,{a},{b},Toast,,0,0,0,,{{\\an7{mv(x + pad, y + int(pad * 0.5))}\\fs{ss}\\b0\\1c&HB8B8B8&}}{small}")
-        out.append(f"Dialogue: 4,{a},{b},Toast,,0,0,0,,{{\\an7{mv(x + pad, y + int(pad * 0.5 + ss * 1.2))}\\fs{bs}\\b1\\1c&HFFFFFF&}}{big}")
     size = 66 if vertical else 58
     margin = 560 if vertical else 70
     box_margin = 560 if vertical else 30
@@ -378,7 +359,6 @@ Style: NarrBox,Segoe UI,{size},&H00FFFFFF,&H00FFFFFF,&H50000000,&H50000000,-1,0,
 Style: PlayerBox,Segoe UI,{size},&H0060E0FF,&H0060E0FF,&H50000000,&H50000000,-1,0,0,0,100,100,0,0,3,14,0,2,70,70,{box_margin},1
 Style: EndTitle,Segoe UI,{104 if vertical else 92},&H00FFFFFF,&H00FFFFFF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,4,3,5,40,40,0,1
 Style: Hook,Segoe UI,{86 if vertical else 76},&H00FFFFFF,&H00FFFFFF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,5,2,8,60,60,{280 if vertical else 70},1
-Style: Toast,Segoe UI,40,&H00FFFFFF,&H00FFFFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
 Style: EndLine,Segoe UI,{54 if vertical else 46},&H00E0E0E0,&H00FFFFFF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,3,2,5,40,40,0,1
 
 [Events]
