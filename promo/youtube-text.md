@@ -3,7 +3,7 @@
 Published on 2026-11-18 on the kirem333 channel, both public:
 
 - Main video: https://youtu.be/Sy-1RGe4uAs (title, description and tags as below, category Gaming, not made for kids, no altered content)
-- Short: https://youtube.com/shorts/qngE8Y6C8uk (title without #Shorts, the tag stays in the description)
+- Short: https://youtube.com/shorts/qngE8Y6C8uk (same title as the main video at the user's request, #Shorts stays in the description)
 
 The main video is embedded at the top of the CurseForge description (right under the title, youtube.com/embed) and the Modrinth description (youtube-nocookie.com/embed). When the better social media video is ready, replace the video id in both descriptions.
 
@@ -72,7 +72,9 @@ minecraft, minecraft mod, minecraft mods, music mod, minecraft music, music cont
 
 ### Title
 
-Turn off that one Minecraft song #Shorts
+Quiet Please - Turn off any song in Minecraft (mod showcase)
+
+The first title, "Turn off that one Minecraft song", was dropped because the user did not like it.
 
 ### Description
 
