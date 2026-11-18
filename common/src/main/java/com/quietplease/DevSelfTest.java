@@ -286,6 +286,10 @@ final class DevSelfTest {
                 "kendi muzigin: ad " + com.quietplease.music.CustomMusic.slugForTest("Benim Sarkim (v2).ogg"));
         check(failures, com.quietplease.music.CustomMusic.slugForTest("Albüm\\01 - Giriş.OGG").equals("alb_m/01_-_giri"),
                 "kendi muzigin: alt klasor adi " + com.quietplease.music.CustomMusic.slugForTest("Albüm\\01 - Giriş.OGG"));
+        check(failures, com.quietplease.music.CustomMusic.slugForTest("Benim Şarkım.MP3").equals("benim_ar_m"),
+                "kendi muzigin: mp3 adi " + com.quietplease.music.CustomMusic.slugForTest("Benim Şarkım.MP3"));
+        check(failures, com.quietplease.music.MusicTrack.title(Identifier.fromNamespaceAndPath("somemod", "music/boss__theme_2")).equals("boss theme 2"),
+                "sarki adi: alt cizgiler bosluk olmali " + com.quietplease.music.MusicTrack.title(Identifier.fromNamespaceAndPath("somemod", "music/boss__theme_2")));
 
         // Nota bloklari listede, kendi turleriyle
         var library = com.quietplease.music.MusicLibrary.scan();
@@ -306,6 +310,8 @@ final class DevSelfTest {
                     "sounds/" + menuFiles.get(0).getPath() + ".ogg"));
             check(failures, seconds > 0 && seconds == original, "kendi muzigin: sure " + seconds + " / " + original);
             check(failures, Playlist.createSoundFor(custom) != null, "kendi muzigin: ses olusturulamadi");
+            check(failures, com.quietplease.music.MusicTrack.title(custom).equals("selftest song"),
+                    "kendi muzigin: ekrandaki ad " + com.quietplease.music.MusicTrack.title(custom));
 
             boolean bg = ModOptions.customInBackground;
             ModOptions.customInBackground = false;
