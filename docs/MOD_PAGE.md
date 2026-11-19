@@ -38,7 +38,9 @@ All the music in your game, vanilla and modded, grouped by the mod it comes from
 - **On / Off** – turn a track off and the game simply picks another one instead; if it is playing right now, it stops and the next song comes
 - **Volume** – set each track anywhere from 0 to 100 %
 - **Mod volume** – one slider in each mod header turns all songs of that mod up or down at once
-- **Play button** – preview the track right in the panel (background music pauses while you listen)
+- **Click a song** – preview it right in the panel (background music pauses while you listen)
+- **Play now** – start the song right away as the background music
+- **Add to queue** – the song plays right after the current one; songs you queue one after another keep their order, and the button shows each song's place in the queue
 - **Star** – keep the song in a Favorites group at the top of the list
 
 On top of the list:
@@ -60,10 +62,10 @@ Press **Playlist** and pick the songs and their order, like a music player.
 ## Your own music
 ![Your own songs in their own group at the top of the panel](https://mckycoskun1-commits.github.io/quiet-please/img/your-music.png)
 
-Put your own .ogg files in `config/quietplease/music` (Settings has a button that opens the folder). No resource pack needed.
+Put your own .mp3 or .ogg files in `config/quietplease/music` (Settings has a button that opens the folder). No resource pack or converting needed.
 - They show up at the top of the panel under **Your music**: listen to them, set their volume or turn them off
 - Add them to the playlist like any other song
-- With **Your music** on (Music behavior screen, on by default) they also play as background music, each about as often as one game song
+- With **Your music** on (Music tab of the settings, on by default) they also play as background music, each about as often as one game song
 
 ## History and stats
 ![The history screen with the last songs, when they played and buttons to play, star or turn them off](https://mckycoskun1-commits.github.io/quiet-please/img/history.png)
@@ -93,10 +95,11 @@ When a new song starts, a small card slides in with the song name and the mod it
 - **Drag the example card** in the popup settings to put it exactly where you want it
 
 ## Music that fits the moment
-![The Music behavior screen](https://mckycoskun1-commits.github.io/quiet-please/img/music-behavior.png)
+![The Behavior tab of the settings](https://mckycoskun1-commits.github.io/quiet-please/img/music-behavior.png)
 
 - **Jukebox** – background music turns down or mutes while a music disc plays nearby, and comes back when the disc ends
-- **In background** – turn the music down when you Alt+Tab out of the game
+- **Alt+Tab music** – turn the music down or mute it when you Alt+Tab out of the game
+- **Alt+Tab silence** – silence every game sound while you are tabbed out; sounds continue where they were when you come back (off by default)
 - **In combat** – turn the music down when you take damage or a hostile mob is close, so you can hear the fight
 - **Fade in/out** – songs start and end softly instead of cutting in and out
 - **No repeats** – the last 5 or 10 songs are skipped when the game picks the next one. In small song pools like the main menu or the Nether, at most half of the songs are held back, so the order stays random and the song that just played never comes right back
@@ -104,13 +107,13 @@ When a new song starts, a small card slides in with the song name and the mod it
 - **Fade on skip** – Skip fades the old song out while the next one already starts
 - **Even out volume** – every song's loudness is measured once in the background, then all songs are brought to the level of Minecraft's own music, so very loud or very quiet mod soundtracks fit in (off by default)
 
-## Shorter silence between songs
-![The Quiet Please settings screen](https://mckycoskun1-commits.github.io/quiet-please/img/settings.png)
+## Clear settings and shorter silence between songs
+![The Music tab of the Quiet Please settings](https://mckycoskun1-commits.github.io/quiet-please/img/settings.png)
 
 - **Music gap** – Vanilla, Short, None or Custom with your own shortest and longest wait. It only changes background music; dragon, credits and boss music are not affected
-- Turn the now-playing text, the menu buttons or the song popup off
+- The settings are split into three tabs, **Music**, **Behavior** and **Display**, and each tab says in one line what it is for
+- Turn the now-playing text, the menu buttons or the song popup off (Display tab)
 - Turn playlist mode on or off, and choose whether ambient tracks show in the list
-- **Popup settings...** and **Music behavior...** open the two screens above
 
 ## Open it from anywhere
 ![The Quiet Please button in the Options screen](https://mckycoskun1-commits.github.io/quiet-please/img/options-button.png)
@@ -155,16 +158,16 @@ Büyük mod paketleri bir sürü müzik getirir ve hepsi birbirine uymaz.
 - Her parça için **%0–100 ses ayarı**, her mod için de ayrı bir **mod sesi** kaydırıcısı
 - Bir modun **tüm müziklerini tek tıkla kapat**
 - **Şarkı bildirimi** – yeni şarkı başlayınca şarkının ve modun adını gösteren küçük bir kart; yeri, boyutu, renkleri ve yazı stili ayarlanır, örnek kart sürüklenerek yerleştirilir
-- **Müzik davranışı** – yakında plak çalarken, oyun arka plandayken ya da savaşta müziği kıs; şarkıları yumuşak başlat ve bitir, son çalınanları tekrar etme, favorileri daha sık çal
-- Panelde **dinleyerek önizle** (dinlerken arka plan müziği susar)
+- **Davranış** – yakında plak çalarken, Alt+Tab ile oyundan çıkınca ya da savaşta müziği kıs, istersen Alt+Tab'da bütün sesleri sustur; şarkıları yumuşak başlat ve bitir, son çalınanları tekrar etme, favorileri daha sık çal
+- Panelde şarkıya **tıklayarak ön izle** (dinlerken arka plan müziği susar); her satırda **şimdi çal** ve **sıraya al** düğmeleri: sıraya alınan şarkı çalan şarkıdan hemen sonra çalar, arka arkaya eklenenler sırasını korur
 - **Arka plan çalma listesi** – şarkıları ve sırasını sen seç, bir müzik çalar gibi: ilerleme çubuklu sıra, yukarı/aşağı taşıma, karıştırma, tekrar. Boss, ejderha ve jenerik müzikleri yine araya girer
 - Çalan arka plan şarkısını **atla** (düğme, `/quietplease skip` ya da seçtiğin bir tuş), **önceki şarkıya dön** (`/quietplease previous` ya da tuş)
-- **Kendi müziğin** – `config/quietplease/music` klasörüne koyduğun .ogg dosyaları panelde kendi grubunda görünür, çalma listesine eklenir ve istersen arka plan müziğine karışır
+- **Kendi müziğin** – `config/quietplease/music` klasörüne koyduğun .mp3 ve .ogg dosyaları panelde kendi grubunda görünür, çalma listesine eklenir ve istersen arka plan müziğine karışır
 - **Geçmiş ve istatistik** – son çalan 20 şarkı, en çok çalanlar ve hiç çalmayanlar; her satırdan şarkıyı çal, favorile ya da kapat
 - **Nota blokları** enstrüman enstrüman listede; her birini kısabilir ya da kapatabilirsin
 - Paneli açmak, şarkı atlamak, önceki şarkıya dönmek, çalan şarkıyı favorilere eklemek ya da bir daha çalmamak ve çalma listesi modunu açıp kapatmak için **kısayol tuşları** (varsayılan olarak boş)
 - **Şarkı arası** – arka plan şarkıları arasındaki uzun sessizliği kısalt ya da kaldır
-- **Ayarlar ekranı** – menü düğmelerini ya da çalan şarkı yazısını gizle
+- **Ayarlar** üç sekmede (Müzik, Davranış, Ekran), her sekmenin altında ne işe yaradığı yazar; menü düğmelerini ya da çalan şarkı yazısını gizle
 - **Hazır ayarlar** – `/quietplease export <ad>` / `import <ad>` ile ayarları paylaş
 - Arama, mod filtresi ve uzun ortam sesleri için ayrı görünüm
 - Vanilla müzikler, plaklar ve modların boss/biyom müzikleriyle çalışır
@@ -189,10 +192,15 @@ ya da **Modlar → Quiet Please → Yapılandırma**. Sohbette `/quietplease` ko
 - Ayarlar `config/quietplease.json` dosyasında. Mod paketi yapanlar `config/quietplease-presets/default.json` ekleyebilir: yeni oyuncu bu ayarla başlar, paket güncellenince oyuncunun değişiklikleri korunur.
 ```
 
-## 2.0.1 sürüm notu (17.11.2026, henüz yüklenmedi)
+## 2.1.0 sürüm notu (19.11.2026, Release)
 
-Metni ana klasördeki `dist/changelog-2.0.1.md` dosyasındadır: kendi müziğin yeniden sesli çalıyor (1.20.1 ve sonrası),
-panelde dinledikten sonra arka plan müziği hemen geri geliyor, Forge 1.21.1 dosyasına eksik MixinExtras kütüphanesi eklendi.
+Metni ana klasördeki `dist/changelog-2.1.0.md` dosyasındadır: paneldeki şimdi çal ve sıraya al düğmeleri, şarkıya tıklayarak
+ön izleme, kendi müziğinde MP3, sekmeli ayarlar, Alt+Tab'da sessiz ayarı, boşluklu şarkı adları, NeoForge 26.3 açılış düzeltmesi.
+
+## 2.0.1 sürüm notu (17.11.2026, Release)
+
+Kendi müziğin yeniden sesli çalıyor (1.20.1 ve sonrası), panelde dinledikten sonra arka plan müziği hemen geri geliyor,
+Forge 1.21.1 dosyasına eksik MixinExtras kütüphanesi eklendi.
 
 ## 2.0.0 sürüm notu (16.11.2026, Release)
 
