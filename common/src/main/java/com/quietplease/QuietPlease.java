@@ -31,6 +31,7 @@ public class QuietPlease {
         com.quietplease.music.MusicControl.clientTick(mc);
         com.quietplease.music.Loudness.clientTick(mc);
         com.quietplease.music.MusicMixer.clientTick(mc);
+        com.quietplease.music.FocusMute.clientTick(mc);
         com.quietplease.music.ListenStats.clientTick();
         QuietPleaseKeys.tick(mc);
         if (guiTestTicks >= 0) guiTestTick(mc);
@@ -78,7 +79,8 @@ public class QuietPlease {
             case 120 -> mc.setScreen(new OptionsScreen(new TitleScreen(), mc.options));
             case 135 -> shot(mc, "quietplease-options.png");
             // Ayarlar ekrani
-            case 136 -> mc.setScreen(new com.quietplease.gui.QuietPleaseSettingsScreen(new TitleScreen()));
+            case 136 -> mc.setScreen(new com.quietplease.gui.QuietPleaseSettingsScreen(new TitleScreen(),
+                    com.quietplease.gui.QuietPleaseSettingsScreen.Tab.MUSIC));
             case 141 -> shot(mc, "quietplease-settings.png");
             // Calma listesi: birkac ornek sarki, ilki hemen calsin (ilerleme cubugu gorunsun)
             case 142 -> {
@@ -163,7 +165,7 @@ public class QuietPlease {
                     mc.getMusicManager().startPlaying(net.minecraft.sounds.Musics.GAME);
                 } else if (t == 69) {
                     String shown = com.quietplease.gui.SongPopup.visibleTitle();
-                    boolean ok = shown != null && expectedTrack != null && expectedTrack.getPath().endsWith(shown);
+                    boolean ok = shown != null && expectedTrack != null && shown.equals(com.quietplease.music.MusicTrack.title(expectedTrack));
                     LOGGER.info("GUITEST sarki bildirimi: {} (kart: {})", ok ? "BASARILI" : "HATA", shown);
                     shot(mc, "quietplease-popup.png");
                 } else if (t == 70 || t == 115) {
@@ -267,7 +269,7 @@ public class QuietPlease {
                     shot(mc, "quietplease-popup-drag.png");
                 } else if (t == 198) {
                     com.quietplease.music.ModOptions.resetPopup();
-                    mc.setScreen(new com.quietplease.gui.MusicBehaviorScreen(null));
+                    mc.setScreen(new com.quietplease.gui.QuietPleaseSettingsScreen(null, com.quietplease.gui.QuietPleaseSettingsScreen.Tab.BEHAVIOR));
                 } else if (t == 204) {
                     shot(mc, "quietplease-behavior.png");
                     var current = ((com.quietplease.mixin.MusicManagerAccessor) mc.getMusicManager()).quietplease$getCurrentMusic();
@@ -342,7 +344,7 @@ public class QuietPlease {
                     mc.setScreen(new QuietPleaseScreen(null));
                 } else if (t == 250) {
                     shot(mc, "quietplease-custom-group.png");
-                    mc.setScreen(new com.quietplease.gui.QuietPleaseSettingsScreen(null));
+                    mc.setScreen(new com.quietplease.gui.QuietPleaseSettingsScreen(null, com.quietplease.gui.QuietPleaseSettingsScreen.Tab.DISPLAY));
                 } else if (t == 254) {
                     shot(mc, "quietplease-settings-ingame.png");
                     mc.setScreen(null);

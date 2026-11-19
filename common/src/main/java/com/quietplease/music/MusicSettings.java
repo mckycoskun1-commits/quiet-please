@@ -107,7 +107,7 @@ public final class MusicSettings {
     }
 
     /** Onizleme calarken arka plan muziginin carpani: -80 dB, duyulmaz ama ses kanali acik kalir. */
-    static final float PREVIEW_MUTE = 1.0E-4F;
+    public static final float PREVIEW_MUTE = 1.0E-4F;
 
     /** Calan bir ses icin carpan. Ses henuz bir dosyaya cozulmemisse etkilenmez. */
     public static float factor(SoundInstance instance) {
