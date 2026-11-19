@@ -619,9 +619,9 @@ public class QuietPleaseScreen extends Screen {
                 Playlist.toggleFavorite(track.id());
                 MusicSettings.save();
                 // Favoriler grubu en ustte: yildizlanan parca oraya gelsin, yildizi kaldirilan oradan kalksin
-                double scroll = list.getScrollAmount();
+                double scroll = QuietPleaseScreen.this.list.getScrollAmount();
                 rebuildList();
-                list.setScrollAmount(scroll);
+                QuietPleaseScreen.this.list.setScrollAmount(scroll);
             }).size(20, 20).build();
             this.slider = new VolumeSlider(track);
             this.toggle = Btn.builder(com.quietplease.Txt.empty(), b -> {
