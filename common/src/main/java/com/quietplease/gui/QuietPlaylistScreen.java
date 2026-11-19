@@ -217,7 +217,7 @@ public class QuietPlaylistScreen extends Screen {
                 .bounds(x + 24 + labelW, y, 20, 20).tooltip(Tooltip.create(Lang.tr("playlist.view.next.tooltip"))).build());
         prev.active = next.active = !Playlist.lists().isEmpty();
         Button create = addRenderableWidget(Button.builder(Component.literal("+"), b ->
-                minecraft.setScreen(new PlaylistNameScreen(this, null, name -> {
+                minecraft.gui.setScreen(new PlaylistNameScreen(this, null, name -> {
                     Playlist.SavedList made = Playlist.createList(name);
                     if (made != null) {
                         view = made;
