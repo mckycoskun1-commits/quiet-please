@@ -482,6 +482,55 @@ final class DevSelfTest {
             check(failures, Playlist.tracks().equals(List.of(b, c)) && Playlist.isLooping(b) && Playlist.isFavorite(c)
                     && !Playlist.isFavorite(b) && Playlist.history().contains(b), "calma listesi: kaydet/yukle " + saved);
 
+            // Kayitli listeler: parcalar calinca listede kalir, liste bitince basa doner
+            Playlist.clear();
+            check(failures, Playlist.createList("Sakin") != null && Playlist.createList("sakin ") == null
+                    && Playlist.createList("  ") == null, "liste: ayni ad ya da bos ad kabul edilmemeli");
+            Playlist.SavedList calm = Playlist.list("SAKIN");
+            Playlist.listAdd(calm, a);
+            Playlist.listAdd(calm, b);
+            Playlist.listAdd(calm, c);
+            Playlist.listAdd(calm, a);
+            check(failures, calm.tracks().equals(List.of(a, b, c)), "liste: tekrar eklenen parca bir kez olmali " + calm.tracks());
+            List<Identifier> listOrder = new ArrayList<>();
+            for (int i = 0; i < 4; i++) {
+                int idx = Playlist.advanceListForTest(calm, all);
+                listOrder.add(idx < 0 ? null : calm.tracks().get(idx));
+            }
+            check(failures, listOrder.equals(List.of(a, b, c, a)) && calm.size() == 3,
+                    "liste: sirayla calmali, parcalar kalmali, basa donmeli " + listOrder);
+            int skippedTo = Playlist.advanceListForTest(calm, id -> !id.equals(b));
+            check(failures, skippedTo == 2, "liste: calinamayan parca atlanmali " + skippedTo);
+            check(failures, Playlist.renameList(calm, "Calm") && Playlist.list("calm") == calm && Playlist.list("Sakin") == null,
+                    "liste: yeniden adlandirma");
+            Playlist.SavedList fight = Playlist.createList("Savas");
+            check(failures, fight != null && !Playlist.renameList(fight, "CALM"), "liste: baska listenin adi alinmamali");
+            Playlist.listAdd(fight, d);
+
+            // Dosyaya yazip okuyunca listeler, siralari ve etkin liste korunur
+            com.google.gson.JsonObject withLists = Playlist.snapshot();
+            Playlist.restore(withLists);
+            Playlist.SavedList calmLoaded = Playlist.list("Calm");
+            Playlist.SavedList fightLoaded = Playlist.list("Savas");
+            check(failures, calmLoaded != null && calmLoaded.tracks().equals(List.of(a, b, c)) && Playlist.activeList() == calmLoaded
+                    && fightLoaded != null && fightLoaded.tracks().equals(List.of(d)) && a.equals(Playlist.listNext(calmLoaded)),
+                    "liste: kaydet/yukle " + withLists);
+
+            // Once sira (Siraya al) calar, sira bitince etkin liste devam eder
+            if (calmLoaded != null) {
+                ModOptions.playlistMode = true;
+                Playlist.add(d);
+                var fromQueue = Playlist.startInstead(Musics.MENU);
+                var fromList = Playlist.startInstead(Musics.MENU);
+                check(failures, fromQueue instanceof Playlist.PlaylistSound q && q.trackId.equals(d) && q.fromList == null
+                                && fromList instanceof Playlist.PlaylistSound l && l.fromList == calmLoaded && l.trackId.equals(a)
+                                && calmLoaded.size() == 3 && Playlist.isEmpty(),
+                        "liste: once sira, sonra kayitli liste calmali " + fromQueue + " " + fromList);
+                Playlist.deleteList(calmLoaded);
+                check(failures, Playlist.activeList() == null && Playlist.list("Calm") == null, "liste: silinince etkin liste kapanmali");
+            }
+            if (fightLoaded != null) Playlist.deleteList(fightLoaded);
+
             // Arka plan muzigi tanimi
             check(failures, ModOptions.isBackground(Musics.MENU) && ModOptions.isBackground(Musics.GAME)
                     && ModOptions.isBackground(Musics.END) && ModOptions.isBackground(Musics.UNDER_WATER)
