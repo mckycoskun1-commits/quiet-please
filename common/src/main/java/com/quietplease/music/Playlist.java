@@ -90,6 +90,9 @@ public final class Playlist {
     @Nullable
     private static ResourceLocation forced;
     private static boolean forcedReplay;
+    /** En son "Siraya al" ile eklenen parca; sonraki eklenen onun ardina girer. */
+    @Nullable
+    private static ResourceLocation lastQueued;
     /** Her degisiklikte artar; panel listesini ne zaman yenileyecegini buradan anlar. */
     private static int version = 0;
     private static final RandomSource RANDOM = RandomSource.create();
@@ -201,6 +204,48 @@ public final class Playlist {
         changed();
     }
 
+    /**
+     * Ana paneldeki "Siraya al" dugmesi: parca calan sarkidan hemen sonra calar. Arka arkaya siraya alinanlar
+     * eklenme sirasiyla dizilir (son eklenen bu blogun en altina). Liste bossa olusur; calma listesi modu kapaliysa
+     * acilir ki siradaki arka plan sarkisi gercekten bu olsun. Zaten listedeyse yeri buraya tasinir.
+     *
+     * @return calinma sirasindaki yeri (1 = siradaki); calan parcanin kendisiyse 0
+     */
+    public static int enqueue(ResourceLocation id) {
+        if (id.equals(currentId)) return 0;
+        int existing = QUEUE.indexOf(id);
+        if (existing >= 0) {
+            QUEUE.remove(existing);
+            LOOP.remove(id);
+            if (id.equals(nextFrom)) nextFrom = null;
+        }
+        int at;
+        int last = lastQueued == null || lastQueued.equals(currentId) ? -1 : QUEUE.indexOf(lastQueued);
+        if (last >= 0) {
+            at = last + 1;
+        } else if (currentId != null && QUEUE.contains(currentId)) {
+            at = QUEUE.indexOf(currentId) + 1;
+        } else {
+            at = QUEUE.isEmpty() ? 0 : startIndex();
+            nextFrom = id; // hicbir sey calmiyorken arama bu parcadan baslasin
+        }
+        QUEUE.add(Math.min(at, QUEUE.size()), id);
+        lastQueued = id;
+        HISTORY.remove(id);
+        HISTORY.add(0, id);
+        while (HISTORY.size() > HISTORY_MAX) HISTORY.remove(HISTORY.size() - 1);
+        ModOptions.playlistMode = true;
+        changed();
+        return queuePosition(id);
+    }
+
+    /** Calinma sirasindaki yeri (1 = siradaki); listede degilse ya da calan parcaysa 0. */
+    public static int queuePosition(ResourceLocation id) {
+        int i = QUEUE.indexOf(id);
+        if (i < 0 || id.equals(currentId)) return 0;
+        return upcoming().indexOf(i) + 1;
+    }
+
     public static void remove(ResourceLocation id) {
         int i = QUEUE.indexOf(id);
         if (i >= 0) removeAt(i);
@@ -256,6 +301,7 @@ public final class Playlist {
         LOOP.clear();
         currentId = null;
         nextFrom = null;
+        lastQueued = null;
         changed();
     }
 

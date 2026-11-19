@@ -521,7 +521,10 @@ public class QuietPleaseScreen extends Screen {
         }
     }
 
-    /** Tek parca: [dinle] [ikon] ad ~~~ .......... [ses kaydiricisi] [Acik/Kapali] */
+    /**
+     * Tek parca: [★ favori] [▶ simdi cal] [+ siraya al] [ikon] ad ~~~ .......... [ses kaydiricisi] [Acik/Kapali].
+     * Ada ya da ikona tiklamak onizlemeyi baslatir/durdurur.
+     */
     private class TrackEntry extends Row {
         private static final int TOGGLE_W = 50;
         private static final int SLIDER_W = 96;
@@ -529,19 +532,31 @@ public class QuietPleaseScreen extends Screen {
         private final MusicTrack track;
         private final boolean alternate;
         private final ItemStack icon;
-        private final Button play;
         private final Button star;
+        private final Button playNow;
+        private final Button queue;
         private final VolumeSlider slider;
         private final Button toggle;
+        /** Son cizimdeki tiklanabilir ad/ikon alani (onizleme). */
+        private int previewLeft;
+        private int previewRight;
 
         TrackEntry(MusicTrack track, boolean alternate) {
             this.track = track;
             this.alternate = alternate;
             this.icon = iconFor(track);
-            this.play = Button.builder(Component.literal("▶"), b -> {
-                if (MusicPreview.isPlaying(track.id())) MusicPreview.stop();
-                else MusicPreview.play(track);
-            }).size(20, 20).tooltip(Tooltip.create(Lang.tr("screen.play.tooltip"))).build();
+            this.playNow = Button.builder(Component.literal("▶"), b -> {
+                MusicPreview.stop();
+                MusicControl.playFromHistory(track.id(), false);
+            }).size(20, 20).tooltip(Tooltip.create(Lang.tr("screen.play_now.tooltip"))).build();
+            this.queue = Button.builder(Component.literal("+"), b -> {
+                if (Playlist.isActive() && Playlist.queuePosition(track.id()) > 0) Playlist.remove(track.id());
+                else Playlist.enqueue(track.id());
+                MusicSettings.save();
+            }).size(20, 20).build();
+            boolean song = track.kind() != MusicTrack.Kind.NOTE;
+            this.playNow.active = song;
+            this.queue.active = song;
             this.star = Button.builder(Component.empty(), b -> {
                 Playlist.toggleFavorite(track.id());
                 MusicSettings.save();
@@ -579,16 +594,24 @@ public class QuietPleaseScreen extends Screen {
 
             // dugmeler
             int by = top + (height - 20) / 2;
-            play.setPosition(left, by);
-            play.setMessage(playing
-                    ? Component.literal("■").withStyle(s -> s.withColor(ACCENT & 0xFFFFFF))
-                    : Component.literal("▶"));
             boolean starred = Playlist.isFavorite(track.id());
-            star.setPosition(left + 22, by);
+            star.setPosition(left, by);
             star.setMessage(starred
                     ? Component.literal("★").withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
                     : Component.literal("☆").withStyle(ChatFormatting.GRAY));
             star.setTooltip(Tooltip.create(Lang.tr(starred ? "screen.star.remove" : "screen.star.add")));
+            playNow.setPosition(left + 22, by);
+            queue.setPosition(left + 44, by);
+            int position = queue.active && Playlist.isActive() ? Playlist.queuePosition(track.id()) : 0;
+            boolean current = Playlist.isActive() && track.id().equals(Playlist.currentTrack());
+            if (position > 0) {
+                queue.setMessage(Component.literal(position > 9 ? "9+" : String.valueOf(position))
+                        .withStyle(s -> s.withColor(PLAYING & 0xFFFFFF)));
+                queue.setTooltip(Tooltip.create(Lang.tr("screen.queued.tooltip", position)));
+            } else {
+                queue.setMessage(Component.literal("+"));
+                queue.setTooltip(Tooltip.create(Lang.tr(current ? "screen.queue.playing" : "screen.queue.tooltip")));
+            }
             toggle.setPosition(left + width - TOGGLE_W, by);
             toggle.setMessage(enabled
                     ? Lang.tr("screen.on").withStyle(ChatFormatting.GREEN)
@@ -597,7 +620,7 @@ public class QuietPleaseScreen extends Screen {
             slider.active = enabled;
 
             // ikon (kapaliysa karartilir)
-            int iconX = left + 46;
+            int iconX = left + 68;
             int iconY = top + (height - 16) / 2;
             g.renderItem(icon, iconX, iconY);
             if (!enabled) {
@@ -628,25 +651,41 @@ public class QuietPleaseScreen extends Screen {
                 g.drawString(font, playingTag, afterName + 12, textY, PLAYING);
             }
 
-            play.render(g, mouseX, mouseY, partialTick);
             star.render(g, mouseX, mouseY, partialTick);
+            playNow.render(g, mouseX, mouseY, partialTick);
+            queue.render(g, mouseX, mouseY, partialTick);
             slider.render(g, mouseX, mouseY, partialTick);
             toggle.render(g, mouseX, mouseY, partialTick);
 
-            // ad/ikon uzerine gelince ayrintilar
-            if (hovering && mouseX >= iconX && mouseX < slider.getX() - 4) {
-                setTooltipForNextRenderPass(details());
+            // ad/ikon: tiklayinca onizleme; uzerine gelince ad ve ipucu
+            previewLeft = iconX - 2;
+            previewRight = slider.getX() - 4;
+            if (hovering && mouseX >= previewLeft && mouseX < previewRight) {
+                setTooltipForNextRenderPass(details(playing));
             }
         }
 
-        private List<FormattedCharSequence> details() {
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (super.mouseClicked(mouseX, mouseY, button)) return true;
+            if (button != com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT
+                    || mouseX < previewLeft || mouseX >= previewRight) {
+                return false;
+            }
+            if (MusicPreview.isPlaying(track.id())) MusicPreview.stop();
+            else MusicPreview.play(track);
+            Minecraft.getInstance().getSoundManager().play(
+                    net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            return true;
+        }
+
+        private List<FormattedCharSequence> details(boolean previewing) {
             List<FormattedCharSequence> lines = new ArrayList<>();
             lines.add(Component.literal(track.title()).withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
                     .append(Component.literal("  ").append(track.kind().displayName()).withStyle(ChatFormatting.GRAY)).getVisualOrderText());
-            if (!Screen.hasControlDown()) {
-                lines.add(Lang.tr("screen.details_hint").withStyle(ChatFormatting.DARK_GRAY).getVisualOrderText());
-                return lines;
-            }
+            lines.add(Lang.tr(previewing ? "screen.preview_stop_hint" : "screen.preview_hint")
+                    .withStyle(ChatFormatting.DARK_GRAY).getVisualOrderText());
+            if (!Screen.hasControlDown()) return lines;
             lines.add(Component.literal(track.id().toString()).withStyle(ChatFormatting.DARK_GRAY).getVisualOrderText());
             lines.add(Lang.tr("screen.events").withStyle(ChatFormatting.GRAY).getVisualOrderText());
             track.events().stream().map(Object::toString).sorted().limit(12)
@@ -659,12 +698,12 @@ public class QuietPleaseScreen extends Screen {
 
         @Override
         public List<? extends GuiEventListener> children() {
-            return List.of(play, star, slider, toggle);
+            return List.of(star, playNow, queue, slider, toggle);
         }
 
         @Override
         public List<? extends NarratableEntry> narratables() {
-            return List.of(play, star, slider, toggle);
+            return List.of(star, playNow, queue, slider, toggle);
         }
     }
 
