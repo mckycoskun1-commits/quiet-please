@@ -34,6 +34,8 @@ public final class QuietPleaseKeys {
             new KeyMapping("key.quietplease.favorite", InputConstants.UNKNOWN.getValue(), CATEGORY);
     public static final KeyMapping PLAYLIST_MODE =
             new KeyMapping("key.quietplease.playlist_mode", InputConstants.UNKNOWN.getValue(), CATEGORY);
+    public static final KeyMapping NEXT_LIST =
+            new KeyMapping("key.quietplease.next_list", InputConstants.UNKNOWN.getValue(), CATEGORY);
     public static final KeyMapping PREVIOUS =
             new KeyMapping("key.quietplease.previous", InputConstants.UNKNOWN.getValue(), CATEGORY);
     public static final KeyMapping DISABLE =
@@ -44,7 +46,7 @@ public final class QuietPleaseKeys {
     private QuietPleaseKeys() {}
 
     public static java.util.List<KeyMapping> all() {
-        return java.util.List.of(OPEN_PANEL, SKIP, PREVIOUS, PAUSE, FAVORITE, DISABLE, PLAYLIST_MODE);
+        return java.util.List.of(OPEN_PANEL, SKIP, PREVIOUS, PAUSE, FAVORITE, DISABLE, PLAYLIST_MODE, NEXT_LIST);
     }
 
     /** Duraklat / devam: ne oldugunu anlatan kisa mesaj. */
@@ -81,10 +83,44 @@ public final class QuietPleaseKeys {
             ModOptions.playlistMode = !ModOptions.playlistMode;
             MusicSettings.save();
             Component state = Lang.tr(ModOptions.playlistMode ? "screen.on" : "screen.off");
-            String key = ModOptions.playlistMode && Playlist.isEmpty() ? "key.playlist_mode.empty" : "key.playlist_mode.changed";
+            String key = ModOptions.playlistMode && Playlist.isEmpty() && Playlist.activeList() == null ? "key.playlist_mode.empty" : "key.playlist_mode.changed";
             mc.gui.setOverlayMessage(Lang.tr(key, state).withStyle(
                     ModOptions.playlistMode ? ChatFormatting.GREEN : ChatFormatting.GRAY), false);
         }
+        while (NEXT_LIST.consumeClick()) {
+            mc.gui.setOverlayMessage(nextList(), false);
+        }
+    }
+
+    /** Liste degistirme tusu: siradaki kayitli liste, son listeden sonra kapali. */
+    public static Component nextList() {
+        if (Playlist.lists().isEmpty()) return Lang.tr("key.list.none").withStyle(ChatFormatting.GRAY);
+        Playlist.SavedList list = Playlist.cycleList();
+        MusicSettings.save();
+        if (list == null) return Lang.tr("key.list.off").withStyle(ChatFormatting.GRAY);
+        return describeList(list);
+    }
+
+    /** /quietplease playlist play &lt;liste&gt; */
+    public static Component playList(String name) {
+        Playlist.SavedList list = Playlist.list(name);
+        if (list == null) return Lang.tr("key.list.unknown", name).withStyle(ChatFormatting.RED);
+        Playlist.startList(list, -1);
+        MusicSettings.save();
+        return describeList(list);
+    }
+
+    /** /quietplease playlist stop */
+    public static Component stopList() {
+        if (Playlist.activeList() == null) return Lang.tr("key.list.not_playing").withStyle(ChatFormatting.GRAY);
+        Playlist.stopList();
+        MusicSettings.save();
+        return Lang.tr("key.list.off").withStyle(ChatFormatting.GRAY);
+    }
+
+    private static Component describeList(Playlist.SavedList list) {
+        if (list.isEmpty()) return Lang.tr("key.list.empty", list.name()).withStyle(ChatFormatting.YELLOW);
+        return Lang.tr("key.list.playing", list.name(), Lang.count("tracks", list.size())).withStyle(ChatFormatting.GREEN);
     }
 
     /** Gecmisteki bir onceki sarkiyi calar; ne oldugunu anlatan kisa mesaji dondurur. */
