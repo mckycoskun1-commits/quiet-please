@@ -46,6 +46,8 @@ import net.minecraft.resources.ResourceLocation;
  *   /quietplease gui                    ayar panelini acar
  *   /quietplease settings               Ayarlar ekranini acar
  *   /quietplease playlist               calma listesi panelini acar
+ *   /quietplease playlist play <liste>  kayitli listeyi calar
+ *   /quietplease playlist stop          kayitli listeyi birakir
  *   /quietplease skip                   calan arka plan sarkisini atlar
  *   /quietplease export <ad>            tum ayarlari config/quietplease-presets/<ad>.json dosyasina yazar
  *   /quietplease import <ad>            o dosyayi yukler
@@ -59,6 +61,10 @@ public final class QuietPleaseCommands {
     private static final SuggestionProvider<Object> TRACKS =
             (ctx, b) -> SharedSuggestionProvider.suggestResource(
                     MusicLibrary.scan().values().stream().flatMap(List::stream).map(MusicTrack::id), b);
+
+    private static final SuggestionProvider<Object> LISTS =
+            (ctx, b) -> SharedSuggestionProvider.suggest(
+                    com.quietplease.music.Playlist.lists().stream().map(com.quietplease.music.Playlist.SavedList::name), b);
 
     private static final SuggestionProvider<Object> PRESETS =
             (ctx, b) -> SharedSuggestionProvider.suggest(MusicSettings.presetNames(), b);
@@ -96,7 +102,16 @@ public final class QuietPleaseCommands {
                 .then(lit("dump").executes(QuietPleaseCommands::dump))
                 .then(lit("gui").executes(QuietPleaseCommands::openGui))
                 .then(lit("settings").executes(ctx -> open(new QuietPleaseSettingsScreen(null))))
-                .then(lit("playlist").executes(ctx -> open(new QuietPlaylistScreen(null))))
+                .then(lit("playlist").executes(ctx -> open(new QuietPlaylistScreen(null)))
+                        .then(lit("play").then(arg("list", StringArgumentType.greedyString()).suggests(LISTS)
+                                .executes(ctx -> {
+                                    say(ctx, QuietPleaseKeys.playList(StringArgumentType.getString(ctx, "list")));
+                                    return 1;
+                                })))
+                        .then(lit("stop").executes(ctx -> {
+                            say(ctx, QuietPleaseKeys.stopList());
+                            return 1;
+                        })))
                 .then(lit("skip").executes(QuietPleaseCommands::skip))
                 .then(lit("previous").executes(ctx -> {
                     say(ctx, QuietPleaseKeys.previous());
