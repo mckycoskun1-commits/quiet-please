@@ -83,6 +83,24 @@ public class QuietPleaseScreen extends Screen {
     @Nullable
     private Btn skip;
 
+    /** Arama icin her parcanin kucuk harfli metni (kimlik, ad, mod adi); panel acilinca bir kez. */
+    private Map<MusicTrack, String> searchText = Map.of();
+    /**
+     * Satirlar bir kez kurulur, aramada yeniden kullanilir: her tusta yuzlerce dugme, kaydirici ve ikon
+     * yeniden yaratilmasin. Favoriler grubundaki satir ayri tutulur (ayni parca iki yerde gorunebilir).
+     */
+    private final Map<ResourceLocation, TrackEntry> entries = new java.util.HashMap<>();
+    private final Map<ResourceLocation, TrackEntry> favoriteEntries = new java.util.HashMap<>();
+    /** Arama kutusuna son yazilan an; buyuk listelerde liste yazmayi birakinca kurulur. */
+    private long searchChangedAt = -1;
+    /** Bu kadar parcadan fazlasinda arama kisa bir beklemeyle uygulanir. */
+    private static final int SEARCH_DEBOUNCE_TRACKS = 300;
+    private static final long SEARCH_DEBOUNCE_MS = 120;
+    /** Baslik ozeti: her karede degil, birkac tick'te bir hesaplanir. */
+    private long offCount;
+    private long adjustedCount;
+    private int summaryTicks;
+
     // Filtreler (ekran yeniden boyutlaninca korunsun diye alanlarda tutuluyor)
     private String query = "";
     private String modFilter = ""; // "" = tum modlar
@@ -101,6 +119,14 @@ public class QuietPleaseScreen extends Screen {
         allTracks = library.values().stream().flatMap(List::stream).toList();
         tracksById = allTracks.stream().collect(Collectors.toMap(MusicTrack::id, t -> t, (a, b) -> a));
         nowPlaying = NowPlaying.find(tracksById);
+        Map<MusicTrack, String> haystack = new java.util.IdentityHashMap<>();
+        for (MusicTrack t : allTracks) {
+            haystack.put(t, (t.id() + "\n" + t.title() + "\n" + MusicLibrary.modName(t.namespace())).toLowerCase(Locale.ROOT));
+        }
+        searchText = haystack;
+        entries.clear();
+        favoriteEntries.clear();
+        updateSummary();
 
         // Ust satir: arama | mod filtresi | ortam sesleri
         int rowW = Math.min(width - 20, MAX_ROW_WIDTH);
@@ -129,7 +155,8 @@ public class QuietPleaseScreen extends Screen {
         search.setValue(query);
         search.setResponder(text -> {
             query = text;
-            rebuildList();
+            if (allTracks.size() > SEARCH_DEBOUNCE_TRACKS) searchChangedAt = System.currentTimeMillis();
+            else rebuildList();
         });
         addRenderableWidget(search);
 
@@ -189,6 +216,7 @@ public class QuietPleaseScreen extends Screen {
 
     private void rebuildList() {
         if (list == null) return;
+        searchChangedAt = -1;
         String q = query.trim().toLowerCase(Locale.ROOT);
         list.clear();
         boolean favoritesOnly = modFilter.equals(PLAYLIST_FILTER);
@@ -201,7 +229,7 @@ public class QuietPleaseScreen extends Screen {
                     .collect(Collectors.toList());
             if (!favorites.isEmpty()) {
                 list.add(new HeaderEntry(Lang.tr("screen.favorites").getString(), favorites, true, null));
-                for (int i = 0; i < favorites.size(); i++) list.add(new TrackEntry(favorites.get(i), i % 2 == 1));
+                for (int i = 0; i < favorites.size(); i++) list.add(entry(favoriteEntries, favorites.get(i), i % 2 == 1));
             }
         }
         if (favoritesOnly) {
@@ -216,16 +244,33 @@ public class QuietPleaseScreen extends Screen {
                     .collect(Collectors.toList());
             if (visible.isEmpty()) return;
             list.add(new HeaderEntry(MusicLibrary.modName(mod), visible, false, mod));
-            for (int i = 0; i < visible.size(); i++) list.add(new TrackEntry(visible.get(i), i % 2 == 1));
+            for (int i = 0; i < visible.size(); i++) list.add(entry(entries, visible.get(i), i % 2 == 1));
         });
         list.setScrollAmount(0);
     }
 
-    private static boolean matches(MusicTrack t, String q) {
-        return q.isEmpty()
-                || t.id().toString().toLowerCase(Locale.ROOT).contains(q)
-                || t.title().toLowerCase(Locale.ROOT).contains(q)
-                || MusicLibrary.modName(t.namespace()).toLowerCase(Locale.ROOT).contains(q);
+    private TrackEntry entry(Map<ResourceLocation, TrackEntry> cache, MusicTrack track, boolean alternate) {
+        TrackEntry e = cache.computeIfAbsent(track.id(), id -> new TrackEntry(track));
+        e.alternate = alternate;
+        return e;
+    }
+
+    private boolean matches(MusicTrack t, String q) {
+        if (q.isEmpty()) return true;
+        String text = searchText.get(t);
+        return text != null && text.contains(q);
+    }
+
+    /** Baslik ozetindeki kapali ve ayarlanmis parca sayilari. */
+    private void updateSummary() {
+        long off = 0;
+        long adjusted = 0;
+        for (MusicTrack t : allTracks) {
+            if (MusicSettings.isDisabled(t.id())) off++;
+            else if (MusicSettings.get(t.id()).volume() != MusicSettings.DEFAULT_VOLUME) adjusted++;
+        }
+        offCount = off;
+        adjustedCount = adjusted;
     }
 
     // ------------------------------------------------------------------ cizim ve yasam dongusu
@@ -246,9 +291,8 @@ public class QuietPleaseScreen extends Screen {
     /** Logo + baslik + ozet satiri. */
     private void renderHeader(GuiGraphics g) {
         Component title = Component.literal("Quiet Please").withStyle(ChatFormatting.BOLD);
-        long off = allTracks.stream().filter(t -> MusicSettings.isDisabled(t.id())).count();
-        long custom = allTracks.stream().filter(t -> !MusicSettings.isDisabled(t.id())
-                && MusicSettings.get(t.id()).volume() != MusicSettings.DEFAULT_VOLUME).count();
+        long off = offCount;
+        long custom = adjustedCount;
         MutableComponent summary = Lang.count("sources", library.size()).append(" · ").append(Lang.count("tracks", allTracks.size()));
         if (off > 0) summary.append(" · ").append(Lang.tr("count.off", off));
         if (custom > 0) summary.append(" · ").append(Lang.tr("count.adjusted", custom));
@@ -346,6 +390,8 @@ public class QuietPleaseScreen extends Screen {
     public void tick() {
         MusicPreview.isActive(); // biten onizlemeyi temizler, boylece arka plan muzigi geri gelebilir
         nowPlaying = NowPlaying.find(tracksById);
+        if (searchChangedAt >= 0 && System.currentTimeMillis() - searchChangedAt >= SEARCH_DEBOUNCE_MS) rebuildList();
+        if (++summaryTicks % 5 == 0) updateSummary();
     }
 
     /**
@@ -543,7 +589,7 @@ public class QuietPleaseScreen extends Screen {
         private static final int SLIDER_W = 96;
 
         private final MusicTrack track;
-        private final boolean alternate;
+        private boolean alternate;
         private final ItemStack icon;
         private final Btn star;
         private final Btn playNow;
@@ -554,9 +600,8 @@ public class QuietPleaseScreen extends Screen {
         private int previewLeft;
         private int previewRight;
 
-        TrackEntry(MusicTrack track, boolean alternate) {
+        TrackEntry(MusicTrack track) {
             this.track = track;
-            this.alternate = alternate;
             this.icon = iconFor(track);
             this.playNow = Btn.builder(Component.literal("▶"), b -> {
                 MusicPreview.stop();

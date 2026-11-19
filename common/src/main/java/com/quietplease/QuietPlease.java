@@ -47,7 +47,7 @@ public class QuietPlease {
 
     private static void guiTestTick(Minecraft mc) {
         guiTestTicks++;
-        var tracks = guiTestTicks <= 180 ? com.quietplease.music.MusicLibrary.scan().get("minecraft") : null;
+        var tracks = guiTestTicks <= 190 ? com.quietplease.music.MusicLibrary.scan().get("minecraft") : null;
         switch (guiTestTicks) {
             case 100 -> {
                 normalizeBackup = com.quietplease.music.ModOptions.normalize;
@@ -124,20 +124,48 @@ public class QuietPlease {
                         playing == null ? "calmiyor" : playing.trackId, com.quietplease.music.Playlist.size());
                 shot(mc, "quietplease-playlist.png");
             }
-            case 151 -> mc.setScreen(new QuietPleaseScreen(new TitleScreen()));
-            case 154 -> shot(mc, "quietplease-favorites.png");
+            // Kayitli liste: siradan once calar, sarkilar listede kalir
+            case 151 -> {
+                savedList = com.quietplease.music.Playlist.createList("Calm");
+                if (savedList != null) {
+                    for (int i : new int[] {2, 5, 7, 10, 13}) {
+                        if (i < tracks.size()) com.quietplease.music.Playlist.listAdd(savedList, tracks.get(i).id());
+                    }
+                    com.quietplease.music.Playlist.createList("Building");
+                    com.quietplease.music.Playlist.startList(savedList, 1);
+                    mc.setScreen(new com.quietplease.gui.QuietPlaylistScreen(new TitleScreen(), savedList));
+                }
+            }
+            case 156 -> {
+                var playing = com.quietplease.music.Playlist.playing();
+                boolean ok = savedList != null && playing != null && playing.fromList == savedList
+                        && playing.trackId.equals(savedList.tracks().get(1)) && savedList.size() == 5
+                        && com.quietplease.music.Playlist.size() == 5;
+                LOGGER.info("GUITEST kayitli liste: {} (calan {}, listede {}, sirada {})", ok ? "BASARILI" : "HATA",
+                        playing == null ? "yok" : playing.trackId, savedList == null ? -1 : savedList.size(), com.quietplease.music.Playlist.size());
+                shot(mc, "quietplease-playlist-saved.png");
+            }
+            case 157 -> {
+                // Liste degistirme tusu: Calm -> Building -> kapali
+                String first = com.quietplease.QuietPleaseKeys.nextList().getString();
+                String second = com.quietplease.QuietPleaseKeys.nextList().getString();
+                LOGGER.info("GUITEST liste degistirme: {} | {} | etkin {}", first, second, com.quietplease.music.Playlist.activeList());
+                for (var l : java.util.List.copyOf(com.quietplease.music.Playlist.lists())) com.quietplease.music.Playlist.deleteList(l);
+                mc.setScreen(new QuietPleaseScreen(new TitleScreen()));
+            }
+            case 160 -> shot(mc, "quietplease-favorites.png");
             // (ESC menusu test edilemiyor: PauseScreen bir dunya/oyuncu ister, ana menude acilinca coker)
             // Onizleme (arka plan muzigini susturur, o yuzden en sona)
-            case 155 -> {
+            case 165 -> {
                 mc.setScreen(new QuietPleaseScreen(new TitleScreen()));
                 mc.getSoundManager().pause(); // ESC ile duraklatilmis oyunu taklit et: calan sesler bekler
                 LOGGER.info("GUITEST onizleme basladi: {}", com.quietplease.music.MusicPreview.play(tracks.get(1)));
             }
-            case 175 -> {
+            case 185 -> {
                 LOGGER.info("GUITEST onizleme (duraklatilmisken) caliyor mu: {}", com.quietplease.music.MusicPreview.isActive());
                 shot(mc, "quietplease-preview.png");
             }
-            case 180 -> {
+            case 190 -> {
                 mc.getSoundManager().resume();
                 MusicSettings.reset(tracks.get(2).id());
                 MusicSettings.reset(tracks.get(3).id());
@@ -151,10 +179,10 @@ public class QuietPlease {
                 worldJoinTick = -1;
             }
             default -> {
-                if (guiTestTicks <= 180) return;
+                if (guiTestTicks <= 190) return;
                 if (worldJoinTick < 0) {
                     if (mc.player != null && mc.level != null) worldJoinTick = guiTestTicks;
-                    else if (guiTestTicks > 180 + 20 * 120) { LOGGER.error("GUITEST dunya 2 dakikada acilmadi"); guiTestTicks = -1; }
+                    else if (guiTestTicks > 190 + 20 * 120) { LOGGER.error("GUITEST dunya 2 dakikada acilmadi"); guiTestTicks = -1; }
                     return;
                 }
                 int t = guiTestTicks - worldJoinTick;
@@ -379,6 +407,7 @@ public class QuietPlease {
         var order = com.quietplease.music.Playlist.upcoming();
         return order.isEmpty() ? null : com.quietplease.music.Playlist.tracks().get(order.get(0));
     }
+    private static com.quietplease.music.Playlist.SavedList savedList;
     private static com.google.gson.JsonObject playlistBackup;
     private static boolean playlistModeBackup;
     private static boolean normalizeBackup;
