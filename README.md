@@ -56,14 +56,18 @@ Yine de oraya konursa `build.gradle` bunu fark edip derleme çıktılarını ve 
 
 **ESC menüsü**, **Ayarlar** (Options) ya da **Müzik ve Sesler** ekranının sağ üst köşesindeki **♪ Quiet Please** düğmesi,
 Mods listesinde Quiet Please > **Config** düğmesi ya da `/quietplease gui` komutu ile açılır. Arama, mod filtresi, her parça için
-▶ dinleme, ses kaydırıcısı ve Açık/Kapalı düğmesi vardır. Önizleme çalarken oyunun arka plan müziği susar.
+solda üç düğme (**☆/★** favori, **▶** şimdi çal, **+** sıraya al), ses kaydırıcısı ve Açık/Kapalı düğmesi vardır.
+Şarkının adına ya da ikonuna tıklamak ön izlemeyi başlatır, bir daha tıklamak durdurur. Önizleme çalarken oyunun arka plan
+müziği susar. **▶** şarkıyı arka plan müziği olarak hemen başlatır. **+** şarkıyı çalan şarkıdan hemen sonraya koyar; arka
+arkaya eklenenler eklenme sırasıyla dizilir (son eklenen en alta), liste yoksa oluşur ve çalma listesi modu açılır. Sıradaki
+şarkıların **+** yerinde sıra numarası görünür; numaraya tıklamak şarkıyı sıradan çıkarır.
 Listenin üstündeki yeşil **Şu an çalıyor** çubuğu oyunda o an çalan müziği gösterir; tıklayınca o parça listede bulunur.
 Çalan parçanın satırı da yeşil "çalıyor" etiketiyle işaretlenir. Tek oyunculu oyunda panel açıkken oyun duraklar.
 Önizleme ana ses kanalından çalar, yani oyunun "Müzik" kaydırıcısı %0 olsa da duyulur.
 ESC menüsünde düğmenin hemen altında, Ayarlar ekranlarında düğmenin solunda o an çalan şarkının adı küçük yazıyla görünür.
 Mod filtresi düğmesinde sol tık sonraki moda, sağ tık önceki moda geçer.
 Çubuğun sağındaki **Atla** çalan arka plan şarkısını durdurur. Başlıkta solda **Ayarlar**, sağda **Çalma listesi** düğmesi var;
-her parça satırındaki **☆/★** parçayı çalma listesine ekler/çıkarır, mod filtresindeki **★ Çalma listesi** sadece listedekileri gösterir.
+her parça satırındaki **☆/★** parçayı favorilere ve çalma listesine ekler/çıkarır, mod filtresindeki **★ Çalma listesi** sadece listedekileri gösterir.
 Her mod başlığında **Mod: %100** kaydırıcısı o modun tüm şarkılarının sesini birlikte ayarlar; her şarkının kendi ses ayarı
 bunun üstüne çarpılır (örneğin mod %50, şarkı %40 ise şarkı %20 çalar).
 
@@ -82,19 +86,25 @@ kartın bırakıldığı yere göre ayarlanır. **Sıfırla** hepsini varsayıla
 
 ## Ayarlar
 
-Paneldeki **Ayarlar** düğmesi ya da `/quietplease settings`: ESC menüsündeki ve Ayarlar ekranlarındaki düğme (ayrı ayrı),
-çalan şarkı yazısı, listede ortam sesleri, çalma listesi modu ve **şarkı arası** (iki arka plan şarkısı arasındaki sessizlik:
-Vanilla / Kısa 30–60 sn / Yok / Özel kaydırıcılar). Şarkı arası sadece arka plan müziğini değiştirir; ejderha, jenerik ve
-boss müzikleri etkilenmez. Ayrıca **Şarkı bildirimi** (açık/kapalı), **Bildirim ayarları...** ve **Müzik davranışı...**.
+Paneldeki **Ayarlar** düğmesi ya da `/quietplease settings` açar. Ayarlar üç sekmede, her sekmenin altında ne işe yaradığını
+anlatan bir satır var:
+
+- **Müzik**: çalma listesi modu, **Çalma listesi** ekranı, kendi müziğin (arka planda çalsın mı, klasörü aç), **Geçmiş ve
+  istatistik**, **şarkılar arası** (iki arka plan şarkısı arasındaki sessizlik: Vanilla / Kısa 30–60 sn / Yok / Özel
+  kaydırıcılar). Şarkı arası sadece arka plan müziğini değiştirir; ejderha, jenerik ve boss müzikleri etkilenmez.
+- **Davranış**: müziğin ne zaman kısılacağı, geçişler ve Alt+Tab (aşağıda).
+- **Ekran**: ESC menüsündeki ve Ayarlar ekranlarındaki düğme (ayrı ayrı), çalan şarkı yazısı, listede ortam sesleri, **Şarkı
+  bildirimi** ve **Bildirim ayarları...**.
+
 Tasarım ayrıntıları: [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md).
 
-### Müzik davranışı
-
-Ayarlar'daki **Müzik davranışı...** düğmesi ayrı bir ekran açar:
+### Davranış sekmesi
 
 - **Plak çalınca** (Kapalı / Kıs %25 / Sustur, varsayılan Sustur): 64 blok içinde bir jukebox'ta plak çalarken arka plan
   müziği kısılır ya da susar, plak bitince yavaşça geri gelir.
-- **Arka plandayken** (Kapalı / Kıs %30 / Sustur): Alt+Tab ile oyundan çıkınca arka plan müziği kısılır ya da susar.
+- **Alt+Tab'da müzik** (Kapalı / Kıs %30 / Sustur): Alt+Tab ile oyundan çıkınca arka plan müziği kısılır ya da susar.
+- **Alt+Tab'da sessiz** (Açık/Kapalı, varsayılan Kapalı): Alt+Tab ile oyundan çıkınca oyunun bütün sesleri susar (müzik,
+  efektler, yaratıklar, ortam). Sesler durmaz, -80 dB'e iner; oyuna dönünce kaldıkları yerden duyulur (`FocusMute`).
 - **Savaşta** (Kapalı / Biraz %60 / Çok %30): hasar alınca (6 saniye boyunca) ya da 12 blok içinde düşman bir yaratık varken
   müzik kısılır.
 - **Yumuşak geçiş** (Kapalı / 2 sn / 5 sn, varsayılan 2 sn): arka plan şarkıları sessizce açılır ve son saniyelerde sessizce
@@ -144,7 +154,7 @@ kapatır ve sıradakine geçer (panelden tekrar açılır).
 `config/quietplease/music/` klasörüne konan `.mp3` ve `.ogg` dosyaları (alt klasörler dahil, en fazla 500) kaynak paketi gerekmeden
 panelde en üstte **Kendi müziğin** grubunda görünür: dinlenebilir, ses ayarı yapılabilir, çalma listesine eklenebilir.
 Ayarlar ekranındaki **Kendi müzik klasörün** düğmesi klasörü açar; yeni dosyalar paneli bir sonraki açışta görünür.
-Müzik davranışı ekranındaki **Kendi müziğin** ayarı açıkken (varsayılan) bu şarkılar oyunun arka plan müziğine de karışır:
+Ayarlar'ın Müzik sekmesindeki **Kendi müziğin** ayarı açıkken (varsayılan) bu şarkılar oyunun arka plan müziğine de karışır:
 her biri yaklaşık bir oyun şarkısı kadar sık çalar. Dosya adları kimliğe çevrilir (`Benim Şarkım.ogg` → `quietplease_music:benim_ark_m`
 gibi: küçük harf, harf/rakam dışındakiler `_`); ekranda ise dosyanın gerçek adı görünür (`Benim Şarkım`).
 Dosyalar oyunun kaynak yöneticisinden okunur (`ReloadableResourceManagerMixin`).

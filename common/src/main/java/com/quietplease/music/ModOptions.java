@@ -96,6 +96,8 @@ public final class ModOptions {
     public static boolean normalize = false;
     /** Kendi muzik klasorundeki sarkilar oyunun arka plan muzigine karissin mi. */
     public static boolean customInBackground = true;
+    /** Alt+Tab ile oyundan cikinca butun oyun sesleri (muzik, efektler, ortam) duyulmayacak kadar kisilir. */
+    public static boolean muteAllUnfocused = false;
 
     public enum PopupPosition {
         RIGHT_MIDDLE("right_middle", true, 1),
@@ -278,6 +280,7 @@ public final class ModOptions {
         favoriteWeight = 2;
         normalize = false;
         customInBackground = true;
+        muteAllUnfocused = false;
         resetPopup();
     }
 
@@ -331,6 +334,7 @@ public final class ModOptions {
         favoriteWeight = choice(o, "favoriteWeight", favoriteWeight, FAVORITE_VALUES);
         normalize = bool(o, "normalize", normalize);
         customInBackground = bool(o, "customInBackground", customInBackground);
+        muteAllUnfocused = bool(o, "muteAllUnfocused", muteAllUnfocused);
         MusicMixer.optionsChanged();
     }
 
@@ -369,6 +373,7 @@ public final class ModOptions {
         o.addProperty("popupEqualizer", popupEqualizer);
         o.addProperty("jukeboxVolume", jukeboxVolume);
         o.addProperty("unfocusedVolume", unfocusedVolume);
+        o.addProperty("muteAllUnfocused", muteAllUnfocused);
         o.addProperty("combatVolume", combatVolume);
         o.addProperty("fadeSeconds", fadeSeconds);
         o.addProperty("noRepeat", noRepeat);
