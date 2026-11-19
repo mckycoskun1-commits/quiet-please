@@ -1,9 +1,0 @@
-loom {
-    forge {
-        mixinConfig "quietplease.mixins.json"
-    }
-}
-
-dependencies {
-    forge "net.minecraftforge:forge:${rootProject.minecraft_version}-${rootProject.forge_version}"
-}

@@ -8,7 +8,7 @@ müziği hemen geri geliyor mu. Oyunun sesini dosyaya yazar (hoparlörden bir ş
 kendisi kapatır:
 
 ```
-powershell -ExecutionPolicy Bypass -File tools\audio-test.ps1 [-Loader fabric|forge|neoforge] [-Format ogg|mp3]
+powershell -ExecutionPolicy Bypass -File tools\audio-test.ps1 [-Node 26.1.2-fabric|1.21.1-neoforge|...] [-Format ogg|mp3]
 ```
 
 ## A. Geliştirme oyununda (hızlı)

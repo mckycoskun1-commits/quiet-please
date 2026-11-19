@@ -1,0 +1,80 @@
+# Surume ozel ayarlar. Ortak ayarlar (mod_version, mod_id...) gradle.properties icinde.
+
+["1.18.2"]
+minecraft_version_range = "[1.18.2]"
+java_version = "17"
+parchment_minecraft_version = "1.18.2"
+parchment_mappings_version = "2022.11.06"
+fabric_api_version = "0.77.0+1.18.2"
+modmenu_version = "3.2.5"
+forge_version = "40.3.12"
+forge_version_range = "[40,)"
+pack_format = "8"
+
+["1.19.2"]
+minecraft_version_range = "[1.19.2]"
+java_version = "17"
+parchment_minecraft_version = "1.19.2"
+parchment_mappings_version = "2022.11.27"
+fabric_api_version = "0.77.0+1.19.2"
+modmenu_version = "4.2.0-beta.2"
+forge_version = "43.5.2"
+forge_version_range = "[43,)"
+pack_format = "9"
+
+["1.20.1"]
+minecraft_version_range = "[1.20.1]"
+java_version = "17"
+parchment_minecraft_version = "1.20.1"
+parchment_mappings_version = "2023.09.03"
+fabric_api_version = "0.92.12+1.20.1"
+modmenu_version = "7.2.2"
+forge_version = "47.4.29"
+forge_version_range = "[47,)"
+pack_format = "15"
+
+["1.21.1"]
+minecraft_version_range = "[1.21.1]"
+java_version = "21"
+parchment_minecraft_version = "1.21.1"
+parchment_mappings_version = "2024.11.17"
+fabric_api_version = "0.116.18+1.21.1"
+modmenu_version = "11.0.5"
+forge_version = "52.1.21"
+forge_version_range = "[52,)"
+neoforge_version = "21.1.266"
+neoforge_version_range = "[21.1.0,)"
+pack_format = "34"
+
+["26.1.2"]
+minecraft_version_range = "[26.1.2,26.2)"
+java_version = "25"
+fabric_api_version = "0.155.3+26.1.2"
+modmenu_version = "18.0.2"
+forge_version = "64.1.6"
+forge_version_range = "[64,)"
+neoforge_version = "26.1.2.126"
+neoforge_version_range = "[26.1.2,)"
+pack_format = "84"
+
+["26.2"]
+minecraft_version_range = "[26.2,26.3)"
+java_version = "25"
+fabric_api_version = "0.161.0+26.2"
+modmenu_version = "20.0.3"
+forge_version = "65.1.6"
+forge_version_range = "[65,)"
+neoforge_version = "26.2.0.93"
+neoforge_version_range = "[26.2.0,)"
+pack_format = "88"
+
+["26.3"]
+minecraft_version_range = "[26.3,26.4)"
+java_version = "25"
+fabric_api_version = "0.166.2+26.3"
+modmenu_version = "21.0.1"
+forge_version = "66.1.5"
+forge_version_range = "[66,)"
+neoforge_version = "26.3.0.102"
+neoforge_version_range = "[26.3.0,)"
+pack_format = "97"

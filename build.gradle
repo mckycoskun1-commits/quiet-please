@@ -1,84 +1,144 @@
-plugins {
-    id "dev.architectury.loom" version "1.17.493" apply false
-    id "dev.architectury.loom-no-remap" version "1.17.493" apply false
+// Her surum/yukleyici alt projesi (versions/<surum>-<yukleyici>) bu dosyayi kullanir.
+def mc = stonecutter.current.version
+def loader = project.name.substring(project.name.indexOf('-') + 1)
+def atLeast = { String v -> stonecutter.current.parsed >= v }
+// 26.1 oncesi surumler karisik adli (obfuscated); jar remapJar ile yeniden adlandirilir
+def remap = !atLeast("26.1")
+def javaVersion = (project.java_version as String) as int
+
+ext.set("loom.platform", loader)
+apply plugin: remap ? "dev.architectury.loom" : "dev.architectury.loom-no-remap"
+
+version = "${mod_version}+${mc}"
+base {
+    archivesName = "${mod_id}-${loader}"
 }
 
-allprojects {
-    group = project.maven_group
-    version = "${project.mod_version}+${project.minecraft_version}"
+repositories {
+    maven { url = "https://maven.parchmentmc.org" }
+    maven { url = "https://maven.terraformersmc.com/releases/" }
+    maven { url = "https://maven.neoforged.net/releases/" }
 }
 
-subprojects {
-    apply plugin: "dev.architectury.loom-no-remap"
-
-    sourceSets.main.java.srcDir rootProject.file("common/src/main/java")
-    sourceSets.main.resources.srcDir rootProject.file("common/src/main/resources")
-
-    base {
-        archivesName = "${rootProject.mod_id}-${project.name}"
+// Baska yukleyicinin kodu ve bu surumde olmayan yardimci siniflar derlenmez
+sourceSets.main.java {
+    ["fabric", "forge", "neoforge"].each { if (it != loader) exclude "com/quietplease/${it}/**" }
+    if (atLeast("1.19")) exclude "com/quietplease/Txt.java"
+    if (atLeast("1.20")) {
+        ["Btn", "GuiGraphics", "HintBox", "Slider", "Tooltip"].each { exclude "com/quietplease/gui/${it}.java" }
     }
+    if (atLeast("1.21")) exclude "com/quietplease/mixin/PauseScreenAccessor.java"
+}
 
-    repositories {
-        maven { url = "https://maven.parchmentmc.org" }
-        maven { url = "https://maven.terraformersmc.com/releases/" }
-        maven { url = "https://maven.neoforged.net/releases/" }
+loom {
+    silentMojangMappingsLicense()
+    if (loader == "forge") {
+        forge {
+            mixinConfig "quietplease.mixins.json"
+        }
     }
+}
 
-    loom {
-        silentMojangMappingsLicense()
+dependencies {
+    minecraft "net.minecraft:minecraft:${mc}"
+    if (remap) {
+        mappings loom.layered {
+            officialMojangMappings()
+            parchment("org.parchmentmc.data:parchment-${parchment_minecraft_version}:${parchment_mappings_version}@zip")
+        }
     }
+    compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+    compileOnly "io.github.llamalad7:mixinextras-common:${mixinextras_version}"
+    annotationProcessor "io.github.llamalad7:mixinextras-common:${mixinextras_version}"
 
+    if (loader == "fabric") {
+        add(remap ? "modImplementation" : "implementation", "net.fabricmc:fabric-loader:${fabric_loader_version}")
+        add(remap ? "modImplementation" : "implementation", "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}")
+        add(remap ? "modCompileOnly" : "compileOnly", "com.terraformersmc:modmenu:${modmenu_version}") { transitive = false }
+    } else if (loader == "forge") {
+        forge "net.minecraftforge:forge:${mc}-${forge_version}"
+        if (remap) {
+            include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-forge:${mixinextras_version}")))
+        }
+    } else if (loader == "neoforge") {
+        neoForge "net.neoforged:neoforge:${neoforge_version}"
+    }
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release = javaVersion
+}
+
+def platformClass = [fabric: "fabric.FabricPlatform", forge: "forge.ForgePlatform", neoforge: "neoforge.NeoForgePlatform"][loader]
+def resourceProps = [
+        mod_id                 : mod_id,
+        mod_name               : mod_name,
+        mod_license            : mod_license,
+        mod_version            : mod_version,
+        mod_author             : mod_author,
+        minecraft_version      : mc,
+        minecraft_version_range: minecraft_version_range,
+        fabric_loader_version  : fabric_loader_version,
+        forge_version_range    : findProperty("forge_version_range") ?: "",
+        neoforge_version_range : findProperty("neoforge_version_range") ?: "",
+        java_version           : javaVersion,
+        platform_class         : "com.quietplease.${platformClass}",
+        mixin_java             : atLeast("1.21") ? "JAVA_21" : "JAVA_17",
+        // 1.21 oncesi Forge mods.toml bu satiri tanimaz
+        forge_client_side_only : atLeast("1.21") ? "clientSideOnly=true" : "",
+        neoforge_icon_key      : atLeast("26.1") ? "iconFile" : "logoFile",
+        // 26.1 ile pack_format yerine min_format/max_format geldi
+        pack_format            : atLeast("26.1")
+                ? "    \"min_format\": ${pack_format},\n    \"max_format\": ${pack_format}"
+                : "    \"pack_format\": ${pack_format}"
+]
+
+tasks.named("processResources") {
+    inputs.properties resourceProps
+    filesMatching(["fabric.mod.json", "META-INF/mods.toml", "META-INF/neoforge.mods.toml", "pack.mcmeta",
+                   "quietplease.mixins.json", "META-INF/services/*"]) {
+        expand resourceProps
+    }
+    // PauseScreenAccessor sadece 1.21 oncesinde var
+    if (atLeast("1.21")) {
+        filesMatching("quietplease.mixins.json") { filter { it.contains('"PauseScreenAccessor"') ? null : it } }
+    }
+    // Tus kategorisi adi 26.1 ile geldi
+    if (!atLeast("26.1")) {
+        filesMatching(["assets/quietplease/lang/en_us.json", "assets/quietplease/lang/tr_tr.json"]) { filter { it.contains('"key.category.quietplease.main"') ? null : it } }
+    }
+    if (loader != "fabric") exclude "fabric.mod.json"
+    if (loader != "forge") exclude "META-INF/mods.toml", "pack.mcmeta"
+    if (loader != "neoforge") exclude "META-INF/neoforge.mods.toml"
+}
+
+tasks.named("jar") {
+    from(rootProject.file("LICENSE")) { rename { "LICENSE_${mod_id}" } }
+}
+
+// Dagitilacak jar: eski surumlerde remapJar, 26.x'te dogrudan jar
+def modJar = tasks.named(remap ? "remapJar" : "jar")
+
+tasks.register("collectJar", Copy) {
+    group = "build"
+    from(modJar.flatMap { it.archiveFile })
+    into(rootProject.layout.projectDirectory.dir("dist"))
+}
+
+if (loader == "fabric") {
+    configurations {
+        productionRuntimeMods
+    }
     dependencies {
-        minecraft "net.minecraft:minecraft:${rootProject.minecraft_version}"
-        compileOnly "com.google.code.findbugs:jsr305:3.0.2"
-        compileOnly "io.github.llamalad7:mixinextras-common:${rootProject.mixinextras_version}"
-        annotationProcessor "io.github.llamalad7:mixinextras-common:${rootProject.mixinextras_version}"
+        productionRuntimeMods "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
     }
-
-    java {
-        toolchain.languageVersion = JavaLanguageVersion.of(rootProject.java_version as int)
-    }
-
-    tasks.withType(JavaCompile).configureEach {
-        options.encoding = "UTF-8"
-        options.release = rootProject.java_version as int
-    }
-
-    tasks.withType(ProcessResources).configureEach {
-        def props = [
-                mod_id                : rootProject.mod_id,
-                mod_name              : rootProject.mod_name,
-                mod_license           : rootProject.mod_license,
-                mod_version           : rootProject.mod_version,
-                mod_author            : rootProject.mod_author,
-                minecraft_version     : rootProject.minecraft_version,
-                minecraft_version_range: rootProject.minecraft_version_range,
-                fabric_loader_version : rootProject.fabric_loader_version,
-                forge_version_range   : rootProject.findProperty("forge_version_range") ?: "",
-                neoforge_version_range: rootProject.findProperty("neoforge_version_range") ?: "",
-                java_version          : rootProject.java_version
-        ]
-        inputs.properties props
-        filesMatching(["fabric.mod.json", "META-INF/mods.toml", "META-INF/neoforge.mods.toml"]) {
-            expand props
-        }
-    }
-
-    tasks.named("jar") {
-        from(rootProject.file("LICENSE")) { rename { "LICENSE_${rootProject.mod_id}" } }
-    }
-}
-
-tasks.register("collectJars") {
-    def platforms = project.enabled_platforms.split(",")
-    dependsOn platforms.collect { ":${it}:jar" }
-    def distDir = file("dist")
-    doLast {
-        distDir.mkdirs()
-        platforms.each { name ->
-            def jar = project(":${name}").tasks.named("jar").get().archiveFile.get().asFile
-            java.nio.file.Files.copy(jar.toPath(), new File(distDir, jar.name).toPath(),
-                    java.nio.file.StandardCopyOption.REPLACE_EXISTING)
-        }
+    tasks.register("prodClient", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+        mods.from(configurations.productionRuntimeMods)
+        mods.from(modJar)
     }
 }

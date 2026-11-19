@@ -13,13 +13,35 @@ Proje klasöründe (PowerShell):
 
 | Ne yapar | Komut |
 |---|---|
-| Modu derler; bitmiş jar `dist/` klasörüne kopyalanır | `.\gradlew.bat build` |
-| Modu yüklenmiş halde Minecraft'ı açar (test için) | `.\gradlew.bat runClient` |
+| 18 jar'ın hepsini derler ve `dist/` klasörüne kopyalar | `.\gradlew.bat collectJars` |
+| Tek bir sürümü derler | `.\gradlew.bat :1.21.1-neoforge:build` |
+| O sürümle Minecraft'ı açar (test için) | `.\gradlew.bat :26.1.2-fabric:runClient` |
+| `src/` klasörünü başka bir sürümün haline getirir (IDE için) | `.\gradlew.bat "Set active project to 1.21.1-fabric"` |
+| `src/` klasörünü 26.1.2 haline geri getirir (commit öncesi) | `.\gradlew.bat "Reset active project"` |
 | Derleme çıktılarını siler | `.\gradlew.bat clean` |
 
-- Derleme çıktıları `build/`, test oyununun klasörü (modlar, ayarlar, loglar, ekran görüntüleri) `run/` içinde.
-- Bitmiş jar ayrıca `dist/` klasörüne kopyalanır.
-- Test oyununa başka mod eklemek için jar'ları `run/mods` klasörüne koy.
+### Çok sürüm (Stonecutter)
+
+Bütün Minecraft sürümleri tek dalda, [Stonecutter](https://stonecutter.kikugie.dev/) ile derlenir. Her sürüm ve
+yükleyici için bir alt proje var: `versions/<sürüm>-<yükleyici>` (1.18.2, 1.19.2, 1.20.1: Fabric, Forge;
+1.21.1, 26.1.2, 26.2, 26.3: Fabric, Forge, NeoForge).
+
+- Kod `src/main/java` içinde bir kez yazılır, 26.1.2 adlarıyla. Sürümler arasındaki gerçek farklar
+  `//? if >=1.21 {` ... `//?} else {` ... `//?}` yorumlarıyla ayrılır; o sürümde geçerli olmayan kısım yorum satırına dönüşür.
+- Basit ad değişiklikleri (`Identifier` / `ResourceLocation`, `GuiGraphicsExtractor` / `GuiGraphics`,
+  `g.text(` / `g.drawString(`, 26.2'deki `minecraft.gui.setScreen(` ...) elle yazılmaz: `stonecutter.gradle.kts`
+  içindeki `replacements` kuralları her sürüm için değiştirir.
+- Yükleyiciye özel kod `com/quietplease/fabric`, `forge`, `neoforge` paketlerinde; diğer yükleyicilerde derlenmez.
+  1.19.2 ve 1.18.2'nin kendi GUI yardımcıları (`Btn`, `HintBox`, `Tooltip`, `Slider`, `GuiGraphics`, `Txt`) ve
+  1.20.1 öncesinin `PauseScreenAccessor` sınıfı sadece o sürümlerde derlenir (`build.gradle`).
+- Sürüm numaraları (Minecraft, Fabric API, Forge, NeoForge, Java...) `stonecutter.properties.toml` içinde,
+  mod sürümü ve ortak ayarlar `gradle.properties` içinde.
+- Gradle'ın Java 25 ile çalışması gerekir (Stonecutter 0.10 ve 26.x bunu ister); eski sürümler için Java 17/21
+  derleyicisini Gradle kendisi indirir.
+
+- Derleme çıktıları `versions/<sürüm>-<yükleyici>/build/`, test oyununun klasörü
+  `versions/<sürüm>-<yükleyici>/run/` içinde.
+- Test oyununa başka mod eklemek için jar'ları o sürümün `run/mods` klasörüne koy.
 
 ### OneDrive notu
 

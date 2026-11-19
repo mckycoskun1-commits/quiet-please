@@ -1,5 +1,5 @@
 param(
-    [string]$Loader = 'fabric',
+    [string]$Node = '26.1.2-fabric',
     [ValidateSet('ogg', 'mp3')]
     [string]$Format = 'ogg',
     [string]$Recording
@@ -7,7 +7,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$run = Join-Path $repo "$Loader\run"
+$run = Join-Path $repo "versions\$Node\run"
 $inv = [Globalization.CultureInfo]::InvariantCulture
 
 $ffmpeg = (Get-ChildItem "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Recurse -Filter ffmpeg.exe -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
@@ -35,7 +35,7 @@ if ($Recording) {
 }
 else {
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-    $out = Join-Path $repo "build\audio-test\$Loader-$stamp"
+    $out = Join-Path $repo "build\audio-test\$Node-$stamp"
     New-Item -ItemType Directory -Force $out | Out-Null
     $musicDir = Join-Path $run 'config\quietplease\music'
     New-Item -ItemType Directory -Force $musicDir | Out-Null
@@ -61,7 +61,7 @@ file = $wavPath
     try {
         $env:QUIETPLEASE_AUTODUMP = 'audio'
         $env:ALSOFT_CONF = Join-Path $out 'alsoft.ini'
-        $gradle = Start-Process -FilePath (Join-Path $repo 'gradlew.bat') -ArgumentList ":${Loader}:runClient", '--console=plain', '--no-daemon' `
+        $gradle = Start-Process -FilePath (Join-Path $repo 'gradlew.bat') -ArgumentList ":${Node}:runClient", '--console=plain', '--no-daemon' `
             -WorkingDirectory $repo -RedirectStandardOutput (Join-Path $out 'gradle.log') -RedirectStandardError (Join-Path $out 'gradle-err.log') `
             -NoNewWindow -PassThru
         $gradle.WaitForExit()
