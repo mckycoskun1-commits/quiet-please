@@ -15,11 +15,15 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
+      # Gradle and Loom need Java 21 or newer to run; an older java_version (17) is
+      # only the compile target, and the Gradle toolchain downloads that JDK itself.
       - name: Read the Java version of this branch
         id: java
         run: |
           version=$(grep '^java_version=' gradle.properties | cut -d= -f2 | tr -d '\r ')
-          echo "version=${version:-21}" >> "$GITHUB_OUTPUT"
+          version=${version:-21}
+          if [ "$version" -lt 21 ]; then version=21; fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Setup JDK ${{ steps.java.outputs.version }}
         uses: actions/setup-java@v4
