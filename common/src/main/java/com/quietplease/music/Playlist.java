@@ -40,9 +40,13 @@ import net.minecraft.util.RandomSource;
  * Ejderha/jenerik muzigi ve modlarin dogrudan caldigi sesler (cogu boss muzigi) hic etkilenmez. Liste bossa ya da
  * mod kapaliysa oyun eskisi gibi davranir.
  *
+ * Kayitli listeler ("Sakin", "Insaat" gibi): parcalari calinca silinmez, liste bitince basa doner. Biri etkin
+ * olabilir; sira bossa (ya da bitince) etkin listeden calinir. "Siraya al" ile eklenenler her zaman once calar.
+ *
  * config/quietplease.json icindeki "playlist" bolumunde saklanir:
  * <pre>
- * "playlist": { "tracks": [...], "loop": [...], "history": [...], "favorites": [...], "next": "..." }
+ * "playlist": { "tracks": [...], "loop": [...], "history": [...], "favorites": [...], "next": "...",
+ *               "lists": [ { "name": "Sakin", "tracks": [...], "next": "..." } ], "active": "Sakin" }
  * </pre>
  */
 public final class Playlist {
@@ -53,6 +57,9 @@ public final class Playlist {
         public final ResourceLocation trackId;
         /** Onceki tusuyla gecmisten tekrar calinan sarki: gecmise yeniden eklenmez. */
         public boolean replay;
+        /** Kayitli listeden calan sarkinin listesi; siradan ya da baska yerden calansa null. */
+        @Nullable
+        public SavedList fromList;
 
         PlaylistSound(ResourceLocation eventId, Sound target, ResourceLocation trackId) {
             // SimpleSoundInstance.forMusic ile ayni ozellikler
@@ -69,6 +76,54 @@ public final class Playlist {
             return manager.getSoundEvent(this.location);
         }
     }
+
+    /** Kayitli bir calma listesi. Parcalari calinca silinmez; liste bitince basa doner. */
+    public static final class SavedList {
+        private String name;
+        private final List<ResourceLocation> tracks = new ArrayList<>();
+        /** Siradaki parca; null = listenin basi. */
+        @Nullable
+        private ResourceLocation next;
+
+        SavedList(String name) {
+            this.name = name;
+        }
+
+        public String name() {
+            return name;
+        }
+
+        public List<ResourceLocation> tracks() {
+            return Collections.unmodifiableList(tracks);
+        }
+
+        public int size() {
+            return tracks.size();
+        }
+
+        public boolean isEmpty() {
+            return tracks.isEmpty();
+        }
+
+        public boolean contains(ResourceLocation id) {
+            return tracks.contains(id);
+        }
+
+        /** Siradaki parcanin sira numarasi. */
+        int startIndex() {
+            return next == null ? 0 : Math.max(0, tracks.indexOf(next));
+        }
+    }
+
+    public static final int NAME_MAX = 24;
+    public static final int LISTS_MAX = 20;
+
+    private static final List<SavedList> LISTS = new ArrayList<>();
+    /** Sira bossa calinan kayitli liste; null = yok. */
+    @Nullable
+    private static SavedList active;
+    /** Bir sonraki baslatmada siradan once etkin listeden cal (liste yeni secildi). */
+    private static boolean listFirst = false;
 
     private static final List<ResourceLocation> QUEUE = new ArrayList<>();
     /** Dongu isaretli parcalar: calinca silinmez, yerinde kalir. */
@@ -169,7 +224,12 @@ public final class Playlist {
 
     /** Calma listesi su an oyunun arka plan muzigini yonetiyor mu? */
     public static boolean isActive() {
-        return ModOptions.playlistMode && !QUEUE.isEmpty();
+        return ModOptions.playlistMode && hasMusic();
+    }
+
+    /** Sirada ya da etkin listede calinacak parca var mi? */
+    private static boolean hasMusic() {
+        return !QUEUE.isEmpty() || (active != null && !active.isEmpty());
     }
 
     /**
@@ -322,6 +382,155 @@ public final class Playlist {
         version++;
     }
 
+    // ---------------------------------------------------------------- kayitli listeler
+
+    public static List<SavedList> lists() {
+        return Collections.unmodifiableList(LISTS);
+    }
+
+    @Nullable
+    public static SavedList list(String name) {
+        String key = name.trim();
+        for (SavedList l : LISTS) if (l.name.equalsIgnoreCase(key)) return l;
+        return null;
+    }
+
+    @Nullable
+    public static SavedList activeList() {
+        return active;
+    }
+
+    /** Bir listenin adi olabilir mi (bos degil, cok uzun degil, baska listede yok)? */
+    public static boolean isValidName(String name, @Nullable SavedList renaming) {
+        String n = name.trim();
+        if (n.isEmpty() || n.length() > NAME_MAX) return false;
+        SavedList same = list(n);
+        return same == null || same == renaming;
+    }
+
+    /** @return yeni liste; ad gecersizse ya da liste sayisi doluysa null */
+    @Nullable
+    public static SavedList createList(String name) {
+        if (LISTS.size() >= LISTS_MAX || !isValidName(name, null)) return null;
+        SavedList l = new SavedList(name.trim());
+        LISTS.add(l);
+        changed();
+        return l;
+    }
+
+    public static boolean renameList(SavedList list, String name) {
+        if (!isValidName(name, list)) return false;
+        list.name = name.trim();
+        changed();
+        return true;
+    }
+
+    public static void deleteList(SavedList list) {
+        if (!LISTS.remove(list)) return;
+        if (active == list) active = null;
+        changed();
+    }
+
+    /** Listenin sonuna ekler (zaten varsa dokunmaz). */
+    public static void listAdd(SavedList list, ResourceLocation id) {
+        if (list.tracks.contains(id)) return;
+        list.tracks.add(id);
+        HISTORY.remove(id);
+        HISTORY.add(0, id);
+        while (HISTORY.size() > HISTORY_MAX) HISTORY.remove(HISTORY.size() - 1);
+        changed();
+    }
+
+    public static void listRemoveAt(SavedList list, int index) {
+        if (index < 0 || index >= list.tracks.size()) return;
+        ResourceLocation id = list.tracks.remove(index);
+        if (id.equals(list.next)) list.next = list.tracks.isEmpty() ? null : list.tracks.get(index % list.tracks.size());
+        changed();
+    }
+
+    /** @return artik listede mi */
+    public static boolean listToggle(SavedList list, ResourceLocation id) {
+        int i = list.tracks.indexOf(id);
+        if (i >= 0) {
+            listRemoveAt(list, i);
+            return false;
+        }
+        listAdd(list, id);
+        return true;
+    }
+
+    public static void listSwap(SavedList list, int a, int b) {
+        if (a < 0 || b < 0 || a >= list.tracks.size() || b >= list.tracks.size() || a == b) return;
+        Collections.swap(list.tracks, a, b);
+        changed();
+    }
+
+    /** Karistirir; yeni sira bastan baslar. */
+    public static void listShuffle(SavedList list) {
+        Collections.shuffle(list.tracks, new java.util.Random(RANDOM.nextLong()));
+        list.next = null;
+        changed();
+    }
+
+    /** Bu listeden calan parca (calmiyorsa ya da baska yerden caliyorsa null). */
+    @Nullable
+    public static ResourceLocation listCurrentTrack(SavedList list) {
+        PlaylistSound p = playing();
+        return p != null && p.fromList == list ? p.trackId : null;
+    }
+
+    /** Listede sonra calacak parca; liste bossa null. */
+    @Nullable
+    public static ResourceLocation listNext(SavedList list) {
+        return list.isEmpty() ? null : list.tracks.get(list.startIndex());
+    }
+
+    /**
+     * Listeyi etkin yapar ve calma listesi modunu acar; liste hemen calmaya baslar.
+     *
+     * @param index ilk calacak parca; -1 = listenin kaldigi yerden
+     */
+    public static void startList(SavedList list, int index) {
+        active = list;
+        if (index >= 0 && index < list.tracks.size()) list.next = list.tracks.get(index);
+        ModOptions.playlistMode = true;
+        changed();
+        if (list.isEmpty()) return;
+        listFirst = true;
+        restartMusic(0);
+    }
+
+    /** Etkin listeyi birakir; calan sarki sonuna kadar calar, sonra sira ya da oyunun kendi muzigi gelir. */
+    public static void stopList() {
+        if (active == null) return;
+        active = null;
+        changed();
+    }
+
+    /**
+     * Liste degistirme tusu: siradaki kayitli listeye gecer; son listeden sonra liste kapanir.
+     *
+     * @return yeni etkin liste; null = liste kapandi
+     */
+    @Nullable
+    public static SavedList cycleList() {
+        if (LISTS.isEmpty()) return null;
+        int i = active == null ? -1 : LISTS.indexOf(active);
+        if (i + 1 >= LISTS.size()) {
+            stopList();
+            return null;
+        }
+        SavedList next = LISTS.get(i + 1);
+        startList(next, -1);
+        return next;
+    }
+
+    /** Oz-test icin {@link #advanceList} (ses calmadan); listeyi etkin de yapar. */
+    public static int advanceListForTest(SavedList list, Predicate<ResourceLocation> playable) {
+        active = list;
+        return advanceList(playable);
+    }
+
     // ---------------------------------------------------------------- secim
 
     /**
@@ -421,26 +630,75 @@ public final class Playlist {
         }
         boolean force = oneShot;
         oneShot = false;
-        if ((!ModOptions.playlistMode && !force) || QUEUE.isEmpty() || !ModOptions.isBackground(music)) return null;
+        boolean preferList = listFirst;
+        listFirst = false;
+        if ((!ModOptions.playlistMode && !force && !preferList) || !hasMusic() || !ModOptions.isBackground(music)) return null;
+        PlaylistSound sound = preferList ? fromList() : null;
+        if (sound == null) sound = fromQueue();
+        if (sound == null && !preferList) sound = fromList();
+        if (sound == null) return null;
+        current = sound;
+        elapsedTicks = 0;
+        durationSeconds(current); // sureyi arka planda okumaya basla
+        MusicSettings.save(); // sira yeniden baslatinca da korunsun
+        QuietPlease.LOGGER.debug("Calma listesi: {} ({})", current.trackId, current.fromList == null ? "sira" : current.fromList.name);
+        return current;
+    }
+
+    @Nullable
+    private static PlaylistSound fromQueue() {
+        if (QUEUE.isEmpty()) return null;
         PlaylistSound[] found = new PlaylistSound[1];
         int index = advance(id -> {
             if (MusicSettings.isDisabled(id)) return false;
             found[0] = createSound(id);
             return found[0] != null;
         });
+        return index < 0 ? null : found[0];
+    }
+
+    @Nullable
+    private static PlaylistSound fromList() {
+        SavedList list = active;
+        if (list == null || list.isEmpty()) return null;
+        PlaylistSound[] found = new PlaylistSound[1];
+        int index = advanceList(id -> {
+            if (MusicSettings.isDisabled(id)) return false;
+            found[0] = createSound(id);
+            return found[0] != null;
+        });
         if (index < 0) return null;
-        current = found[0];
-        elapsedTicks = 0;
-        durationSeconds(current); // sureyi arka planda okumaya basla
-        MusicSettings.save(); // sira yeniden baslatinca da korunsun
-        QuietPlease.LOGGER.debug("Calma listesi: {}. parca {}", index + 1, current.trackId);
-        return current;
+        // Liste siradaki bir sarkinin yerine baslarsa o sarki siradan dusmesin, sonra bastan calsin
+        currentId = null;
+        found[0].fromList = list;
+        return found[0];
+    }
+
+    /**
+     * Etkin listede siradaki ilk calinabilir parcayi secer; parcalar listede kalir.
+     *
+     * @return sira numarasi; -1 = calinacak parca yok
+     */
+    static int advanceList(Predicate<ResourceLocation> playable) {
+        SavedList list = active;
+        if (list == null) return -1;
+        int n = list.tracks.size();
+        int start = list.startIndex();
+        for (int k = 0; k < n; k++) {
+            int i = (start + k) % n;
+            if (playable.test(list.tracks.get(i))) {
+                list.next = list.tracks.get((i + 1) % n);
+                version++;
+                return i;
+            }
+        }
+        return -1;
     }
 
     /** Onizleme calarken liste ilerlemesin diye mixin bunu sorar. */
     public static boolean wouldTakeOver(Music music) {
         if (forced != null && ModOptions.isBackground(music)) return true;
-        return (ModOptions.playlistMode || oneShot) && !QUEUE.isEmpty() && ModOptions.isBackground(music);
+        return (ModOptions.playlistMode || oneShot || listFirst) && hasMusic() && ModOptions.isBackground(music);
     }
 
     /** Rastgele secim yapmadan bu parcayi calan arka plan sesi (kendi muzigin, gecmis); bulunamazsa null. */
@@ -595,6 +853,7 @@ public final class Playlist {
         current = null;
         currentId = null;
         oneShot = false;
+        listFirst = false;
         elapsedTicks = 0;
     }
 
@@ -612,7 +871,26 @@ public final class Playlist {
         FAVORITES.clear();
         currentId = null;
         nextFrom = null;
+        LISTS.clear();
+        active = null;
         if (o != null) {
+            if (o.has("lists") && o.get("lists").isJsonArray()) {
+                for (JsonElement e : o.getAsJsonArray("lists")) {
+                    if (!e.isJsonObject()) continue;
+                    JsonObject lo = e.getAsJsonObject();
+                    String name = lo.has("name") && lo.get("name").isJsonPrimitive() ? lo.get("name").getAsString().trim() : "";
+                    if (name.length() > NAME_MAX) name = name.substring(0, NAME_MAX).trim();
+                    if (name.isEmpty() || list(name) != null || LISTS.size() >= LISTS_MAX) continue;
+                    SavedList l = new SavedList(name);
+                    readIds(lo, "tracks", l.tracks);
+                    if (lo.has("next") && lo.get("next").isJsonPrimitive()) {
+                        ResourceLocation next = ResourceLocation.tryParse(lo.get("next").getAsString());
+                        if (next != null && l.tracks.contains(next)) l.next = next;
+                    }
+                    LISTS.add(l);
+                }
+            }
+            if (o.has("active") && o.get("active").isJsonPrimitive()) active = list(o.get("active").getAsString());
             List<ResourceLocation> favorites = new ArrayList<>();
             // eski dosyalarda favori yok: yildiz o zamanlar siraya ekliyordu, siradakiler favori sayilir
             readIds(o, o.has("favorites") ? "favorites" : "tracks", favorites);
@@ -654,6 +932,16 @@ public final class Playlist {
         o.add("favorites", ids(List.copyOf(FAVORITES)));
         ResourceLocation next = currentId != null ? currentId : nextFrom;
         if (next != null && QUEUE.contains(next)) o.addProperty("next", next.toString());
+        JsonArray lists = new JsonArray();
+        for (SavedList l : LISTS) {
+            JsonObject lo = new JsonObject();
+            lo.addProperty("name", l.name);
+            lo.add("tracks", ids(l.tracks));
+            if (l.next != null) lo.addProperty("next", l.next.toString());
+            lists.add(lo);
+        }
+        o.add("lists", lists);
+        if (active != null) o.addProperty("active", active.name);
         return o;
     }
 }

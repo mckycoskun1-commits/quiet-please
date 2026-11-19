@@ -49,6 +49,10 @@ import net.minecraft.world.item.ItemStack;
  * Calma listesi paneli: bir muzik calar gibi, en ustte calan sarki (ilerleme cubuguyla), altinda listenin tamami
  * numarali; calan sarki yerinde durur ve basinda yesil cizgi vardir. Sira degistirme (▲/▼), cikarma (✕), hemen
  * calma (▶), dongu (∞), atlama, karistirma ve "Sarki ekle" sekmesinde tum muziklerden ekleme.
+ *
+ * Ustteki ◀ ▶ dugmeleri sira ile kayitli listeler ("Sakin", "Insaat" gibi) arasinda gecer; + yeni liste acar.
+ * Kayitli listede dongu dugmesi yoktur (parcalar zaten listede kalir); alt satirda Cal/Durdur, Karistir,
+ * Yeniden adlandir ve Sil vardir.
  */
 public class QuietPlaylistScreen extends Screen {
 
@@ -76,7 +80,10 @@ public class QuietPlaylistScreen extends Screen {
     private List<ResourceLocation> suggestionPool;
     private final List<Button> suggestionButtons = new ArrayList<>();
     @Nullable
-    private Button queueTab;
+    private Button viewTab;
+    /** Gosterilen liste: null = sira. */
+    @Nullable
+    private Playlist.SavedList view;
 
     private Map<String, List<MusicTrack>> library = Map.of();
     private Map<ResourceLocation, MusicTrack> tracksById = Map.of();
@@ -95,6 +102,66 @@ public class QuietPlaylistScreen extends Screen {
     public QuietPlaylistScreen(@Nullable Screen parent) {
         super(Lang.tr("playlist.title"));
         this.parent = parent;
+        // Sira bossa ve bir liste caliyorsa o listeyle acilsin
+        if (Playlist.isEmpty()) this.view = Playlist.activeList();
+    }
+
+    /** Belirli bir kayitli listeyle acar. */
+    public QuietPlaylistScreen(@Nullable Screen parent, @Nullable Playlist.SavedList view) {
+        this(parent);
+        this.view = view;
+    }
+
+    // ------------------------------------------------------------------ gosterilen liste (sira ya da kayitli liste)
+
+    private List<ResourceLocation> viewTracks() {
+        return view == null ? Playlist.tracks() : view.tracks();
+    }
+
+    private int viewSize() {
+        return view == null ? Playlist.size() : view.size();
+    }
+
+    private boolean inView(ResourceLocation id) {
+        return view == null ? Playlist.contains(id) : view.contains(id);
+    }
+
+    private void addToView(ResourceLocation id) {
+        if (view == null) Playlist.add(id);
+        else Playlist.listAdd(view, id);
+    }
+
+    private void toggleInView(ResourceLocation id) {
+        if (view == null) Playlist.toggle(id);
+        else Playlist.listToggle(view, id);
+    }
+
+    /** Gosterilen listeden su an calan parca. */
+    @Nullable
+    private ResourceLocation viewCurrent() {
+        return view == null ? Playlist.currentTrack() : Playlist.listCurrentTrack(view);
+    }
+
+    /** ◀ / ▶: sira, sonra kayitli listeler sirasiyla. */
+    private void cycleView(int step) {
+        List<Playlist.SavedList> lists = Playlist.lists();
+        int i = view == null ? -1 : lists.indexOf(view);
+        int n = lists.size() + 1;
+        int next = Math.floorMod(i + 1 + step, n) - 1;
+        view = next < 0 ? null : lists.get(next);
+        shownVersion = -1;
+        rebuildWidgets();
+    }
+
+    private Component viewLabel(int maxW) {
+        if (view == null) return fit(Lang.tr("playlist.tab.queue", Playlist.size()), maxW);
+        boolean playing = view == Playlist.activeList();
+        String count = " (" + view.size() + ")";
+        String name = view.name();
+        String prefix = playing ? "♪ " : "";
+        int room = maxW - font.width(prefix + count + "…");
+        if (font.width(prefix + name + count) > maxW) name = font.plainSubstrByWidth(name, Math.max(0, room)) + "…";
+        return Component.literal(prefix + name + count).withStyle(s -> s.withColor((playing ? PLAYING : TEXT) & 0xFFFFFF));
     }
 
     // ------------------------------------------------------------------ kurulum
@@ -135,21 +202,41 @@ public class QuietPlaylistScreen extends Screen {
         int x = rowX();
         int rowW = blockW();
 
-        // Sekmeler + calma listesi modu
+        if (view != null && !Playlist.lists().contains(view)) view = null;
+
+        // Ust satir: [◀] sira / liste [▶] [+] [Sarki ekle] .......... [Calma listesi modu]
         int y = 30;
-        queueTab = addRenderableWidget(Button.builder(Lang.tr("playlist.tab.queue", Playlist.size()), b -> {
+        int labelW = 120;
+        Button prev = addRenderableWidget(Button.builder(Component.literal("◀"), b -> cycleView(-1))
+                .bounds(x, y, 20, 20).tooltip(Tooltip.create(Lang.tr("playlist.view.prev.tooltip"))).build());
+        viewTab = addRenderableWidget(Button.builder(viewLabel(labelW - 8), b -> {
             addMode = false;
             rebuildWidgets();
-        }).bounds(x, y, 90, 20).build());
+        }).bounds(x + 22, y, labelW, 20).tooltip(Tooltip.create(Lang.tr("playlist.view.tooltip"))).build());
+        Button next = addRenderableWidget(Button.builder(Component.literal("▶"), b -> cycleView(1))
+                .bounds(x + 24 + labelW, y, 20, 20).tooltip(Tooltip.create(Lang.tr("playlist.view.next.tooltip"))).build());
+        prev.active = next.active = !Playlist.lists().isEmpty();
+        Button create = addRenderableWidget(Button.builder(Component.literal("+"), b ->
+                minecraft.setScreen(new PlaylistNameScreen(this, null, name -> {
+                    Playlist.SavedList made = Playlist.createList(name);
+                    if (made != null) {
+                        view = made;
+                        addMode = true; // yeni listeye hemen sarki eklensin
+                        MusicSettings.save();
+                    }
+                }))).bounds(x + 48 + labelW, y, 20, 20).tooltip(Tooltip.create(Lang.tr("playlist.new.tooltip"))).build());
+        create.active = Playlist.lists().size() < Playlist.LISTS_MAX;
+        int addX = x + 72 + labelW;
         Button addTab = addRenderableWidget(Button.builder(Lang.tr("playlist.tab.add"), b -> {
             addMode = true;
             rebuildWidgets();
-        }).bounds(x + 94, y, 90, 20).build());
-        queueTab.active = addMode;
+        }).bounds(addX, y, 90, 20).build());
+        viewTab.active = addMode;
         addTab.active = !addMode;
+        int modeW = Math.max(80, Math.min(150, x + rowW - (addX + 94)));
         addRenderableWidget(CycleButton.onOffBuilder(ModOptions.playlistMode)
                 .withTooltip(v -> Tooltip.create(Lang.tr("settings.playlist_mode.tooltip")))
-                .create(x + rowW - 150, y, 150, 20, Lang.tr("settings.playlist_mode"), (b, v) -> {
+                .create(x + rowW - modeW, y, modeW, 20, Lang.tr("settings.playlist_mode"), (b, v) -> {
                     ModOptions.playlistMode = v;
                     MusicSettings.save();
                 }));
@@ -205,6 +292,43 @@ public class QuietPlaylistScreen extends Screen {
                 rebuildWidgets();
             }).bounds(width / 2 - 154, by, 150, 20).build());
             addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> onClose()).bounds(width / 2 + 4, by, 150, 20).build());
+        } else if (view != null) {
+            Playlist.SavedList list = view;
+            int bw = (rowW - 16) / 5;
+            boolean playingList = list == Playlist.activeList();
+            Button play = addRenderableWidget(Button.builder(Lang.tr(playingList ? "playlist.list.stop" : "playlist.list.play"), b -> {
+                        if (list == Playlist.activeList()) Playlist.stopList();
+                        else Playlist.startList(list, -1);
+                        MusicSettings.save();
+                        rebuildWidgets();
+                    }).bounds(x, by, bw, 20)
+                    .tooltip(Tooltip.create(Lang.tr(playingList ? "playlist.list.stop.tooltip" : "playlist.list.play.tooltip")))
+                    .build());
+            play.active = playingList || !list.isEmpty();
+            addRenderableWidget(Button.builder(Lang.tr("playlist.shuffle"), b -> {
+                        Playlist.listShuffle(list);
+                        rebuildList();
+                    }).bounds(x + bw + 4, by, bw, 20)
+                    .tooltip(Tooltip.create(Lang.tr("playlist.list.shuffle.tooltip")))
+                    .build()).active = list.size() > 1;
+            addRenderableWidget(Button.builder(Lang.tr("playlist.list.rename"), b -> minecraft.setScreen(
+                    new PlaylistNameScreen(this, list, name -> {
+                        Playlist.renameList(list, name);
+                        MusicSettings.save();
+                    }))).bounds(x + 2 * (bw + 4), by, bw, 20).build());
+            addRenderableWidget(Button.builder(Lang.tr("playlist.list.delete"), b -> minecraft.setScreen(new ConfirmScreen(ok -> {
+                        if (ok) {
+                            Playlist.deleteList(list);
+                            view = null;
+                            MusicSettings.save();
+                        }
+                        minecraft.setScreen(this);
+                    }, Lang.tr("playlist.list.delete.confirm", list.name()),
+                    Lang.tr("playlist.list.delete.confirm.message", list.size()))))
+                    .bounds(x + 3 * (bw + 4), by, bw, 20)
+                    .build());
+            addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> onClose())
+                    .bounds(x + 4 * (bw + 4), by, bw, 20).build());
         } else {
             int bw = (rowW - 8) / 3;
             addRenderableWidget(Button.builder(Lang.tr("playlist.shuffle"), b -> {
@@ -236,7 +360,7 @@ public class QuietPlaylistScreen extends Screen {
                 String modName = MusicLibrary.modName(mod);
                 List<MusicTrack> visible = tracks.stream()
                         .filter(t -> t.kind() != MusicTrack.Kind.NOTE)
-                        .filter(t -> ModOptions.showAmbient || t.kind() != MusicTrack.Kind.OTHER || Playlist.contains(t.id()))
+                        .filter(t -> ModOptions.showAmbient || t.kind() != MusicTrack.Kind.OTHER || inView(t.id()))
                         .filter(t -> q.isEmpty()
                                 || t.id().toString().toLowerCase(Locale.ROOT).contains(q)
                                 || modName.toLowerCase(Locale.ROOT).contains(q))
@@ -246,11 +370,11 @@ public class QuietPlaylistScreen extends Screen {
                 for (int i = 0; i < visible.size(); i++) list.add(new AddRow(visible.get(i), i % 2 == 1));
             });
         } else {
-            for (int i = 0; i < Playlist.size(); i++) list.add(new QueueRow(i));
+            for (int i = 0; i < viewSize(); i++) list.add(new QueueRow(i));
         }
         shownVersion = Playlist.version();
         list.setScrollAmount(sameView ? scroll : 0);
-        if (queueTab != null) queueTab.setMessage(Lang.tr("playlist.tab.queue", Playlist.size()));
+        if (viewTab != null) viewTab.setMessage(viewLabel(viewTab.getWidth() - 8));
         refreshSuggestions();
     }
 
@@ -282,7 +406,7 @@ public class QuietPlaylistScreen extends Screen {
         for (ResourceLocation id : suggestionPool()) {
             if (y + 18 > bottom) break;
             MusicTrack track = tracksById.get(id);
-            if (track == null || Playlist.contains(id) || MusicSettings.isDisabled(id)) continue;
+            if (track == null || inView(id) || MusicSettings.isDisabled(id)) continue;
             boolean favorite = Playlist.isFavorite(id);
             String reason = favorite ? "playlist.suggest.favorite"
                     : Playlist.history().contains(id) ? "playlist.suggest.history" : "playlist.suggest.popular";
@@ -291,9 +415,10 @@ public class QuietPlaylistScreen extends Screen {
             Component tooltip = Component.literal(track.title()).withStyle(s -> s.withColor(GOLD & 0xFFFFFF))
                     .append(Component.literal("\n" + MusicLibrary.modName(track.namespace()) + " · ").withStyle(ChatFormatting.GRAY))
                     .append(Lang.tr(reason).withStyle(ChatFormatting.GRAY))
-                    .append(Component.literal("\n").append(Lang.tr("playlist.add.tooltip")).withStyle(ChatFormatting.DARK_GRAY));
+                    .append(Component.literal("\n").append(Lang.tr(view == null ? "playlist.add.tooltip" : "playlist.list.add.tooltip"))
+                            .withStyle(ChatFormatting.DARK_GRAY));
             Button b = Button.builder(label, btn -> {
-                Playlist.add(id);
+                addToView(id);
                 MusicSettings.save();
                 rebuildList();
             }).bounds(x, y, sideW(), 18).tooltip(Tooltip.create(tooltip)).build();
@@ -325,9 +450,9 @@ public class QuietPlaylistScreen extends Screen {
         renderHeader(g);
         if (!addMode) renderNowPlaying(g);
         if (list.children().isEmpty()) {
-            Component msg = addMode ? Lang.tr("screen.no_results") : Lang.tr("playlist.empty");
+            Component msg = addMode ? Lang.tr("screen.no_results") : Lang.tr(view == null ? "playlist.empty" : "playlist.list.empty");
             g.drawCenteredString(font, msg, width / 2, TOP + 20, MUTED);
-            if (!addMode) g.drawCenteredString(font, Lang.tr("playlist.empty.hint"), width / 2, TOP + 34, MUTED);
+            if (!addMode) g.drawCenteredString(font, Lang.tr(view == null ? "playlist.empty.hint" : "playlist.list.empty.hint"), width / 2, TOP + 34, MUTED);
         } else if (!addMode && ModOptions.gap == ModOptions.Gap.VANILLA) {
             // Ipucu: vanilla sarki arasi oyunda 5-20 dk
             g.drawCenteredString(font, Lang.tr("playlist.gap_hint"), width / 2, height - 40, MUTED);
@@ -336,8 +461,10 @@ public class QuietPlaylistScreen extends Screen {
 
     private void renderHeader(GuiGraphics g) {
         Component title = Lang.tr("playlist.title").withStyle(ChatFormatting.BOLD);
-        MutableComponent summary = Lang.count("tracks", Playlist.size()).append(" · ")
+        MutableComponent summary = Lang.count("tracks", viewSize()).append(" · ")
                 .append(Lang.tr(ModOptions.playlistMode ? "playlist.mode_on" : "playlist.mode_off"));
+        Playlist.SavedList playingList = Playlist.activeList();
+        if (playingList != null && ModOptions.playlistMode) summary.append(" · ").append(Lang.tr("playlist.playing_list", playingList.name()));
         int logo = 22;
         int textW = Math.max(font.width(title), font.width(summary));
         int x = (width - (logo + 6 + textW)) / 2;
@@ -360,7 +487,13 @@ public class QuietPlaylistScreen extends Screen {
 
         if (playing == null) {
             Component line;
-            if (Playlist.isEmpty()) line = Lang.tr("playlist.bar.empty");
+            if (view != null) {
+                ResourceLocation next = Playlist.listNext(view);
+                if (next == null) line = Lang.tr("playlist.list.bar.empty");
+                else if (view != Playlist.activeList()) line = Lang.tr("playlist.list.bar.inactive");
+                else if (!ModOptions.playlistMode) line = Lang.tr("playlist.bar.off");
+                else line = Lang.tr("playlist.bar.next", Component.literal(shortName(next)).withStyle(s -> s.withColor(TEXT & 0xFFFFFF)));
+            } else if (Playlist.isEmpty()) line = Lang.tr("playlist.bar.empty");
             else if (!ModOptions.playlistMode) line = Lang.tr("playlist.bar.off");
             else {
                 List<Integer> order = Playlist.upcoming();
@@ -493,58 +626,67 @@ public class QuietPlaylistScreen extends Screen {
         return Button.builder(Component.literal(symbol), b -> action.run()).size(18, 18).tooltip(Tooltip.create(tooltip)).build();
     }
 
-    /** Listedeki bir sarki: numara, ad, mod, [▶] [▲] [▼] [∞] [✕]. */
+    /** Listedeki bir sarki: numara, ad, mod, [▶] [▲] [▼] [∞] [✕]; kayitli listede dongu dugmesi yok. */
     private class QueueRow extends Row {
         private final int number;
         private final int index;
         private final Button play;
         private final Button up;
         private final Button down;
-        private final Button loop;
         private final Button remove;
         private final List<Button> buttons;
 
         QueueRow(int index) {
             this.number = index + 1;
             this.index = index;
-            ResourceLocation id = Playlist.tracks().get(index);
-            boolean looping = Playlist.isLooping(id);
-            this.loop = iconButton("∞", Lang.tr(looping ? "playlist.loop.on.tooltip" : "playlist.loop.off.tooltip"), () -> {
-                Playlist.toggleLoop(id);
+            Playlist.SavedList saved = view;
+            ResourceLocation id = viewTracks().get(index);
+            this.play = iconButton("▶", Lang.tr(saved == null ? "playlist.play_now.tooltip" : "playlist.list.play_now.tooltip"), () -> {
+                if (saved == null) Playlist.playNow(index);
+                else Playlist.startList(saved, index);
                 MusicSettings.save();
-                rebuildList();
-            });
-            loop.setMessage(Component.literal("∞").withStyle(looping ? ChatFormatting.GREEN : ChatFormatting.GRAY));
-            this.play = iconButton("▶", Lang.tr("playlist.play_now.tooltip"), () -> {
-                Playlist.playNow(index);
-                rebuildList();
+                rebuildWidgets();
             });
             this.up = iconButton("▲", Lang.tr("playlist.up.tooltip"), () -> {
-                Playlist.swap(index, index - 1);
+                if (saved == null) Playlist.swap(index, index - 1);
+                else Playlist.listSwap(saved, index, index - 1);
                 rebuildList();
             });
             this.down = iconButton("▼", Lang.tr("playlist.down.tooltip"), () -> {
-                Playlist.swap(index, index + 1);
+                if (saved == null) Playlist.swap(index, index + 1);
+                else Playlist.listSwap(saved, index, index + 1);
                 rebuildList();
             });
-            this.remove = iconButton("✕", Lang.tr("playlist.remove.tooltip"), () -> {
-                Playlist.removeAt(index);
+            this.remove = iconButton("✕", Lang.tr(saved == null ? "playlist.remove.tooltip" : "playlist.list.remove.tooltip"), () -> {
+                if (saved == null) Playlist.removeAt(index);
+                else Playlist.listRemoveAt(saved, index);
                 rebuildList();
             });
             up.active = index > 0;
-            down.active = index < Playlist.size() - 1;
-            this.buttons = List.of(play, up, down, loop, remove);
+            down.active = index < viewSize() - 1;
+            if (saved == null) {
+                boolean looping = Playlist.isLooping(id);
+                Button loop = iconButton("∞", Lang.tr(looping ? "playlist.loop.on.tooltip" : "playlist.loop.off.tooltip"), () -> {
+                    Playlist.toggleLoop(id);
+                    MusicSettings.save();
+                    rebuildList();
+                });
+                loop.setMessage(Component.literal("∞").withStyle(looping ? ChatFormatting.GREEN : ChatFormatting.GRAY));
+                this.buttons = List.of(play, up, down, loop, remove);
+            } else {
+                this.buttons = List.of(play, up, down, remove);
+            }
         }
 
         @Override
         public void render(GuiGraphics g, int i, int top, int left, int width, int height,
                            int mouseX, int mouseY, boolean hovering, float partialTick) {
-            if (index >= Playlist.size()) return; // liste degisti, yenilenmeyi bekliyor
-            ResourceLocation id = Playlist.tracks().get(index);
+            if (index >= viewSize()) return; // liste degisti, yenilenmeyi bekliyor
+            ResourceLocation id = viewTracks().get(index);
             MusicTrack track = tracksById.get(id);
             boolean disabled = MusicSettings.isDisabled(id);
             boolean missing = track == null;
-            boolean current = id.equals(Playlist.currentTrack());
+            boolean current = id.equals(viewCurrent());
             play.active = !disabled && !missing;
 
             if (hovering) g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_HOVER);
@@ -632,14 +774,14 @@ public class QuietPlaylistScreen extends Screen {
             this.track = track;
             this.alternate = alternate;
             this.icon = QuietPleaseScreen.iconFor(track);
-            this.toggle = Button.builder(Component.empty(), b -> Playlist.toggle(track.id()))
+            this.toggle = Button.builder(Component.empty(), b -> toggleInView(track.id()))
                     .size(70, 18).build();
         }
 
         @Override
         public void render(GuiGraphics g, int i, int top, int left, int width, int height,
                            int mouseX, int mouseY, boolean hovering, float partialTick) {
-            boolean in = Playlist.contains(track.id());
+            boolean in = inView(track.id());
             if (hovering) {
                 g.fill(left - 3, top - 1, left + width + 3, top + height + 1, ROW_HOVER);
                 g.fill(left - 3, top - 1, left - 1, top + height + 1, ACCENT);
@@ -649,7 +791,8 @@ public class QuietPlaylistScreen extends Screen {
             g.renderItem(icon, left + 2, top + (height - 16) / 2);
             toggle.setPosition(left + width - toggle.getWidth(), top + (height - 18) / 2);
             toggle.setMessage(in ? Lang.tr("playlist.added").withStyle(ChatFormatting.GREEN) : Lang.tr("playlist.add"));
-            toggle.setTooltip(Tooltip.create(Lang.tr(in ? "playlist.added.tooltip" : "playlist.add.tooltip")));
+            String tip = in ? "added.tooltip" : "add.tooltip";
+            toggle.setTooltip(Tooltip.create(Lang.tr(view == null ? "playlist." + tip : "playlist.list." + tip)));
             boolean disabled = MusicSettings.isDisabled(track.id());
             MutableComponent name = Component.literal(track.title());
             if (disabled) name.withStyle(ChatFormatting.STRIKETHROUGH, ChatFormatting.DARK_GRAY);
