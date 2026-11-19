@@ -431,6 +431,33 @@ final class DevSelfTest {
             Playlist.shuffle();
             check(failures, new HashSet<>(Playlist.tracks()).equals(Set.of(a, b, c, d)), "calma listesi: karistirma " + Playlist.tracks());
 
+            // Siraya al (ana panel): calan sarkinin hemen ardina; arka arkaya eklenenler eklenme sirasiyla dizilir
+            Playlist.clear();
+            for (ResourceLocation id : List.of(a, b)) Playlist.add(id);
+            Playlist.advanceForTest(all); // a caliyor, sirada b
+            int posC = Playlist.enqueue(c);
+            int posD = Playlist.enqueue(d);
+            check(failures, posC == 1 && posD == 2 && Playlist.tracks().equals(List.of(a, c, d, b)),
+                    "siraya al: calanin ardina, eklenme sirasiyla " + posC + " " + posD + " " + Playlist.tracks());
+            check(failures, Playlist.enqueue(a) == 0, "siraya al: calan parca yerinden oynamamali");
+            Playlist.advanceForTest(all);
+            check(failures, c.equals(Playlist.currentTrack()), "siraya al: siradaki c olmali " + Playlist.currentTrack());
+            // Bos liste: sira olusur, calma listesi modu acilir, ilk eklenen ilk calar
+            Playlist.clear();
+            ModOptions.playlistMode = false;
+            Playlist.enqueue(c);
+            Playlist.enqueue(d);
+            check(failures, ModOptions.playlistMode && Playlist.tracks().equals(List.of(c, d)),
+                    "siraya al: bos listede sira olusmali " + Playlist.tracks() + " mod " + ModOptions.playlistMode);
+            check(failures, Playlist.advanceForTest(all) == 0 && c.equals(Playlist.currentTrack()),
+                    "siraya al: bos listede ilk eklenen calmali " + Playlist.currentTrack());
+            // Hicbir sey calmiyorken, baslamamis bir listenin onune girer
+            Playlist.clear();
+            for (ResourceLocation id : List.of(a, b)) Playlist.add(id);
+            Playlist.enqueue(c);
+            check(failures, Playlist.queuePosition(c) == 1 && Playlist.advanceForTest(all) == 0 && c.equals(Playlist.currentTrack()),
+                    "siraya al: calmayan listede ilk calmali " + Playlist.tracks());
+
             // Favoriler: siraya da eklenir, calinca favori kalir, yildiz kaldirilinca siradan da cikar
             Playlist.clear();
             Playlist.toggleFavorite(d);

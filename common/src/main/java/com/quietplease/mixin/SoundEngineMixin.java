@@ -24,7 +24,7 @@ public abstract class SoundEngineMixin {
             at = @At("RETURN"), cancellable = true)
     private void quietplease$volumeWhilePlaying(SoundInstance sound, CallbackInfoReturnable<Float> cir) {
         float factor = MusicSettings.factor(sound) * com.quietplease.music.MusicControl.fadeFactor(sound)
-                * com.quietplease.music.MusicMixer.factor(sound);
+                * com.quietplease.music.MusicMixer.factor(sound) * com.quietplease.music.FocusMute.factor();
         if (factor != 1.0F) cir.setReturnValue(cir.getReturnValueF() * factor);
     }
 
