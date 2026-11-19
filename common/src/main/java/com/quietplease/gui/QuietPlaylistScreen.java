@@ -207,25 +207,24 @@ public class QuietPlaylistScreen extends Screen {
         // Ust satir: [◀] sira / liste [▶] [+] [Sarki ekle] .......... [Calma listesi modu]
         int y = 30;
         int labelW = 120;
-        Button prev = addRenderableWidget(iconButton("◀", Lang.tr("playlist.view.prev.tooltip"), () -> cycleView(-1)));
-        prev.setRectangle(20, 20, x, y);
+        Button prev = addRenderableWidget(Button.builder(Component.literal("◀"), b -> cycleView(-1))
+                .bounds(x, y, 20, 20).tooltip(Tooltip.create(Lang.tr("playlist.view.prev.tooltip"))).build());
         viewTab = addRenderableWidget(Button.builder(viewLabel(labelW - 8), b -> {
             addMode = false;
             rebuildWidgets();
         }).bounds(x + 22, y, labelW, 20).tooltip(Tooltip.create(Lang.tr("playlist.view.tooltip"))).build());
-        Button next = addRenderableWidget(iconButton("▶", Lang.tr("playlist.view.next.tooltip"), () -> cycleView(1)));
-        next.setRectangle(20, 20, x + 24 + labelW, y);
+        Button next = addRenderableWidget(Button.builder(Component.literal("▶"), b -> cycleView(1))
+                .bounds(x + 24 + labelW, y, 20, 20).tooltip(Tooltip.create(Lang.tr("playlist.view.next.tooltip"))).build());
         prev.active = next.active = !Playlist.lists().isEmpty();
-        Button create = addRenderableWidget(iconButton("+", Lang.tr("playlist.new.tooltip"), () ->
-                minecraft.gui.setScreen(new PlaylistNameScreen(this, null, name -> {
+        Button create = addRenderableWidget(Button.builder(Component.literal("+"), b ->
+                minecraft.setScreen(new PlaylistNameScreen(this, null, name -> {
                     Playlist.SavedList made = Playlist.createList(name);
                     if (made != null) {
                         view = made;
                         addMode = true; // yeni listeye hemen sarki eklensin
                         MusicSettings.save();
                     }
-                }))));
-        create.setRectangle(20, 20, x + 48 + labelW, y);
+                }))).bounds(x + 48 + labelW, y, 20, 20).tooltip(Tooltip.create(Lang.tr("playlist.new.tooltip"))).build());
         create.active = Playlist.lists().size() < Playlist.LISTS_MAX;
         int addX = x + 72 + labelW;
         Button addTab = addRenderableWidget(Button.builder(Lang.tr("playlist.tab.add"), b -> {
