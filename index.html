@@ -799,14 +799,15 @@ code {
     </div>
     <div class="gallery">
       <figure class="stage">
-        $1The Quiet Please panel with star, play now and add to queue buttons on every song, volume sliders, On buttons and a Click to preview tooltip$2 width="854" height="480">
-        $1The panel: play now, add to queue, its own volume and an On or Off switch for every song. Click a song to preview it.$2
+        <img id="stageImg" src="img/panel-en.png" alt="The Quiet Please panel with star, play now and add to queue buttons on every song, volume sliders, On buttons and a Click to preview tooltip" width="854" height="480">
+        <figcaption id="stageCap">The panel: play now, add to queue, its own volume and an On or Off switch for every song. Click a song to preview it.</figcaption>
       </figure>
       <div class="thumbs" id="thumbs">
         <button type="button" aria-current="true" data-src="img/panel-en.png" data-cap="The panel: play now, add to queue, its own volume and an On or Off switch for every song. Click a song to preview it." data-alt="The Quiet Please panel with star, play now and add to queue buttons on every song, volume sliders, On buttons and a Click to preview tooltip"><img src="img/panel-en.png" alt="Panel"></button>
         <button type="button" aria-current="false" data-src="img/pause-menu.png" data-cap="The pause menu button, with the song that is playing right now under it." data-alt="Pause menu with a Quiet Please button in the top right corner and the current song below it"><img src="img/pause-menu.png" alt="Pause menu"></button>
         <button type="button" aria-current="false" data-src="img/options-button.png" data-cap="The same button in the Options screen." data-alt="Options screen with the Quiet Please button"><img src="img/options-button.png" alt="Options"></button>
         <button type="button" aria-current="false" data-src="img/playlist.png" data-cap="Your own playlist: a queue with a loop button on every song, and suggested songs on the right." data-alt="Playlist screen with a numbered queue of songs, a loop button on each song, a Suggested list and Shuffle and Clear buttons"><img src="img/playlist.png" alt="Playlist"></button>
+        <button type="button" aria-current="false" data-src="img/saved-playlists.png" data-cap="Saved playlists: make lists like Calm, Building or Combat, switch with the arrows and play one with a click." data-alt="Playlist screen showing a saved list called Calm playing, with arrows to switch lists, a + button and Stop, Shuffle, Rename and Delete buttons"><img src="img/saved-playlists.png" alt="Saved playlists"></button>
         <button type="button" aria-current="false" data-src="img/song-popup.png" data-cap="New song? A small card shows its name and the mod it comes from." data-alt="A small card in the corner of the game screen with a jukebox icon, the song name and Minecraft as its mod"><img src="img/song-popup.png" alt="Song popup"></button>
         <button type="button" aria-current="false" data-src="img/popup-settings.png" data-cap="Popup settings: place, size, colors and text style. Drag the example card where you want it." data-alt="Song Popup Settings screen with a large framed example card in aqua and white"><img src="img/popup-settings.png" alt="Popup settings"></button>
         <button type="button" aria-current="false" data-src="img/music-behavior.png" data-cap="The Behavior tab: quieter near a jukebox, on Alt+Tab or in a fight, Alt+Tab silence, soft fades, no repeats and more favorites." data-alt="Behavior tab of the settings with Jukebox, In combat, Alt+Tab music, Alt+Tab silence, Fade in and out, Fade on skip, No repeats, Favorites and Even out volume buttons"><img src="img/music-behavior.png" alt="Behavior tab"></button>
@@ -820,7 +821,7 @@ code {
   <section id="download">
     <div class="sec-head">
       <h2 class="shadow">Versions</h2>
-      <p>Version 2.1.0, client side only.</p>
+      <p>Version 2.2.0, client side only.</p>
     </div>
     <div class="vgrid" id="vgrid"></div>
     <p class="vnote">Click a loader to open its download page on CurseForge. The Fabric files need Fabric API and also run on Quilt.</p>
@@ -858,13 +859,14 @@ code {
       <div class="qa"><h3>Can I add my own music?</h3><p>Yes. Put .mp3 or .ogg files in <code>config/quietplease/music</code> (Settings has a button that opens the folder). They show up at the top of the panel under Your music, can go in the playlist and, with Your music on in the Music tab of Settings, also play as background music.</p></div>
       <div class="qa"><h3>What was that song a minute ago?</h3><p>Open History and stats in Settings, or type <code>/quietplease history</code>. It lists the last 20 songs and when they played, plus the most played songs and the ones that never played. The Previous song key plays the song before again.</p></div>
       <div class="qa"><h3>Can I play a song right away or queue it?</h3><p>Yes. Every song in the panel has a play now button and an add to queue button. A queued song plays right after the current one, and songs you queue one after another keep their order. Click the song name to just listen to it first.</p></div>
-$1<p>The game simply picks another song instead. If the song is playing right now, it stops at once and the next one comes.</p></div>
+      <div class="qa"><h3>What happens when I switch a song off?</h3><p>The game simply picks another song instead. If the song is playing right now, it stops at once and the next one comes.</p></div>
       <div class="qa"><h3>Does a song stay in the playlist after it plays?</h3><p>No, it leaves the queue when it ends and the song after it starts. Turn on its loop button to keep it in its place. When the queue reaches the end it starts again from the top.</p></div>
+      <div class="qa"><h3>Can I keep different playlists?</h3><p>Yes. In the Playlist screen, press + to make a saved list, for example Calm, Building or Combat, and switch lists with the arrows. Songs in a saved list stay there after they play and the list starts again from the top. Songs you queue still play first. The Switch playlist key or <code>/quietplease playlist play &lt;name&gt;</code> changes the list from anywhere.</p></div>
       <div class="qa"><h3>Does the playlist stop boss music?</h3><p>No. Dragon, credits and boss music still play. The playlist only takes over the normal background music.</p></div>
       <div class="qa"><h3>Why do I hear a preview with Music at 0%?</h3><p>Previews play on the master channel, so you can check a song even when your music slider is all the way down.</p></div>
       <div class="qa"><h3>Where are my settings saved?</h3><p>In <code>config/quietplease.json</code>. Modpack makers can ship <code>config/quietplease-presets/default.json</code>: a new player starts with it, and their own changes are kept when the pack updates. <code>/quietplease export</code> and <code>import</code> save and load presets.</p></div>
       <div class="qa"><h3>Which languages are there?</h3><p>English, Turkish, German, Spanish, Russian, Brazilian Portuguese and Simplified Chinese. Other languages show the English text.</p></div>
-      <div class="qa"><h3>Can I skip or pause a song with a key?</h3><p>Yes. Open the panel, Skip the current song, Previous song, Pause / resume the music, Favorite the current song, Never play the current song and Toggle playlist mode all have key binds. They start unbound, so pick your own keys.</p></div>
+      <div class="qa"><h3>Can I skip or pause a song with a key?</h3><p>Yes. Open the panel, Skip the current song, Previous song, Pause / resume the music, Favorite the current song, Never play the current song, Toggle playlist mode and Switch playlist all have key binds. They start unbound, so pick your own keys.</p></div>
       <div class="qa"><h3>Can the music get quieter by itself?</h3><p>Yes. In the Behavior tab of Settings, it can turn down or mute while a jukebox plays nearby, while you Alt+Tab out of the game or during a fight. Songs can also fade in and out, and Alt+Tab silence mutes every game sound while you are tabbed out.</p></div>
       <div class="qa"><h3>Some mod music is much louder than the rest. Can it match?</h3><p>Yes. Turn on Even out volume in the Behavior tab of Settings. Each song is measured once in the background, then every song plays at the level of Minecraft's own music.</p></div>
       <div class="qa"><h3>Can I turn off the song popup?</h3><p>Yes. Song popup in Settings turns it off. Popup settings changes its place, size, colors and text, and you can drag the example card where you want it.</p></div>
@@ -891,6 +893,7 @@ $1<p>The game simply picks another song instead. If the song is playing right no
           <tr><td><code>/quietplease skip</code></td><td>Skip the background song that is playing.</td></tr>
           <tr><td><code>/quietplease previous</code></td><td>Play the song before again. Run it again to keep going back.</td></tr>
           <tr><td><code>/quietplease pause</code></td><td>Pause the background song, or play it again from where it stopped.</td></tr>
+          <tr><td><code>/quietplease playlist play &lt;name&gt;</code>, <code>playlist stop</code></td><td>Play one of your saved playlists, or stop it.</td></tr>
           <tr><td><code>/quietplease history</code>, <code>stats</code></td><td>Open History and stats: recently played, most played and never played songs.</td></tr>
           <tr><td><code>/quietplease export &lt;name&gt;</code>, <code>import &lt;name&gt;</code></td><td>Save or load all your settings, playlist included, as a preset.</td></tr>
           <tr><td><code>/quietplease dump</code></td><td>Write the full track list to <code>quietplease-tracks.txt</code>.</td></tr>
@@ -903,7 +906,19 @@ $1<p>The game simply picks another song instead. If the song is playing right no
     <div class="sec-head">
       <h2 class="shadow">What's new</h2>
     </div>
-$1      <div class="rel">
+    <div class="changes">
+      <div class="rel">
+        <div class="rel-h"><span class="tag">2.2.0</span><h3>Saved playlists</h3></div>
+        <ul>
+          <li>Make your own named playlists in the Playlist screen, for example Calm, Building or Combat. Press + for a new list and switch between the queue and your lists with the arrows</li>
+          <li>Songs in a saved list stay there after they play, and the list starts again from the top when it ends. Each list has Play and Stop, Shuffle, Rename and Delete</li>
+          <li>Songs you queue still play first, then the playing list goes on</li>
+          <li>New Switch playlist key (unbound by default) and the commands <code>/quietplease playlist play &lt;name&gt;</code> and <code>stop</code></li>
+          <li>Faster search in the panel, so big modpacks with hundreds of songs stay smooth while you type</li>
+          <li>Forge 1.18.2 to 1.21.1 and NeoForge 1.21.1: the star button keeps the panel at its scroll position</li>
+        </ul>
+      </div>
+      <div class="rel">
         <div class="rel-h"><span class="tag">2.1.0</span><h3>Play now, queue and MP3</h3></div>
         <ul>
           <li>Every song row in the panel has three buttons: star, play now and add to queue. Play now starts the song right away as the background music</li>
@@ -916,7 +931,8 @@ $1      <div class="rel">
           <li>NeoForge 26.3: fixed a crash at startup on NeoForge 26.3.0.65 and newer</li>
         </ul>
       </div>
-$2<h3>Sound fixes</h3></div>
+      <div class="rel">
+        <div class="rel-h"><span class="tag">2.0.1</span><h3>Sound fixes</h3></div>
         <ul>
           <li>Your own music plays with sound again: on Minecraft 1.20.1 and newer the songs from <code>config/quietplease/music</code> showed as playing but made no sound</li>
           <li>Background music comes back right after you listen to a song in the panel, instead of staying silent until the next song</li>
@@ -1975,13 +1991,13 @@ $2<h3>Sound fixes</h3></div>
 
   var CF_FILES = "https://www.curseforge.com/minecraft/mc-mods/quiet-please/files/";
   var VERS = [
-    ["26.3", { f: 9693586, o: 9693670, n: 9696462 }],
-    ["26.2", { f: 9693604, o: 9693664, n: 9696460 }],
-    ["26.1.2", { f: 9693616, o: 9693660, n: 9696457 }],
-    ["1.21.1", { f: 9693623, o: 9693654, n: 9696453 }],
-    ["1.20.1", { f: 9693626, o: 9693651 }],
-    ["1.19.2", { f: 9693633, o: 9693644 }],
-    ["1.18.2", { f: 9693638, o: 9693642 }]
+    ["26.3", { f: 9707088, o: 9707073, n: 9707017 }],
+    ["26.2", { f: 9707096, o: 9707065, n: 9707029 }],
+    ["26.1.2", { f: 9707099, o: 9707058, n: 9707032 }],
+    ["1.21.1", { f: 9707103, o: 9707044, n: 9707039 }],
+    ["1.20.1", { f: 9707112, o: 9707047 }],
+    ["1.19.2", { f: 9707119, o: 9707050 }],
+    ["1.18.2", { f: 9707124, o: 9707056 }]
   ];
   var LOADERS = [["f", "lf", "Fabric"], ["o", "lo", "Forge"], ["n", "ln2", "NeoForge"], ["f", "lq", "Quilt"]];
   VERS.forEach(function (v) {
@@ -1991,7 +2007,7 @@ $2<h3>Sound fixes</h3></div>
     LOADERS.forEach(function (ld) {
       var id = v[1][ld[0]];
       if (!id) return;
-      l += '<a class="' + ld[1] + '" href="' + CF_FILES + id + '" title="Download Quiet Please 2.1.0 for ' + ld[2] + ' ' + v[0] + '">' + ld[2] + '</a>';
+      l += '<a class="' + ld[1] + '" href="' + CF_FILES + id + '" title="Download Quiet Please 2.2.0 for ' + ld[2] + ' ' + v[0] + '">' + ld[2] + '</a>';
     });
     el.innerHTML = '<div class="v">' + v[0] + '</div><div class="l">' + l + '</div>';
     $("vgrid").appendChild(el);
